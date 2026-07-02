@@ -17,7 +17,7 @@ export default function Stats() {
   const streak = 12;
 
   const progress = Math.min(
-    Math.round((balance / goal) * 100),
+    Math.round((Number(balance) / Number(goal)) * 100),
     100
   );
 
