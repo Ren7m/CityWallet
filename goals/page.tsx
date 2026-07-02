@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+
 import { useBudget } from "@/context/BudgetContext";
+
 import styles from "./goals.module.css";
 
 export default function GoalsPage() {
@@ -13,32 +15,46 @@ export default function GoalsPage() {
   const [value, setValue] = useState<number>(2000);
 
   useEffect(() => {
-    if (typeof goal === "number" && !isNaN(goal)) {
-      setValue(goal);
+    if (
+      typeof goal?.targetAmount === "number" &&
+      Number.isFinite(goal.targetAmount)
+    ) {
+      setValue(goal.targetAmount);
     }
   }, [goal]);
 
   function saveGoal() {
-    setGoal(value);
+    if (!Number.isFinite(value) || value <= 0) {
+      return;
+    }
+
+    setGoal({
+      title: "Monthly Saving Goal",
+      type: "saving",
+      targetAmount: value,
+    });
+
     router.push("/city");
   }
 
   return (
     <main className={styles.page}>
       <div className={styles.card}>
-        <h1>🎯 Monthly Goal</h1>
+        <h1>Monthly Goal</h1>
 
         <p>Enter your saving goal.</p>
 
         <input
           type="number"
+          min="1"
           value={value}
-          onChange={(e) =>
-            setValue(Number(e.target.value) || 0)
+          onChange={(event) =>
+            setValue(Number(event.target.value) || 0)
           }
         />
 
         <button
+          type="button"
           className={styles.save}
           onClick={saveGoal}
         >
@@ -47,6 +63,7 @@ export default function GoalsPage() {
 
         <div className={styles.buttons}>
           <button
+            type="button"
             className={styles.back}
             onClick={() => router.push("/expense")}
           >
@@ -54,8 +71,9 @@ export default function GoalsPage() {
           </button>
 
           <button
+            type="button"
             className={styles.next}
-            onClick={() => router.push("/city")}
+            onClick={saveGoal}
           >
             Next
           </button>
