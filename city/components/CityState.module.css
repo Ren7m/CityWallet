@@ -1,0 +1,36 @@
+.cityState{
+margin:20px auto;
+padding:18px;
+border-radius:18px;
+width:90%;
+text-align:center;
+font-weight:bold;
+font-size:20px;
+transition:.4s;
+}
+
+.healthy{
+background:#dcfce7;
+color:#15803d;
+}
+
+.warning{
+background:#fef9c3;
+color:#ca8a04;
+}
+
+.destroyed{
+background:#fee2e2;
+color:#dc2626;
+animation:shake .6s infinite;
+}
+
+@keyframes shake{
+
+0%{transform:translateX(0);}
+25%{transform:translateX(4px);}
+50%{transform:translateX(-4px);}
+75%{transform:translateX(4px);}
+100%{transform:translateX(0);}
+
+}

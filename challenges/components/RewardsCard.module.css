@@ -1,0 +1,99 @@
+.card{
+background:white;
+border-radius:28px;
+padding:28px;
+box-shadow:0 15px 35px rgba(0,0,0,.08);
+}
+
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:25px;
+}
+
+.header h2{
+font-size:24px;
+color:#0f172a;
+}
+
+.header span{
+background:#dcfce7;
+color:#15803d;
+padding:8px 14px;
+border-radius:999px;
+font-size:12px;
+font-weight:800;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:16px;
+}
+
+.reward{
+background:#f8fafc;
+border:1px solid #e2e8f0;
+border-radius:20px;
+padding:20px;
+text-align:center;
+transition:.3s;
+cursor:pointer;
+}
+
+.reward:hover{
+transform:translateY(-6px);
+box-shadow:0 12px 25px rgba(0,0,0,.08);
+}
+
+.icon{
+width:60px;
+height:60px;
+margin:auto;
+margin-bottom:15px;
+border-radius:18px;
+background:linear-gradient(135deg,#22c55e,#4ade80);
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:28px;
+}
+
+.reward h3{
+font-size:18px;
+color:#0f172a;
+margin-bottom:8px;
+}
+
+.reward p{
+font-size:14px;
+color:#64748b;
+}
+
+.claim{
+margin-top:25px;
+width:100%;
+padding:16px;
+border:none;
+border-radius:16px;
+background:linear-gradient(135deg,#2563eb,#1d4ed8);
+color:white;
+font-size:16px;
+font-weight:800;
+cursor:pointer;
+transition:.3s;
+}
+
+.claim:hover{
+transform:translateY(-3px);
+box-shadow:0 12px 25px rgba(37,99,235,.25);
+}
+
+@media(max-width:600px){
+
+.grid{
+grid-template-columns:1fr;
+}
+
+}

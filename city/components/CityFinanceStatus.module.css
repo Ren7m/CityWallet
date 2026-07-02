@@ -1,0 +1,243 @@
+.card {
+  padding: 20px;
+
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto;
+  gap: 18px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 12px 30px
+      rgba(15, 23, 42, 0.06);
+}
+
+.information > span,
+.challenge > div > span {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.information h2 {
+  margin-top: 6px;
+
+  color: #172033;
+
+  font-size: 21px;
+}
+
+.information p {
+  max-width: 650px;
+  margin-top: 7px;
+
+  color: #667085;
+
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(100px, 1fr));
+  gap: 9px;
+}
+
+.stats div {
+  padding: 12px;
+
+  border-radius: 12px;
+
+  background: rgba(
+    255,
+    255,
+    255,
+    0.7
+  );
+}
+
+.stats span {
+  display: block;
+
+  color: #667085;
+
+  font-size: 9px;
+}
+
+.stats strong {
+  display: block;
+  margin-top: 5px;
+
+  color: #172033;
+
+  font-size: 12px;
+}
+
+.challenge {
+  grid-column: 1 / -1;
+
+  padding-top: 17px;
+
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    310px;
+  gap: 20px;
+
+  border-top:
+    1px solid
+    rgba(148, 163, 184, 0.25);
+}
+
+.challenge h3 {
+  margin-top: 5px;
+
+  color: #172033;
+
+  font-size: 14px;
+}
+
+.challenge p {
+  margin-top: 5px;
+
+  color: #667085;
+
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.progress > div:first-child {
+  display: flex;
+  justify-content: space-between;
+
+  color: #667085;
+
+  font-size: 9px;
+}
+
+.progress strong {
+  color: #172033;
+}
+
+.track {
+  height: 9px;
+  margin-top: 7px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: rgba(
+    148,
+    163,
+    184,
+    0.2
+  );
+}
+
+.track span {
+  display: block;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: #16a34a;
+}
+
+.progress small {
+  display: block;
+  margin-top: 6px;
+
+  color: #667085;
+
+  font-size: 9px;
+}
+
+.link {
+  grid-column: 1 / -1;
+
+  min-height: 41px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  background: #172033;
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.flourishing {
+  background:
+    linear-gradient(
+      135deg,
+      #ecfdf5,
+      #ffffff
+    );
+}
+
+.flourishing
+  .information
+  > span {
+  color: #15803d;
+}
+
+.stable {
+  background:
+    linear-gradient(
+      135deg,
+      #eff6ff,
+      #ffffff
+    );
+}
+
+.stable .information > span {
+  color: #2563eb;
+}
+
+.warning {
+  background:
+    linear-gradient(
+      135deg,
+      #fffbeb,
+      #ffffff
+    );
+}
+
+.warning .information > span {
+  color: #d97706;
+}
+
+.critical {
+  background:
+    linear-gradient(
+      135deg,
+      #fef2f2,
+      #ffffff
+    );
+}
+
+.critical .information > span {
+  color: #dc2626;
+}
+
+@media (max-width: 900px) {
+  .card,
+  .challenge {
+    grid-template-columns: 1fr;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+}
