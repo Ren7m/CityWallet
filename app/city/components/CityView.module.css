@@ -1,0 +1,1268 @@
+.city {
+  min-height: 840px;
+
+  position: relative;
+
+  background: #dff7ff;
+  border-radius: 30px;
+
+  overflow: hidden;
+  isolation: isolate;
+
+  box-shadow:
+    0 24px 55px rgba(15, 23, 42, 0.15),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+.cityHeader {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  top: 22px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+
+  z-index: 300;
+}
+
+.healthCard {
+  width: 270px;
+
+  padding: 16px 17px;
+
+  background: rgba(15, 23, 42, 0.87);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 17px;
+
+  color: white;
+  backdrop-filter: blur(14px);
+
+  box-shadow: 0 15px 35px rgba(15, 23, 42, 0.22);
+}
+
+.healthCard > span {
+  display: block;
+
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.healthCard strong {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #4ade80;
+  font-size: 23px;
+}
+
+.warning .healthCard strong {
+  color: #fbbf24;
+}
+
+.destroyed .healthCard strong {
+  color: #f87171;
+}
+
+.healthBar {
+  height: 9px;
+
+  margin-top: 12px;
+
+  background: rgba(255, 255, 255, 0.17);
+  border-radius: 999px;
+
+  overflow: hidden;
+}
+
+.healthBar div {
+  height: 100%;
+
+  background: linear-gradient(90deg, #22c55e, #86efac);
+  border-radius: inherit;
+
+  transition: width 0.45s ease;
+}
+
+.warning .healthBar div {
+  background: linear-gradient(90deg, #f59e0b, #fde047);
+}
+
+.destroyed .healthBar div {
+  background: linear-gradient(90deg, #dc2626, #fb7185);
+}
+
+.healthCard small {
+  display: block;
+
+  margin-top: 8px;
+
+  color: #cbd5e1;
+  font-size: 11px;
+}
+
+.fullButton {
+  padding: 12px 17px;
+
+  background: rgba(15, 23, 42, 0.87);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+
+  color: white;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+
+  backdrop-filter: blur(14px);
+
+  box-shadow: 0 13px 30px rgba(15, 23, 42, 0.2);
+}
+
+.fullButton:hover {
+  background: #16a34a;
+}
+
+/* Sky */
+
+.sky {
+  height: 455px;
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+
+  background: linear-gradient(#58bdf8, #d8f4ff 85%);
+
+  overflow: hidden;
+
+  transition: background 0.8s ease;
+}
+
+.warning .sky {
+  background: linear-gradient(#7c9fbc, #d9e8ef 84%);
+}
+
+.destroyed .sky {
+  background:
+    radial-gradient(
+      circle at 70% 10%,
+      rgba(2, 6, 23, 0.32),
+      transparent 45%
+    ),
+    linear-gradient(#1f2937, #64748b 68%, #a8a29e);
+}
+
+.sun {
+  width: 96px;
+  height: 96px;
+
+  position: absolute;
+  right: 11%;
+  top: 85px;
+
+  background: #fff7ae;
+  border-radius: 50%;
+
+  box-shadow:
+    0 0 0 18px rgba(254, 240, 138, 0.12),
+    0 0 70px #fef08a;
+}
+
+.warning .sun {
+  opacity: 0.5;
+}
+
+.destroyed .sun {
+  opacity: 0.08;
+  filter: grayscale(1);
+}
+
+.cloud,
+.stormCloud {
+  position: absolute;
+
+  border-radius: 999px;
+}
+
+.cloud {
+  width: 150px;
+  height: 45px;
+
+  background: white;
+
+  filter: drop-shadow(0 8px 8px rgba(15, 23, 42, 0.08));
+}
+
+.cloud::before,
+.cloud::after,
+.stormCloud::before,
+.stormCloud::after {
+  content: "";
+
+  position: absolute;
+
+  background: inherit;
+  border-radius: 50%;
+}
+
+.cloud::before {
+  width: 61px;
+  height: 61px;
+
+  left: 20px;
+  top: -26px;
+}
+
+.cloud::after {
+  width: 77px;
+  height: 77px;
+
+  right: 17px;
+  top: -38px;
+}
+
+.cloudOne {
+  left: -190px;
+  top: 105px;
+
+  animation: cloudMove 35s linear infinite;
+}
+
+.cloudTwo {
+  left: -520px;
+  top: 188px;
+
+  transform: scale(0.82);
+
+  animation: cloudMove 48s linear infinite;
+}
+
+.cloudThree {
+  left: -860px;
+  top: 70px;
+
+  transform: scale(1.12);
+
+  animation: cloudMove 58s linear infinite;
+}
+
+.warning .cloud {
+  background: #cbd5e1;
+}
+
+.destroyed .cloud {
+  opacity: 0;
+}
+
+.stormCloud {
+  width: 230px;
+  height: 67px;
+
+  background: #1f2937;
+
+  opacity: 0;
+
+  filter: drop-shadow(0 15px 12px rgba(2, 6, 23, 0.35));
+}
+
+.stormCloud::before {
+  width: 95px;
+  height: 95px;
+
+  left: 24px;
+  top: -49px;
+}
+
+.stormCloud::after {
+  width: 128px;
+  height: 128px;
+
+  right: 21px;
+  top: -67px;
+}
+
+.stormOne {
+  left: 17%;
+  top: 97px;
+}
+
+.stormTwo {
+  right: 5%;
+  top: 168px;
+
+  transform: scale(1.25);
+}
+
+.destroyed .stormCloud {
+  opacity: 0.95;
+
+  animation: stormMove 8s ease-in-out infinite alternate;
+}
+
+.lightning {
+  width: 24px;
+  height: 120px;
+
+  position: absolute;
+  right: 25%;
+  top: 150px;
+
+  background: #fef08a;
+
+  clip-path: polygon(
+    48% 0,
+    100% 0,
+    64% 42%,
+    95% 42%,
+    18% 100%,
+    40% 56%,
+    10% 56%
+  );
+
+  filter: drop-shadow(0 0 13px #fde047);
+
+  opacity: 0;
+}
+
+.destroyed .lightning {
+  animation: lightning 6s infinite;
+}
+
+.rain {
+  position: absolute;
+  inset: 0;
+
+  opacity: 0;
+
+  background-image: repeating-linear-gradient(
+    105deg,
+    transparent 0 19px,
+    rgba(186, 230, 253, 0.58) 20px 22px,
+    transparent 23px 42px
+  );
+
+  background-size: 55px 70px;
+
+  pointer-events: none;
+}
+
+.destroyed .rain {
+  opacity: 0.72;
+
+  animation: rain 0.48s linear infinite;
+}
+
+.birds {
+  position: absolute;
+  left: -200px;
+  top: 155px;
+
+  display: flex;
+  gap: 22px;
+
+  animation: birds 18s linear infinite;
+}
+
+.birds span {
+  width: 18px;
+  height: 9px;
+
+  position: relative;
+
+  border-top: 3px solid #334155;
+  border-radius: 50%;
+}
+
+.birds span::after {
+  content: "";
+
+  width: 18px;
+  height: 9px;
+
+  position: absolute;
+  left: 14px;
+  top: -3px;
+
+  border-top: 3px solid #334155;
+  border-radius: 50%;
+
+  transform: rotate(-25deg);
+}
+
+.birds span:nth-child(2) {
+  margin-top: 17px;
+}
+
+.birds span:nth-child(4) {
+  margin-top: 27px;
+}
+
+.warning .birds {
+  opacity: 0.3;
+}
+
+.destroyed .birds {
+  display: none;
+}
+
+/* Background */
+
+.mountains {
+  height: 270px;
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 250px;
+
+  overflow: hidden;
+
+  z-index: 3;
+}
+
+.mountains span {
+  width: 400px;
+  height: 290px;
+
+  position: absolute;
+  bottom: -180px;
+
+  background: linear-gradient(135deg, #86efac, #166534);
+  border-radius: 40px;
+
+  transform: rotate(45deg);
+}
+
+.mountains span:nth-child(1) {
+  left: -90px;
+}
+
+.mountains span:nth-child(2) {
+  left: 32%;
+
+  transform: rotate(45deg) scale(1.25);
+}
+
+.mountains span:nth-child(3) {
+  right: -100px;
+
+  transform: rotate(45deg) scale(0.92);
+}
+
+.warning .mountains span {
+  background: linear-gradient(135deg, #a3b18a, #4d7c0f);
+}
+
+.destroyed .mountains span {
+  background: linear-gradient(135deg, #57534e, #292524);
+}
+
+.grass {
+  height: 280px;
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 70px;
+
+  background: linear-gradient(#86efac, #16a34a);
+
+  z-index: 4;
+}
+
+.warning .grass {
+  background: linear-gradient(#bef264, #65a30d);
+}
+
+.destroyed .grass {
+  background:
+    repeating-linear-gradient(
+      25deg,
+      transparent 0 14px,
+      rgba(28, 25, 23, 0.08) 15px 18px
+    ),
+    linear-gradient(#78716c, #44403c);
+}
+
+/* Trees */
+
+.backTrees,
+.frontTrees {
+  position: absolute;
+  left: 0;
+  right: 0;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+
+  pointer-events: none;
+}
+
+.backTrees {
+  bottom: 270px;
+
+  padding: 0 30px;
+
+  opacity: 0.85;
+
+  z-index: 8;
+}
+
+.frontTrees {
+  bottom: 94px;
+
+  padding: 0 14px;
+
+  z-index: 45;
+}
+
+.tree {
+  width: 65px;
+  height: 105px;
+
+  position: relative;
+
+  transform-origin: bottom center;
+
+  animation: treeMove 3.5s ease-in-out infinite;
+}
+
+.tree:nth-child(even) {
+  transform: scale(0.83);
+  animation-delay: 0.6s;
+}
+
+.tree:nth-child(3n) {
+  transform: scale(1.13);
+  animation-delay: 1.2s;
+}
+
+.trunk {
+  width: 13px;
+  height: 54px;
+
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+
+  transform: translateX(-50%);
+
+  background: linear-gradient(90deg, #78350f, #a16207, #713f12);
+  border-radius: 7px;
+}
+
+.branchOne,
+.branchTwo {
+  width: 35px;
+  height: 7px;
+
+  position: absolute;
+  left: 50%;
+  bottom: 39px;
+
+  background: #78350f;
+  border-radius: 6px;
+
+  transform-origin: left center;
+}
+
+.branchOne {
+  transform: rotate(-37deg);
+}
+
+.branchTwo {
+  transform: rotate(215deg);
+}
+
+.leafOne,
+.leafTwo,
+.leafThree {
+  position: absolute;
+
+  background: radial-gradient(
+    circle at 35% 30%,
+    #86efac,
+    #16a34a 65%,
+    #166534
+  );
+
+  border-radius: 50%;
+
+  box-shadow: 0 8px 12px rgba(22, 101, 52, 0.24);
+
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+}
+
+.leafOne {
+  width: 54px;
+  height: 54px;
+
+  left: 4px;
+  top: 14px;
+}
+
+.leafTwo {
+  width: 48px;
+  height: 48px;
+
+  right: 1px;
+  top: 27px;
+}
+
+.leafThree {
+  width: 45px;
+  height: 45px;
+
+  left: 13px;
+  top: 0;
+}
+
+.deadBranchOne,
+.deadBranchTwo,
+.treeMold {
+  display: none;
+}
+
+.deadBranchOne,
+.deadBranchTwo {
+  width: 45px;
+  height: 6px;
+
+  position: absolute;
+  left: 50%;
+  bottom: 48px;
+
+  background: #451a03;
+  border-radius: 6px;
+
+  transform-origin: left center;
+}
+
+.deadBranchOne {
+  transform: rotate(-48deg);
+}
+
+.deadBranchTwo {
+  transform: rotate(218deg);
+}
+
+.treeMold {
+  width: 20px;
+  height: 26px;
+
+  position: absolute;
+  left: 14px;
+  bottom: 4px;
+
+  background: #365314;
+  border-radius: 50%;
+
+  filter: blur(1px);
+}
+
+.warning .leafOne,
+.warning .leafTwo,
+.warning .leafThree {
+  background: radial-gradient(
+    circle at 35% 30%,
+    #d9f99d,
+    #65a30d 65%,
+    #3f6212
+  );
+}
+
+.destroyed .tree {
+  animation: none;
+}
+
+.destroyed .leafOne,
+.destroyed .leafTwo,
+.destroyed .leafThree {
+  opacity: 0;
+  transform: scale(0.2);
+}
+
+.destroyed .deadBranchOne,
+.destroyed .deadBranchTwo,
+.destroyed .treeMold {
+  display: block;
+}
+
+/* Building district */
+
+.buildings {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 125px;
+
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+
+  padding: 150px 22px 0;
+
+  overflow-x: auto;
+  overflow-y: visible;
+
+  z-index: 35;
+
+  scrollbar-width: thin;
+}
+
+/* Park */
+
+.park {
+  width: 310px;
+  height: 116px;
+
+  position: absolute;
+  left: 35px;
+  bottom: 74px;
+
+  background: rgba(34, 197, 94, 0.24);
+  border: 3px solid rgba(22, 101, 52, 0.28);
+  border-radius: 55% 35% 50% 40%;
+
+  z-index: 20;
+}
+
+.pond {
+  width: 97px;
+  height: 47px;
+
+  position: absolute;
+  left: 27px;
+  bottom: 18px;
+
+  background: radial-gradient(ellipse at 45% 35%, #bae6fd, #0284c7);
+  border: 5px solid #86efac;
+  border-radius: 50%;
+
+  overflow: hidden;
+}
+
+.pond span {
+  width: 26px;
+  height: 4px;
+
+  position: absolute;
+  left: 16px;
+  top: 17px;
+
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 999px;
+
+  animation: pond 2.4s ease-in-out infinite;
+}
+
+.parkPath {
+  width: 130px;
+  height: 24px;
+
+  position: absolute;
+  right: 14px;
+  bottom: 22px;
+
+  background: #fde68a;
+  border-radius: 50%;
+
+  transform: rotate(-9deg);
+}
+
+.bench {
+  position: absolute;
+  right: 73px;
+  bottom: 38px;
+}
+
+.bench span:first-child {
+  display: block;
+
+  width: 52px;
+  height: 9px;
+
+  background: #78350f;
+  border-radius: 4px;
+}
+
+.bench span:last-child {
+  display: block;
+
+  width: 44px;
+  height: 7px;
+
+  margin: 4px auto 0;
+
+  background: #92400e;
+  border-radius: 3px;
+}
+
+.flowers {
+  position: absolute;
+  left: 122px;
+  top: 23px;
+
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 9px;
+}
+
+.flowers span {
+  width: 7px;
+  height: 7px;
+
+  background: #f472b6;
+  border-radius: 50%;
+
+  box-shadow:
+    5px 0 #fde047,
+    -5px 0 #60a5fa;
+}
+
+.warning .flowers {
+  opacity: 0.3;
+}
+
+.destroyed .park {
+  background: rgba(68, 64, 60, 0.34);
+  border-color: rgba(28, 25, 23, 0.45);
+}
+
+.destroyed .pond {
+  background: #3f6212;
+  border-color: #44403c;
+}
+
+.destroyed .flowers {
+  display: none;
+}
+
+/* Road and cars */
+
+.road {
+  height: 76px;
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  background: #334155;
+  border-top: 7px solid #94a3b8;
+
+  overflow: hidden;
+
+  z-index: 80;
+}
+
+.roadLine {
+  height: 5px;
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 33px;
+
+  background: repeating-linear-gradient(
+    90deg,
+    white 0 47px,
+    transparent 47px 86px
+  );
+}
+
+.car {
+  width: 80px;
+  height: 33px;
+
+  position: absolute;
+  bottom: 13px;
+
+  animation: carDrive 15s linear infinite;
+}
+
+.carBody {
+  width: 80px;
+  height: 25px;
+
+  position: absolute;
+  left: 0;
+  bottom: 3px;
+
+  background: #ef4444;
+  border: 3px solid #7f1d1d;
+  border-radius: 10px 15px 7px 7px;
+}
+
+.carRoof {
+  width: 43px;
+  height: 20px;
+
+  position: absolute;
+  left: 19px;
+  top: -5px;
+
+  background: #fecaca;
+  border: 3px solid #7f1d1d;
+  border-radius: 12px 12px 3px 3px;
+}
+
+.wheelOne,
+.wheelTwo {
+  width: 15px;
+  height: 15px;
+
+  position: absolute;
+  bottom: -4px;
+
+  background: #0f172a;
+  border: 4px solid #475569;
+  border-radius: 50%;
+}
+
+.wheelOne {
+  left: 11px;
+}
+
+.wheelTwo {
+  right: 11px;
+}
+
+.carOne {
+  left: -100px;
+}
+
+.carTwo {
+  left: -450px;
+
+  animation-duration: 20s;
+  animation-delay: 4s;
+}
+
+.carTwo .carBody {
+  background: #2563eb;
+  border-color: #1e3a8a;
+}
+
+.carTwo .carRoof {
+  background: #bfdbfe;
+  border-color: #1e3a8a;
+}
+
+.wreckedCar {
+  display: none;
+
+  width: 97px;
+  height: 44px;
+
+  position: absolute;
+  right: 14%;
+  bottom: 10px;
+
+  transform: rotate(-7deg);
+}
+
+.wreckBody {
+  width: 93px;
+  height: 28px;
+
+  position: absolute;
+  left: 0;
+  bottom: 4px;
+
+  background: #292524;
+  border: 4px solid #0c0a09;
+  border-radius: 8px 17px 6px 5px;
+}
+
+.wreckRoof {
+  width: 44px;
+  height: 21px;
+
+  position: absolute;
+  left: 22px;
+  top: 1px;
+
+  background: #44403c;
+  border: 4px solid #0c0a09;
+
+  transform: skewX(-13deg);
+}
+
+.wreckWheelOne,
+.wreckWheelTwo {
+  width: 16px;
+  height: 16px;
+
+  position: absolute;
+  bottom: -3px;
+
+  background: #0c0a09;
+  border: 3px solid #292524;
+  border-radius: 50%;
+}
+
+.wreckWheelOne {
+  left: 13px;
+}
+
+.wreckWheelTwo {
+  right: 15px;
+  transform: translateY(7px);
+}
+
+.wreckFire {
+  position: absolute;
+  right: 4px;
+  bottom: 24px;
+
+  display: flex;
+  align-items: flex-end;
+}
+
+.wreckFire span {
+  width: 13px;
+  height: 32px;
+
+  background: linear-gradient(#fef08a, #f97316 55%, #b91c1c);
+  border-radius: 50%;
+
+  animation: wreckFire 0.55s infinite alternate;
+}
+
+.wreckFire span:nth-child(2) {
+  height: 46px;
+  animation-delay: 0.2s;
+}
+
+.wreckSmoke {
+  position: absolute;
+  right: 7px;
+  bottom: 63px;
+}
+
+.wreckSmoke span {
+  width: 29px;
+  height: 29px;
+
+  position: absolute;
+
+  background: rgba(12, 10, 9, 0.8);
+  border-radius: 50%;
+
+  animation: wreckSmoke 2.1s infinite;
+}
+
+.wreckSmoke span:nth-child(2) {
+  animation-delay: 0.7s;
+}
+
+.wreckSmoke span:nth-child(3) {
+  animation-delay: 1.4s;
+}
+
+.destroyed .car {
+  display: none;
+}
+
+.destroyed .wreckedCar {
+  display: block;
+}
+
+.destroyed .road {
+  background: #1c1917;
+  border-top-color: #57534e;
+}
+
+.destroyed .roadLine {
+  opacity: 0.25;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+
+  z-index: 250;
+}
+
+.warning .overlay {
+  background: rgba(120, 113, 108, 0.08);
+}
+
+.destroyed .overlay {
+  background:
+    radial-gradient(
+      circle at 70% 40%,
+      transparent,
+      rgba(2, 6, 23, 0.18)
+    ),
+    rgba(12, 10, 9, 0.13);
+}
+
+/* Animations */
+
+@keyframes cloudMove {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(2200px);
+  }
+}
+
+@keyframes stormMove {
+  from {
+    transform: translateX(-10px);
+  }
+
+  to {
+    transform: translateX(20px);
+  }
+}
+
+@keyframes lightning {
+  0%,
+  92%,
+  94%,
+  100% {
+    opacity: 0;
+  }
+
+  93% {
+    opacity: 1;
+  }
+}
+
+@keyframes rain {
+  from {
+    background-position: 0 -70px;
+  }
+
+  to {
+    background-position: -45px 70px;
+  }
+}
+
+@keyframes birds {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(1900px);
+  }
+}
+
+@keyframes treeMove {
+  0%,
+  100% {
+    rotate: -1.5deg;
+  }
+
+  50% {
+    rotate: 1.5deg;
+  }
+}
+
+@keyframes pond {
+  0%,
+  100% {
+    transform: translateX(0);
+    opacity: 0.4;
+  }
+
+  50% {
+    transform: translateX(36px);
+    opacity: 0.9;
+  }
+}
+
+@keyframes carDrive {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(2100px);
+  }
+}
+
+@keyframes wreckFire {
+  from {
+    transform: scaleY(0.8) rotate(-5deg);
+  }
+
+  to {
+    transform: scaleY(1.18) rotate(7deg);
+  }
+}
+
+@keyframes wreckSmoke {
+  from {
+    opacity: 0.8;
+    transform: translate(0, 0) scale(0.7);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-27px, -77px) scale(1.8);
+  }
+}
+
+@media (max-width: 900px) {
+  .city {
+    min-height: 760px;
+  }
+
+  .cityHeader {
+    left: 12px;
+    right: 12px;
+    top: 12px;
+  }
+
+  .healthCard {
+    width: 205px;
+    padding: 12px;
+  }
+
+  .healthCard strong {
+    font-size: 18px;
+  }
+
+  .fullButton {
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+
+  .buildings {
+    left: 8px;
+    right: 8px;
+
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .backTrees {
+    opacity: 0.5;
+  }
+
+  .frontTrees {
+    opacity: 0.6;
+  }
+
+  .park {
+    transform: scale(0.75);
+    transform-origin: left bottom;
+  }
+}
