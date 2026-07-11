@@ -10,371 +10,664 @@ import {
   type ReactNode,
 } from "react";
 
-export type CityWalletUser = {
+import type {
+  AuthChangeEvent,
+  Session,
+  User as SupabaseUser,
+} from "@supabase/supabase-js";
+
+import {
+  createClient,
+} from "../lib/supabase/client";
+
+/* =========================
+   TYPES
+========================= */
+
+export type AuthUser = {
+  id: string;
   name: string;
   email: string;
   initials: string;
+  createdAt: string;
 };
 
-type StoredAccount = {
-  user: CityWalletUser;
-  password: string;
-};
-
-type AuthResult = {
+export type AuthResult = {
   success: boolean;
   message: string;
+  emailConfirmationRequired: boolean;
 };
 
 type AuthContextType = {
-  user: CityWalletUser | null;
-  isReady: boolean;
+  user: AuthUser | null;
+
+  isLoading: boolean;
+
   isAuthenticated: boolean;
 
   register: (
     name: string,
     email: string,
     password: string
-  ) => AuthResult;
+  ) => Promise<AuthResult>;
 
   login: (
     email: string,
     password: string
-  ) => AuthResult;
+  ) => Promise<AuthResult>;
 
-  updateUser: (values: {
-    name: string;
-    email: string;
-  }) => AuthResult;
+  logout: () => Promise<AuthResult>;
 
-  logout: () => void;
+  refreshUser: () => Promise<void>;
 };
 
+/* =========================
+   CONTEXT
+========================= */
+
 const AuthContext =
-  createContext<AuthContextType | null>(null);
+  createContext<AuthContextType | null>(
+    null
+  );
 
-const ACCOUNT_KEY = "fincity-account";
-const CURRENT_USER_KEY =
-  "fincity-current-user";
+/* =========================
+   HELPERS
+========================= */
 
-function normalizeEmail(email: string) {
-  return email.trim().toLowerCase();
-}
+function getInitials(
+  name: string
+) {
+  const cleanName =
+    name.trim();
 
-function createInitials(name: string) {
-  const words = name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
-
-  if (words.length === 0) {
+  if (!cleanName) {
     return "M";
   }
 
-  if (words.length === 1) {
-    return words[0]
-      .slice(0, 2)
+  const parts =
+    cleanName
+      .split(/\s+/)
+      .filter(Boolean);
+
+  if (parts.length === 1) {
+    return parts[0]
+      .charAt(0)
       .toUpperCase();
   }
 
-  return `${words[0][0]}${
-    words[words.length - 1][0]
-  }`.toUpperCase();
+  return (
+    parts[0].charAt(0) +
+    parts[
+      parts.length - 1
+    ].charAt(0)
+  ).toUpperCase();
 }
+
+function mapSupabaseUser(
+  supabaseUser: SupabaseUser
+): AuthUser {
+  const fullName =
+    typeof supabaseUser
+      .user_metadata?.full_name ===
+    "string"
+      ? supabaseUser
+          .user_metadata
+          .full_name
+
+      : typeof supabaseUser
+            .user_metadata?.name ===
+          "string"
+        ? supabaseUser
+            .user_metadata
+            .name
+
+        : "";
+
+  const email =
+    supabaseUser.email || "";
+
+  const fallbackName =
+    email
+      .split("@")[0]
+      .trim() ||
+    "Mayor";
+
+  const name =
+    fullName.trim() ||
+    fallbackName;
+
+  return {
+    id:
+      supabaseUser.id,
+
+    name,
+
+    email,
+
+    initials:
+      getInitials(name),
+
+    createdAt:
+      supabaseUser.created_at,
+  };
+}
+
+/* =========================
+   PROVIDER
+========================= */
 
 export function AuthProvider({
   children,
 }: {
   children: ReactNode;
 }) {
-  const [user, setUser] =
-    useState<CityWalletUser | null>(null);
+  const supabase =
+    useMemo(
+      () => createClient(),
+      []
+    );
 
-  const [isReady, setIsReady] =
-    useState(false);
-
-  useEffect(() => {
-    const storedUser =
-      window.sessionStorage.getItem(
-        CURRENT_USER_KEY
-      );
-
-    if (storedUser) {
-      try {
-        setUser(
-          JSON.parse(
-            storedUser
-          ) as CityWalletUser
-        );
-      } catch {
-        window.sessionStorage.removeItem(
-          CURRENT_USER_KEY
-        );
-      }
-    }
-
-    setIsReady(true);
-  }, []);
-
-  const saveCurrentUser = useCallback(
-    (nextUser: CityWalletUser) => {
-      setUser(nextUser);
-
-      window.sessionStorage.setItem(
-        CURRENT_USER_KEY,
-        JSON.stringify(nextUser)
-      );
-    },
-    []
+  const [
+    user,
+    setUser,
+  ] = useState<AuthUser | null>(
+    null
   );
 
-  const register = useCallback(
-    (
-      name: string,
-      email: string,
-      password: string
-    ): AuthResult => {
-      const cleanName = name.trim();
-      const cleanEmail =
-        normalizeEmail(email);
+  const [
+    isLoading,
+    setIsLoading,
+  ] = useState(true);
 
-      if (cleanName.length < 2) {
-        return {
-          success: false,
-          message:
-            "Please enter your full name.",
-        };
+  /* =========================
+     REFRESH USER
+  ========================= */
+
+  const refreshUser =
+    useCallback(
+      async () => {
+        const {
+          data,
+          error,
+        } =
+          await supabase.auth.getUser();
+
+        if (
+          error ||
+          !data.user
+        ) {
+          setUser(null);
+
+          return;
+        }
+
+        setUser(
+          mapSupabaseUser(
+            data.user
+          )
+        );
+      },
+      [supabase]
+    );
+
+  /* =========================
+     RESTORE SESSION
+  ========================= */
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCurrentUser() {
+      setIsLoading(true);
+
+      const {
+        data,
+        error,
+      } =
+        await supabase.auth.getUser();
+
+      if (!isMounted) {
+        return;
       }
 
       if (
-        !cleanEmail.includes("@") ||
-        !cleanEmail.includes(".")
+        error ||
+        !data.user
       ) {
-        return {
-          success: false,
-          message:
-            "Please enter a valid email address.",
-        };
+        setUser(null);
+      } else {
+        setUser(
+          mapSupabaseUser(
+            data.user
+          )
+        );
       }
 
-      if (password.length < 6) {
-        return {
-          success: false,
-          message:
-            "Password must contain at least 6 characters.",
-        };
-      }
+      setIsLoading(false);
+    }
 
-      const nextUser: CityWalletUser = {
-        name: cleanName,
-        email: cleanEmail,
-        initials:
-          createInitials(cleanName),
-      };
+    void loadCurrentUser();
 
-      const account: StoredAccount = {
-        user: nextUser,
-        password,
-      };
+    const {
+      data: {
+        subscription,
+      },
+    } =
+      supabase.auth.onAuthStateChange(
+        (
+          _event: AuthChangeEvent,
+          session: Session | null
+        ) => {
+          if (session?.user) {
+            setUser(
+              mapSupabaseUser(
+                session.user
+              )
+            );
+          } else {
+            setUser(null);
+          }
 
-      window.sessionStorage.setItem(
-        ACCOUNT_KEY,
-        JSON.stringify(account)
+          setIsLoading(false);
+        }
       );
 
-      saveCurrentUser(nextUser);
+    return () => {
+      isMounted = false;
 
-      return {
-        success: true,
-        message:
-          "Account created successfully.",
-      };
-    },
-    [saveCurrentUser]
-  );
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
 
-  const login = useCallback(
-    (
-      email: string,
-      password: string
-    ): AuthResult => {
-      const cleanEmail =
-        normalizeEmail(email);
+  /* =========================
+     REGISTER
+  ========================= */
 
-      const storedAccount =
-        window.sessionStorage.getItem(
-          ACCOUNT_KEY
-        );
+  const register =
+    useCallback(
+      async (
+        name: string,
+        email: string,
+        password: string
+      ): Promise<AuthResult> => {
+        const cleanName =
+          name.trim();
 
-      if (!storedAccount) {
-        return {
-          success: false,
-          message:
-            "No account was found. Please register first.",
-        };
-      }
-
-      try {
-        const account =
-          JSON.parse(
-            storedAccount
-          ) as StoredAccount;
+        const cleanEmail =
+          email
+            .trim()
+            .toLowerCase();
 
         if (
-          account.user.email !==
-            cleanEmail ||
-          account.password !== password
+          cleanName.length < 2
         ) {
           return {
             success: false,
+
             message:
-              "Incorrect email or password.",
+              "Please enter your full name.",
+
+            emailConfirmationRequired:
+              false,
           };
         }
 
-        saveCurrentUser(account.user);
+        if (
+          !cleanEmail ||
+          !cleanEmail.includes("@")
+        ) {
+          return {
+            success: false,
 
-        return {
-          success: true,
-          message: "Login successful.",
-        };
-      } catch {
-        window.sessionStorage.removeItem(
-          ACCOUNT_KEY
-        );
+            message:
+              "Please enter a valid email address.",
 
-        return {
-          success: false,
-          message:
-            "Account data is invalid.",
-        };
-      }
-    },
-    [saveCurrentUser]
-  );
-
-  const updateUser = useCallback(
-    ({
-      name,
-      email,
-    }: {
-      name: string;
-      email: string;
-    }): AuthResult => {
-      if (!user) {
-        return {
-          success: false,
-          message:
-            "No signed-in user was found.",
-        };
-      }
-
-      const cleanName = name.trim();
-      const cleanEmail =
-        normalizeEmail(email);
-
-      if (cleanName.length < 2) {
-        return {
-          success: false,
-          message:
-            "Please enter a valid name.",
-        };
-      }
-
-      if (
-        !cleanEmail.includes("@") ||
-        !cleanEmail.includes(".")
-      ) {
-        return {
-          success: false,
-          message:
-            "Please enter a valid email.",
-        };
-      }
-
-      const nextUser: CityWalletUser = {
-        name: cleanName,
-        email: cleanEmail,
-        initials:
-          createInitials(cleanName),
-      };
-
-      saveCurrentUser(nextUser);
-
-      const storedAccount =
-        window.sessionStorage.getItem(
-          ACCOUNT_KEY
-        );
-
-      if (storedAccount) {
-        try {
-          const account =
-            JSON.parse(
-              storedAccount
-            ) as StoredAccount;
-
-          window.sessionStorage.setItem(
-            ACCOUNT_KEY,
-            JSON.stringify({
-              ...account,
-              user: nextUser,
-            })
-          );
-        } catch {
-          window.sessionStorage.removeItem(
-            ACCOUNT_KEY
-          );
+            emailConfirmationRequired:
+              false,
+          };
         }
-      }
 
-      return {
-        success: true,
-        message:
-          "Account updated successfully.",
-      };
-    },
-    [saveCurrentUser, user]
-  );
+        if (
+          password.length < 6
+        ) {
+          return {
+            success: false,
 
-  const logout = useCallback(() => {
-    setUser(null);
+            message:
+              "Password must contain at least 6 characters.",
 
-    window.sessionStorage.removeItem(
-      CURRENT_USER_KEY
+            emailConfirmationRequired:
+              false,
+          };
+        }
+
+        try {
+          const redirectUrl =
+            `${window.location.origin}/auth/confirm`;
+
+          const {
+            data,
+            error,
+          } =
+            await supabase.auth.signUp({
+              email:
+                cleanEmail,
+
+              password,
+
+              options: {
+                data: {
+                  full_name:
+                    cleanName,
+
+                  name:
+                    cleanName,
+                },
+
+                emailRedirectTo:
+                  redirectUrl,
+              },
+            });
+
+          if (error) {
+            return {
+              success: false,
+
+              message:
+                error.message,
+
+              emailConfirmationRequired:
+                false,
+            };
+          }
+
+          if (!data.user) {
+            return {
+              success: false,
+
+              message:
+                "The account could not be created. Please try again.",
+
+              emailConfirmationRequired:
+                false,
+            };
+          }
+
+          /*
+            إذا تأكيد البريد مفعّل:
+            المستخدم موجود لكن لا توجد Session بعد.
+          */
+
+          if (!data.session) {
+            setUser(null);
+
+            return {
+              success: true,
+
+              message:
+                "Account created. Please confirm your email to continue.",
+
+              emailConfirmationRequired:
+                true,
+            };
+          }
+
+          /*
+            إذا تأكيد البريد غير مفعّل:
+            Supabase ينشئ Session مباشرة.
+          */
+
+          setUser(
+            mapSupabaseUser(
+              data.user
+            )
+          );
+
+          return {
+            success: true,
+
+            message:
+              "Account created successfully.",
+
+            emailConfirmationRequired:
+              false,
+          };
+        } catch {
+          return {
+            success: false,
+
+            message:
+              "Unable to create the account right now. Please try again.",
+
+            emailConfirmationRequired:
+              false,
+          };
+        }
+      },
+      [supabase]
     );
-  }, []);
+
+  /* =========================
+     LOGIN
+  ========================= */
+
+  const login =
+    useCallback(
+      async (
+        email: string,
+        password: string
+      ): Promise<AuthResult> => {
+        const cleanEmail =
+          email
+            .trim()
+            .toLowerCase();
+
+        if (
+          !cleanEmail ||
+          !cleanEmail.includes("@")
+        ) {
+          return {
+            success: false,
+
+            message:
+              "Please enter a valid email address.",
+
+            emailConfirmationRequired:
+              false,
+          };
+        }
+
+        if (!password) {
+          return {
+            success: false,
+
+            message:
+              "Please enter your password.",
+
+            emailConfirmationRequired:
+              false,
+          };
+        }
+
+        try {
+          const {
+            data,
+            error,
+          } =
+            await supabase.auth
+              .signInWithPassword({
+                email:
+                  cleanEmail,
+
+                password,
+              });
+
+          if (error) {
+            const needsConfirmation =
+              error.message
+                .toLowerCase()
+                .includes(
+                  "email not confirmed"
+                );
+
+            return {
+              success: false,
+
+              message:
+                needsConfirmation
+                  ? "Please confirm your email before signing in."
+                  : error.message,
+
+              emailConfirmationRequired:
+                needsConfirmation,
+            };
+          }
+
+          if (!data.user) {
+            return {
+              success: false,
+
+              message:
+                "Unable to sign in. Please try again.",
+
+              emailConfirmationRequired:
+                false,
+            };
+          }
+
+          setUser(
+            mapSupabaseUser(
+              data.user
+            )
+          );
+
+          return {
+            success: true,
+
+            message:
+              "Signed in successfully.",
+
+            emailConfirmationRequired:
+              false,
+          };
+        } catch {
+          return {
+            success: false,
+
+            message:
+              "Unable to sign in right now. Please try again.",
+
+            emailConfirmationRequired:
+              false,
+          };
+        }
+      },
+      [supabase]
+    );
+
+  /* =========================
+     LOGOUT
+  ========================= */
+
+  const logout =
+    useCallback(
+      async (): Promise<AuthResult> => {
+        try {
+          const {
+            error,
+          } =
+            await supabase.auth.signOut();
+
+          if (error) {
+            return {
+              success: false,
+
+              message:
+                error.message,
+
+              emailConfirmationRequired:
+                false,
+            };
+          }
+
+          setUser(null);
+
+          window.location.replace(
+            "/login"
+          );
+
+          return {
+            success: true,
+
+            message:
+              "Signed out successfully.",
+
+            emailConfirmationRequired:
+              false,
+          };
+        } catch {
+          return {
+            success: false,
+
+            message:
+              "Unable to sign out right now.",
+
+            emailConfirmationRequired:
+              false,
+          };
+        }
+      },
+      [supabase]
+    );
+
+  /* =========================
+     CONTEXT VALUE
+  ========================= */
 
   const value =
     useMemo<AuthContextType>(
       () => ({
         user,
-        isReady,
+
+        isLoading,
+
         isAuthenticated:
           Boolean(user),
+
         register,
+
         login,
-        updateUser,
+
         logout,
+
+        refreshUser,
       }),
       [
         user,
-        isReady,
+        isLoading,
         register,
         login,
-        updateUser,
         logout,
+        refreshUser,
       ]
     );
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider
+      value={value}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
 
+/* =========================
+   HOOK
+========================= */
+
 export function useAuth() {
-  const context = useContext(AuthContext);
+  const context =
+    useContext(AuthContext);
 
   if (!context) {
     throw new Error(

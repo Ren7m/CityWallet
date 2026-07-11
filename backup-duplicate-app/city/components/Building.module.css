@@ -1,0 +1,1243 @@
+.lot {
+  --accent: #64748b;
+
+  width: 190px;
+  min-width: 190px;
+  height: 365px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+
+  position: relative;
+}
+
+.label {
+  width: 150px;
+
+  margin-bottom: 10px;
+  padding: 9px 12px;
+
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  color: #0f172a;
+  box-shadow: 0 9px 22px rgba(15, 23, 42, 0.14);
+
+  position: relative;
+  z-index: 30;
+}
+
+.label strong {
+  font-size: 13px;
+}
+
+.label span {
+  padding: 5px 8px;
+
+  background: var(--accent);
+  border-radius: 8px;
+
+  color: white;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.buildingButton {
+  width: 100%;
+  height: 290px;
+
+  padding: 0;
+  border: 0;
+
+  background: transparent;
+
+  cursor: pointer;
+  position: relative;
+}
+
+.structure {
+  width: 100%;
+  height: 100%;
+
+  position: relative;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  filter: drop-shadow(0 17px 13px rgba(15, 23, 42, 0.22));
+
+  transition:
+    filter 0.5s ease,
+    opacity 0.5s ease;
+}
+
+.tooltip {
+  width: 170px;
+
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 12px);
+
+  transform: translateX(-50%) translateY(7px);
+
+  padding: 13px;
+
+  background: #0f172a;
+  border-radius: 13px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  color: white;
+  text-align: left;
+  box-shadow: 0 15px 35px rgba(15, 23, 42, 0.35);
+
+  opacity: 0;
+  visibility: hidden;
+
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+
+  z-index: 100;
+}
+
+.tooltip::after {
+  content: "";
+
+  position: absolute;
+  left: 50%;
+  top: 100%;
+
+  transform: translateX(-50%);
+
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 9px solid #0f172a;
+}
+
+.tooltip span {
+  color: #86efac;
+  font-weight: 800;
+}
+
+.tooltip small {
+  color: #94a3b8;
+}
+
+.buildingButton:hover .tooltip,
+.buildingButton:focus-visible .tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Restaurant */
+
+.restaurant {
+  width: 170px;
+  height: 245px;
+
+  position: relative;
+
+  background: var(--accent);
+  border: 5px solid #7f1d1d;
+  border-bottom: 0;
+  border-radius: 18px 18px 3px 3px;
+
+  overflow: hidden;
+}
+
+.restaurantRoof {
+  height: 25px;
+
+  background: #7f1d1d;
+  border-bottom: 5px solid rgba(255, 255, 255, 0.25);
+}
+
+.restaurantSign {
+  width: 130px;
+
+  margin: 11px auto 9px;
+  padding: 8px;
+
+  background: #fef3c7;
+  border: 4px solid #7f1d1d;
+  border-radius: 8px;
+
+  color: #7f1d1d;
+  font-size: 10px;
+  font-weight: 1000;
+  letter-spacing: 0.6px;
+  text-align: center;
+}
+
+.restaurantWindows {
+  display: flex;
+  justify-content: center;
+  gap: 9px;
+}
+
+.restaurantWindows span {
+  width: 31px;
+  height: 35px;
+
+  background: linear-gradient(#dbeafe, #60a5fa);
+  border: 4px solid #7f1d1d;
+  border-radius: 4px;
+}
+
+.awning {
+  height: 22px;
+
+  margin-top: 9px;
+
+  display: flex;
+}
+
+.awning span {
+  flex: 1;
+  background: #fff7ed;
+}
+
+.awning span:nth-child(even) {
+  background: #b91c1c;
+}
+
+.restaurantBottom {
+  height: 67px;
+
+  display: grid;
+  grid-template-columns: 1fr 38px 1fr;
+  gap: 5px;
+
+  padding: 7px 9px 0;
+}
+
+.restaurantBottom span {
+  background: linear-gradient(#dbeafe, #38bdf8);
+  border: 4px solid #7f1d1d;
+}
+
+.restaurantBottom div {
+  background: #451a03;
+  border: 4px solid #7f1d1d;
+  border-bottom: 0;
+  border-radius: 5px 5px 0 0;
+}
+
+/* Mall */
+
+.mall {
+  width: 180px;
+  height: 270px;
+
+  position: relative;
+
+  background: var(--accent);
+  border: 5px solid #581c87;
+  border-bottom: 0;
+  border-radius: 24px 24px 3px 3px;
+
+  overflow: hidden;
+}
+
+.mallSign {
+  width: 146px;
+
+  margin: 15px auto 10px;
+  padding: 8px;
+
+  background: white;
+  border: 4px solid #581c87;
+  border-radius: 10px;
+
+  color: #581c87;
+  font-size: 11px;
+  font-weight: 1000;
+  text-align: center;
+}
+
+.mallWindows {
+  margin: 0 20px;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+}
+
+.mallWindows span {
+  height: 34px;
+
+  background: linear-gradient(135deg, #e0f2fe, #38bdf8);
+  border: 3px solid #581c87;
+  border-radius: 4px;
+}
+
+.mallEntrance {
+  width: 76px;
+  height: 57px;
+
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+
+  transform: translateX(-50%);
+
+  display: flex;
+  gap: 3px;
+}
+
+.mallEntrance span {
+  flex: 1;
+
+  background: linear-gradient(#dbeafe, #0284c7);
+  border: 3px solid #312e81;
+  border-bottom: 0;
+}
+
+/* Transport */
+
+.transport {
+  width: 180px;
+  height: 210px;
+
+  position: relative;
+
+  background: #f8fafc;
+  border: 5px solid #1e40af;
+  border-bottom: 0;
+  border-radius: 14px 14px 3px 3px;
+}
+
+.transportSign {
+  height: 31px;
+
+  background: var(--accent);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: white;
+  font-size: 11px;
+  font-weight: 1000;
+  letter-spacing: 1px;
+}
+
+.transportCanopy {
+  height: 19px;
+
+  position: absolute;
+  left: -13px;
+  right: -13px;
+  top: 51px;
+
+  background: #1d4ed8;
+  border: 5px solid white;
+  border-radius: 8px;
+}
+
+.transportOffice {
+  width: 75px;
+  height: 78px;
+
+  position: absolute;
+  right: 9px;
+  bottom: 0;
+
+  background: #bfdbfe;
+  border: 4px solid #1e40af;
+  border-bottom: 0;
+}
+
+.transportOffice span {
+  display: block;
+
+  height: 27px;
+
+  margin: 8px;
+
+  background: #38bdf8;
+  border: 3px solid #1e3a8a;
+}
+
+.transportOffice div {
+  width: 25px;
+  height: 34px;
+
+  margin: auto;
+
+  background: #1e3a8a;
+}
+
+.pumps {
+  position: absolute;
+  left: 13px;
+  bottom: 7px;
+
+  display: flex;
+  gap: 9px;
+}
+
+.pumps span {
+  width: 20px;
+  height: 41px;
+
+  background: white;
+  border: 4px solid #1e40af;
+  border-radius: 5px;
+}
+
+/* Utilities */
+
+.utilities {
+  width: 180px;
+  height: 285px;
+
+  position: relative;
+}
+
+.utilityBuilding {
+  width: 151px;
+  height: 190px;
+
+  position: absolute;
+  left: 8px;
+  bottom: 0;
+
+  background: var(--accent);
+  border: 5px solid #78350f;
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+}
+
+.utilitySign {
+  margin: 12px;
+  padding: 7px;
+
+  background: #451a03;
+  border-radius: 6px;
+
+  color: #fde68a;
+  font-size: 11px;
+  font-weight: 1000;
+  text-align: center;
+}
+
+.utilityWindows {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+
+  padding: 3px 13px;
+}
+
+.utilityWindows span {
+  height: 24px;
+
+  background: #fef3c7;
+  border: 3px solid #78350f;
+}
+
+.utilityDoor {
+  width: 32px;
+  height: 48px;
+
+  margin: 10px auto 0;
+
+  background: #451a03;
+}
+
+.chimneys {
+  position: absolute;
+  left: 31px;
+  top: 0;
+
+  display: flex;
+  gap: 13px;
+
+  z-index: 4;
+}
+
+.chimneys span {
+  width: 24px;
+  height: 100px;
+
+  background: repeating-linear-gradient(
+    0deg,
+    #f8fafc 0 14px,
+    #b91c1c 14px 28px
+  );
+
+  border: 4px solid #78350f;
+  border-radius: 7px 7px 0 0;
+}
+
+.chimneySmoke {
+  position: absolute;
+  left: 35px;
+  top: -10px;
+
+  display: flex;
+  gap: 15px;
+
+  z-index: 3;
+}
+
+.chimneySmoke span {
+  width: 31px;
+  height: 31px;
+
+  background: rgba(71, 85, 105, 0.72);
+  border-radius: 50%;
+
+  animation: chimneySmoke 3s ease-out infinite;
+}
+
+.chimneySmoke span:nth-child(2) {
+  animation-delay: 0.8s;
+}
+
+.chimneySmoke span:nth-child(3) {
+  animation-delay: 1.6s;
+}
+
+/* Cinema */
+
+.cinema {
+  width: 178px;
+  height: 220px;
+
+  position: relative;
+
+  background: #3f0b36;
+  border: 5px solid #831843;
+  border-bottom: 0;
+  border-radius: 15px 15px 0 0;
+
+  overflow: hidden;
+}
+
+.cinemaSign {
+  width: 140px;
+
+  margin: 16px auto 10px;
+  padding: 10px;
+
+  background: #111827;
+  border: 4px solid #facc15;
+  border-radius: 8px;
+
+  color: #fef08a;
+  font-size: 17px;
+  font-weight: 1000;
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+.cinemaLights {
+  position: absolute;
+  left: 11px;
+  right: 11px;
+  top: 76px;
+
+  display: flex;
+  justify-content: space-between;
+}
+
+.cinemaLights span {
+  width: 6px;
+  height: 6px;
+
+  background: #fef08a;
+  border-radius: 50%;
+  box-shadow: 0 0 7px #fde047;
+}
+
+.posters {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+
+  margin-top: 20px;
+}
+
+.posters span {
+  width: 33px;
+  height: 48px;
+
+  background: linear-gradient(135deg, #f472b6, #7e22ce);
+  border: 3px solid white;
+  border-radius: 4px;
+}
+
+.cinemaDoors {
+  height: 50px;
+
+  position: absolute;
+  left: 37px;
+  right: 37px;
+  bottom: 0;
+
+  display: flex;
+  gap: 4px;
+}
+
+.cinemaDoors span {
+  flex: 1;
+
+  background: linear-gradient(#475569, #0f172a);
+  border: 3px solid #facc15;
+  border-bottom: 0;
+}
+
+/* Hospital */
+
+.hospital {
+  width: 183px;
+  height: 245px;
+
+  position: relative;
+
+  background: #f8fafc;
+  border: 5px solid #15803d;
+  border-bottom: 0;
+  border-radius: 13px 13px 0 0;
+}
+
+.hospitalCross {
+  width: 47px;
+  height: 47px;
+
+  margin: 14px auto 11px;
+
+  position: relative;
+}
+
+.hospitalCross span:first-child {
+  width: 17px;
+  height: 47px;
+
+  position: absolute;
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  background: #dc2626;
+  border-radius: 4px;
+}
+
+.hospitalCross span:last-child {
+  width: 47px;
+  height: 17px;
+
+  position: absolute;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  background: #dc2626;
+  border-radius: 4px;
+}
+
+.hospitalWindows {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+
+  padding: 0 15px;
+}
+
+.hospitalWindows span {
+  height: 27px;
+
+  background: #bae6fd;
+  border: 3px solid #15803d;
+}
+
+.hospitalDoor {
+  width: 35px;
+  height: 48px;
+
+  margin: 12px auto 0;
+
+  background: #166534;
+  border-radius: 6px 6px 0 0;
+}
+
+.hospitalWingLeft,
+.hospitalWingRight {
+  width: 33px;
+  height: 105px;
+
+  position: absolute;
+  bottom: 0;
+
+  background: #dcfce7;
+  border-top: 4px solid #15803d;
+}
+
+.hospitalWingLeft {
+  left: 0;
+}
+
+.hospitalWingRight {
+  right: 0;
+}
+
+/* School */
+
+.school {
+  width: 180px;
+  height: 225px;
+
+  position: relative;
+
+  background: #d97706;
+  border: 5px solid #7c2d12;
+  border-bottom: 0;
+}
+
+.schoolRoof {
+  width: 0;
+  height: 0;
+
+  position: absolute;
+  left: -11px;
+  top: -42px;
+
+  border-left: 96px solid transparent;
+  border-right: 96px solid transparent;
+  border-bottom: 47px solid #7f1d1d;
+}
+
+.schoolClock {
+  width: 43px;
+  height: 43px;
+
+  position: absolute;
+  left: 50%;
+  top: 10px;
+
+  transform: translateX(-50%);
+
+  background: white;
+  border: 5px solid #7c2d12;
+  border-radius: 50%;
+}
+
+.schoolClock::before {
+  content: "";
+
+  width: 3px;
+  height: 12px;
+
+  position: absolute;
+  left: 50%;
+  top: 50%;
+
+  background: #0f172a;
+
+  transform: translate(-50%, -100%) rotate(18deg);
+  transform-origin: bottom;
+}
+
+.schoolClock::after {
+  content: "";
+
+  width: 3px;
+  height: 9px;
+
+  position: absolute;
+  left: 50%;
+  top: 50%;
+
+  background: #0f172a;
+
+  transform: translate(-50%, -100%) rotate(100deg);
+  transform-origin: bottom;
+}
+
+.schoolSign {
+  width: 90px;
+
+  margin: 64px auto 9px;
+  padding: 6px;
+
+  background: #fef3c7;
+  border: 4px solid #7c2d12;
+  border-radius: 6px;
+
+  color: #7c2d12;
+  font-size: 12px;
+  font-weight: 1000;
+  text-align: center;
+}
+
+.schoolWindows {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+
+  padding: 0 13px;
+}
+
+.schoolWindows span {
+  height: 27px;
+
+  background: #bae6fd;
+  border: 3px solid #7c2d12;
+}
+
+.schoolDoor {
+  width: 36px;
+  height: 47px;
+
+  margin: 12px auto 0;
+
+  background: #451a03;
+}
+
+/* House */
+
+.house {
+  width: 170px;
+  height: 225px;
+
+  position: relative;
+}
+
+.houseRoof {
+  width: 0;
+  height: 0;
+
+  position: absolute;
+  left: 0;
+  top: 0;
+
+  border-left: 85px solid transparent;
+  border-right: 85px solid transparent;
+  border-bottom: 80px solid #7c2d12;
+
+  z-index: 4;
+}
+
+.houseRoof span {
+  width: 21px;
+  height: 47px;
+
+  position: absolute;
+  left: 28px;
+  top: 18px;
+
+  background: #78350f;
+  border: 4px solid #451a03;
+}
+
+.houseBody {
+  width: 142px;
+  height: 165px;
+
+  position: absolute;
+  left: 14px;
+  bottom: 0;
+
+  background: var(--accent);
+  border: 5px solid #334155;
+  border-bottom: 0;
+}
+
+.houseWindowLeft,
+.houseWindowRight {
+  width: 32px;
+  height: 40px;
+
+  position: absolute;
+  top: 30px;
+
+  background: #bae6fd;
+  border: 5px solid #334155;
+}
+
+.houseWindowLeft {
+  left: 18px;
+}
+
+.houseWindowRight {
+  right: 18px;
+}
+
+.houseDoor {
+  width: 35px;
+  height: 60px;
+
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+
+  transform: translateX(-50%);
+
+  background: #451a03;
+  border: 4px solid #334155;
+  border-bottom: 0;
+}
+
+.fence {
+  position: absolute;
+  left: -5px;
+  right: -5px;
+  bottom: 0;
+
+  display: flex;
+  justify-content: space-between;
+
+  z-index: 6;
+}
+
+.fence span {
+  width: 8px;
+  height: 33px;
+
+  background: white;
+  border: 2px solid #94a3b8;
+}
+
+/* Damage states */
+
+.damage {
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+  z-index: 60;
+}
+
+.crackOne,
+.crackTwo,
+.crackThree,
+.brokenSection,
+.mold,
+.rubble,
+.fire,
+.smoke {
+  display: none;
+}
+
+.warning .structure {
+  filter:
+    saturate(0.7)
+    brightness(0.88)
+    drop-shadow(0 17px 13px rgba(15, 23, 42, 0.25));
+}
+
+.warning .label {
+  border-color: #f59e0b;
+}
+
+.destroyed .structure {
+  filter:
+    grayscale(0.7)
+    sepia(0.22)
+    brightness(0.58)
+    contrast(1.25)
+    drop-shadow(0 17px 13px rgba(15, 23, 42, 0.3));
+
+  animation: damagedShake 2.5s ease-in-out infinite;
+}
+
+.destroyed .label {
+  background: #292524;
+  border-color: #78716c;
+  color: #f5f5f4;
+}
+
+.destroyed .label span {
+  background: #7f1d1d;
+}
+
+.destroyed .crackOne,
+.destroyed .crackTwo,
+.destroyed .crackThree {
+  display: block;
+
+  width: 4px;
+
+  position: absolute;
+
+  background: #111827;
+  border-radius: 999px;
+}
+
+.destroyed .crackOne {
+  height: 100px;
+
+  left: 37%;
+  top: 15%;
+
+  transform: rotate(25deg);
+}
+
+.destroyed .crackOne::after {
+  content: "";
+
+  width: 4px;
+  height: 48px;
+
+  position: absolute;
+  left: 12px;
+  top: 42px;
+
+  background: #111827;
+
+  transform: rotate(-45deg);
+}
+
+.destroyed .crackTwo {
+  height: 76px;
+
+  right: 26%;
+  top: 43%;
+
+  transform: rotate(-31deg);
+}
+
+.destroyed .crackThree {
+  height: 56px;
+
+  left: 21%;
+  bottom: 4%;
+
+  transform: rotate(43deg);
+}
+
+.destroyed .brokenSection {
+  display: block;
+
+  width: 58px;
+  height: 52px;
+
+  position: absolute;
+  right: -5px;
+  top: 25%;
+
+  background: #111827;
+
+  clip-path: polygon(
+    15% 0,
+    100% 10%,
+    76% 38%,
+    100% 63%,
+    65% 100%,
+    24% 82%,
+    0 47%
+  );
+
+  opacity: 0.82;
+}
+
+.destroyed .mold {
+  display: block;
+
+  position: absolute;
+  left: 6px;
+  bottom: 8px;
+}
+
+.destroyed .mold span {
+  position: absolute;
+
+  background: #365314;
+  border-radius: 50%;
+
+  filter: blur(1px);
+}
+
+.destroyed .mold span:nth-child(1) {
+  width: 42px;
+  height: 25px;
+
+  left: 0;
+  bottom: 0;
+}
+
+.destroyed .mold span:nth-child(2) {
+  width: 28px;
+  height: 36px;
+
+  left: 30px;
+  bottom: 3px;
+}
+
+.destroyed .mold span:nth-child(3) {
+  width: 20px;
+  height: 18px;
+
+  left: 56px;
+  bottom: 0;
+}
+
+.destroyed .rubble {
+  display: flex;
+
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  bottom: -5px;
+
+  align-items: flex-end;
+  justify-content: space-around;
+}
+
+.destroyed .rubble span {
+  background: #44403c;
+  border: 2px solid #1c1917;
+}
+
+.destroyed .rubble span:nth-child(1) {
+  width: 30px;
+  height: 18px;
+
+  transform: rotate(20deg);
+}
+
+.destroyed .rubble span:nth-child(2) {
+  width: 20px;
+  height: 29px;
+
+  transform: rotate(-18deg);
+}
+
+.destroyed .rubble span:nth-child(3) {
+  width: 40px;
+  height: 20px;
+
+  transform: rotate(8deg);
+}
+
+.destroyed .rubble span:nth-child(4) {
+  width: 25px;
+  height: 14px;
+
+  transform: rotate(-34deg);
+}
+
+.destroyed .fire {
+  display: flex;
+
+  position: absolute;
+  right: 14px;
+  bottom: 5px;
+
+  align-items: flex-end;
+}
+
+.destroyed .fire span {
+  width: 13px;
+  height: 34px;
+
+  background: linear-gradient(
+    #fef08a,
+    #f97316 55%,
+    #dc2626
+  );
+
+  border-radius: 50%;
+
+  transform-origin: bottom;
+
+  animation: buildingFire 0.55s ease-in-out infinite alternate;
+}
+
+.destroyed .fire span:nth-child(2) {
+  height: 46px;
+  animation-delay: 0.18s;
+}
+
+.destroyed .fire span:nth-child(3) {
+  height: 29px;
+  animation-delay: 0.35s;
+}
+
+.destroyed .smoke {
+  display: block;
+
+  position: absolute;
+  right: 9px;
+  bottom: 48px;
+}
+
+.destroyed .smoke span {
+  width: 28px;
+  height: 28px;
+
+  position: absolute;
+
+  background: rgba(28, 25, 23, 0.82);
+  border-radius: 50%;
+
+  animation: buildingSmoke 2.4s ease-out infinite;
+}
+
+.destroyed .smoke span:nth-child(2) {
+  animation-delay: 0.8s;
+}
+
+.destroyed .smoke span:nth-child(3) {
+  animation-delay: 1.6s;
+}
+
+@keyframes chimneySmoke {
+  from {
+    opacity: 0.6;
+    transform: translateY(0) scale(0.75);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-50px) scale(1.6);
+  }
+}
+
+@keyframes damagedShake {
+  0%,
+  100% {
+    transform: rotate(-0.35deg);
+  }
+
+  50% {
+    transform: rotate(0.45deg);
+  }
+}
+
+@keyframes buildingFire {
+  from {
+    transform: scaleY(0.8) rotate(-5deg);
+  }
+
+  to {
+    transform: scaleY(1.16) rotate(7deg);
+  }
+}
+
+@keyframes buildingSmoke {
+  from {
+    opacity: 0.8;
+    transform: translate(0, 0) scale(0.65);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-23px, -77px) scale(1.8);
+  }
+}

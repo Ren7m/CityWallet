@@ -1,38 +1,33 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
-
 import "./globals.css";
 
+import { LanguageProvider } from "@/context/LanguageContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { BudgetProvider } from "@/context/BudgetContext";
 import { GameProvider } from "@/context/GameContext";
-import { LanguageProvider } from "@/context/LanguageContext";
 import { FinancialAnalysisProvider } from "@/context/FinancialAnalysisContext";
+
+import AppShell from "./components/AppShell";
 
 export const metadata: Metadata = {
   title: "CityWallet",
-  description:
-    "An interactive personal finance and city-building game",
+  description: "A gamified personal finance city simulator.",
 };
 
 export default function RootLayout({
   children,
-}: {
-  children: ReactNode;
-}) {
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html
-      lang="en"
-      dir="ltr"
-      suppressHydrationWarning
-    >
+    <html lang="en">
       <body>
         <LanguageProvider>
           <AuthProvider>
             <BudgetProvider>
               <GameProvider>
                 <FinancialAnalysisProvider>
-                  {children}
+                  <AppShell>{children}</AppShell>
                 </FinancialAnalysisProvider>
               </GameProvider>
             </BudgetProvider>

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
+
 import {
-  useEffect,
   useMemo,
   useState,
   type FormEvent,
@@ -12,117 +12,189 @@ import { useBudget } from "@/context/BudgetContext";
 
 import styles from "./expenses.module.css";
 
-type CategoryConfig = {
+/* =========================
+   TYPES
+========================= */
+
+type CategorySummary = {
   name: string;
-  icon: string;
+  amount: number;
+  percentage: number;
+  transactions: number;
   color: string;
-  building: string;
+  icon: string;
 };
 
-const CATEGORIES: CategoryConfig[] = [
-  {
-    name: "Food",
-    icon: "🍔",
-    color: "#f97316",
-    building: "Restaurant District",
-  },
-  {
-    name: "Transport",
-    icon: "🚕",
-    color: "#38bdf8",
-    building: "Transport Station",
-  },
-  {
-    name: "Shopping",
-    icon: "🛍️",
-    color: "#8b5cf6",
-    building: "Shopping Mall",
-  },
-  {
-    name: "Bills",
-    icon: "💡",
-    color: "#eab308",
-    building: "Utility Center",
-  },
-  {
-    name: "Entertainment",
-    icon: "🎮",
-    color: "#ec4899",
-    building: "Entertainment Zone",
-  },
-  {
-    name: "Health",
-    icon: "🏥",
-    color: "#ef4444",
-    building: "City Hospital",
-  },
-  {
-    name: "Education",
-    icon: "🎓",
-    color: "#14b8a6",
-    building: "Education Center",
-  },
-  {
-    name: "Rent",
-    icon: "🏠",
-    color: "#64748b",
-    building: "Residential District",
-  },
-  {
-    name: "Other",
-    icon: "📦",
-    color: "#0f766e",
-    building: "General District",
-  },
+type SortOption =
+  | "newest"
+  | "oldest"
+  | "highest"
+  | "lowest";
+
+/* =========================
+   CONSTANTS
+========================= */
+
+const CATEGORIES = [
+  "Food",
+  "Transport",
+  "Shopping",
+  "Bills",
+  "Entertainment",
+  "Health",
+  "Education",
+  "Rent",
+  "Other",
 ];
 
-const STORAGE_KEYS = {
-  xp: "fincity-player-xp",
-  coins: "fincity-city-coins",
+const CATEGORY_META: Record<
+  string,
+  {
+    color: string;
+    icon: string;
+  }
+> = {
+  Food: {
+    color: "#f97316",
+    icon: "🍽️",
+  },
+
+  Transport: {
+    color: "#38bdf8",
+    icon: "🚗",
+  },
+
+  Shopping: {
+    color: "#a855f7",
+    icon: "🛍️",
+  },
+
+  Bills: {
+    color: "#f59e0b",
+    icon: "🧾",
+  },
+
+  Entertainment: {
+    color: "#ec4899",
+    icon: "🎮",
+  },
+
+  Health: {
+    color: "#ef4444",
+    icon: "🏥",
+  },
+
+  Education: {
+    color: "#6366f1",
+    icon: "🎓",
+  },
+
+  Rent: {
+    color: "#14b8a6",
+    icon: "🏠",
+  },
+
+  Other: {
+    color: "#64748b",
+    icon: "📦",
+  },
 };
+
+/* =========================
+   HELPERS
+========================= */
+
+function clamp(
+  value: number,
+  minimum: number,
+  maximum: number
+) {
+  return Math.min(
+    Math.max(value, minimum),
+    maximum
+  );
+}
+
+function formatExpenseDate(
+  createdAt?: string
+) {
+  if (!createdAt) {
+    return "Date unavailable";
+  }
+
+  const date = new Date(createdAt);
+
+  if (
+    Number.isNaN(date.getTime())
+  ) {
+    return "Date unavailable";
+  }
+
+  const today = new Date();
+
+  const todayKey =
+    today.toDateString();
+
+  const yesterday = new Date(today);
+
+  yesterday.setDate(
+    yesterday.getDate() - 1
+  );
+
+  if (
+    date.toDateString() === todayKey
+  ) {
+    return "Today";
+  }
+
+  if (
+    date.toDateString() ===
+    yesterday.toDateString()
+  ) {
+    return "Yesterday";
+  }
+
+  return new Intl.DateTimeFormat(
+    "en-US",
+    {
+      month: "short",
+      day: "numeric",
+      year:
+        date.getFullYear() !==
+        today.getFullYear()
+          ? "numeric"
+          : undefined,
+    }
+  ).format(date);
+}
+
+/* =========================
+   ICONS
+========================= */
 
 function PlusIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
       <path d="M12 5v14M5 12h14" />
-    </svg>
-  );
-}
-
-function WalletIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 6h14a2 2 0 0 1 2 2v11H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h12" />
-      <path d="M15 11h7v5h-7a2.5 2.5 0 0 1 0-5Z" />
-      <circle cx="16.5" cy="13.5" r=".7" />
-    </svg>
-  );
-}
-
-function ReceiptIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z" />
-      <path d="M9 8h6M9 12h6M9 16h3" />
-    </svg>
-  );
-}
-
-function TrashIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 7h16" />
-      <path d="M9 7V4h6v3" />
-      <path d="m7 7 1 13h8l1-13" />
-      <path d="M10 11v5M14 11v5" />
     </svg>
   );
 }
 
 function SearchIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="11" cy="11" r="7" />
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <circle
+        cx="11"
+        cy="11"
+        r="7"
+      />
+
       <path d="m20 20-4-4" />
     </svg>
   );
@@ -130,342 +202,637 @@ function SearchIcon() {
 
 function DownloadIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
       <path d="M12 3v12" />
+
       <path d="m7 10 5 5 5-5" />
+
       <path d="M5 20h14" />
     </svg>
   );
 }
 
-function ArrowIcon() {
+function SparkIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 12h14" />
-      <path d="m14 7 5 5-5 5" />
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path d="m12 3 1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3Z" />
+
+      <path d="m19 15 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z" />
     </svg>
   );
 }
 
-function CoinIcon() {
+function ReceiptIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <ellipse cx="12" cy="7" rx="7" ry="3.5" />
-      <path d="M5 7v5c0 2 3.1 3.5 7 3.5s7-1.5 7-3.5V7" />
-      <path d="M5 12v5c0 2 3.1 3.5 7 3.5s7-1.5 7-3.5v-5" />
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z" />
+
+      <path d="M9 8h6M9 12h6M9 16h3" />
+    </svg>
+  );
+}
+
+function WalletIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path d="M4 6h14a2 2 0 0 1 2 2v10H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h12" />
+
+      <path d="M16 11h6v4h-6a2 2 0 0 1 0-4Z" />
     </svg>
   );
 }
 
 function ShieldIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
       <path d="M12 3 20 6v6c0 5-3.4 8-8 9-4.6-1-8-4-8-9V6l8-3Z" />
+
       <path d="m8.5 12 2.2 2.2 4.8-5" />
+    </svg>
+  );
+}
+
+function FilterIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path d="M4 6h16" />
+
+      <path d="M7 12h10" />
+
+      <path d="M10 18h4" />
+    </svg>
+  );
+}
+
+function ArrowIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path d="M5 12h14" />
+
+      <path d="m14 7 5 5-5 5" />
+    </svg>
+  );
+}
+
+function ResetIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path d="M4 4v6h6" />
+
+      <path d="M5.5 15a7 7 0 1 0 1.2-8.4L4 10" />
     </svg>
   );
 }
 
 function ChartIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 20V11M10 20V5M16 20v-8M22 20V7M2 20h22" />
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path d="M4 20V10" />
+
+      <path d="M10 20V4" />
+
+      <path d="M16 20v-7" />
+
+      <path d="M22 20H2" />
     </svg>
   );
 }
 
-function CheckIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="m5 12 4 4L19 6" />
-    </svg>
-  );
-}
-
-function LoadingPage() {
-  return (
-    <div className={styles.loadingPage}>
-      <div className={styles.loadingHero}></div>
-
-      <div className={styles.loadingStats}>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-
-      <div className={styles.loadingMain}>
-        <span></span>
-        <span></span>
-      </div>
-    </div>
-  );
-}
+/* =========================
+   PAGE
+========================= */
 
 export default function ExpensesPage() {
   const {
     budget,
     expenses,
+    addExpense,
     totalSpent,
     balance,
-    addExpense,
-    removeExpense,
+    budgetUsage,
   } = useBudget();
 
-  const [mounted, setMounted] = useState(false);
+  /* =========================
+     FORM STATE
+  ========================= */
 
-  const [name, setName] = useState("");
-  const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("Food");
+  const [
+    expenseName,
+    setExpenseName,
+  ] = useState("");
 
-  const [search, setSearch] = useState("");
-  const [filterCategory, setFilterCategory] =
-    useState("All");
+  const [
+    expenseAmount,
+    setExpenseAmount,
+  ] = useState("");
 
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
+  const [
+    expenseCategory,
+    setExpenseCategory,
+  ] = useState("Food");
 
-  const [playerXp, setPlayerXp] = useState(3000);
-  const [cityCoins, setCityCoins] = useState(120);
+  const [error, setError] =
+    useState("");
 
-  useEffect(() => {
-    const storedXp = window.localStorage.getItem(
-      STORAGE_KEYS.xp
+  const [success, setSuccess] =
+    useState("");
+
+  /* =========================
+     FILTER STATE
+  ========================= */
+
+  const [search, setSearch] =
+    useState("");
+
+  const [
+    selectedCategory,
+    setSelectedCategory,
+  ] = useState("All");
+
+  const [sortBy, setSortBy] =
+    useState<SortOption>(
+      "newest"
     );
 
-    const storedCoins = window.localStorage.getItem(
-      STORAGE_KEYS.coins
-    );
-
-    setPlayerXp(Number(storedXp ?? 3000) || 3000);
-    setCityCoins(Number(storedCoins ?? 120) || 120);
-
-    setMounted(true);
-  }, []);
-
-  const safeBudget = mounted ? Number(budget || 0) : 0;
-  const safeSpent = mounted
-    ? Number(totalSpent || 0)
-    : 0;
-  const safeBalance = mounted
-    ? Number(balance || 0)
-    : 0;
-  const safeExpenses = mounted ? expenses ?? [] : [];
+  /* =========================
+     FORMATTER
+  ========================= */
 
   const numberFormatter = useMemo(() => {
-    return new Intl.NumberFormat("en-US", {
-      maximumFractionDigits: 2,
-    });
+    return new Intl.NumberFormat(
+      "en-US",
+      {
+        maximumFractionDigits: 2,
+      }
+    );
   }, []);
 
-  const budgetUsage =
-    safeBudget > 0
-      ? Math.round((safeSpent / safeBudget) * 100)
-      : 0;
+  /* =========================
+     SAFE VALUES
+  ========================= */
 
-  const playerLevel =
-    Math.floor(playerXp / 500) + 1;
+  const safeExpenses = Array.isArray(
+    expenses
+  )
+    ? expenses
+    : [];
 
-  const currentLevelXp = playerXp % 500;
+  const safeBudget =
+    Number(budget) || 0;
 
-  const levelProgress = Math.round(
-    (currentLevelXp / 500) * 100
+  const safeSpent =
+    Number(totalSpent) || 0;
+
+  const safeBalance =
+    Number(balance) || 0;
+
+  const safeBudgetUsage =
+    Number(budgetUsage) || 0;
+
+  const hasExpenses =
+    safeExpenses.length > 0;
+
+  const progressWidth = clamp(
+    safeBudgetUsage,
+    0,
+    100
   );
 
-  const selectedCategory =
-    CATEGORIES.find((item) => item.name === category) ??
-    CATEGORIES[0];
+  /* =========================
+     BUDGET STATUS
+  ========================= */
 
-  const amountNumber = Number(amount) || 0;
+  const budgetStatus =
+    !hasExpenses
+      ? {
+          label: "No spending yet",
+          tone:
+            styles.statusWaiting,
+          message:
+            "Record your first expense to activate spending analysis.",
+        }
 
-  const expenseImpact =
-    safeBudget > 0
-      ? Math.max(
-          0,
-          Math.round(
-            (amountNumber / safeBudget) * 100
-          )
+      : safeBudgetUsage >= 100
+        ? {
+            label: "Critical",
+            tone:
+              styles.statusDanger,
+            message:
+              "Your recorded spending has reached or exceeded your monthly budget.",
+          }
+
+        : safeBudgetUsage >= 70
+          ? {
+              label: "Warning",
+              tone:
+                styles.statusWarning,
+              message:
+                "Your budget usage is entering the pressure zone.",
+            }
+
+          : {
+              label: "Protected",
+              tone:
+                styles.statusSafe,
+              message:
+                "Your current recorded spending remains below 70% of your budget.",
+            };
+
+  /* =========================
+     CATEGORY SUMMARY
+  ========================= */
+
+  const categorySummary =
+    useMemo<CategorySummary[]>(() => {
+      if (
+        safeExpenses.length === 0
+      ) {
+        return [];
+      }
+
+      const totals =
+        new Map<
+          string,
+          {
+            amount: number;
+            transactions: number;
+          }
+        >();
+
+      safeExpenses.forEach(
+        (expense) => {
+          const category =
+            expense.category ||
+            "Other";
+
+          const current =
+            totals.get(category) || {
+              amount: 0,
+              transactions: 0,
+            };
+
+          totals.set(category, {
+            amount:
+              current.amount +
+              (Number(
+                expense.amount
+              ) || 0),
+
+            transactions:
+              current.transactions + 1,
+          });
+        }
+      );
+
+      return Array.from(
+        totals.entries()
+      )
+        .map(
+          ([
+            name,
+            categoryData,
+          ]) => ({
+            name,
+
+            amount:
+              categoryData.amount,
+
+            transactions:
+              categoryData.transactions,
+
+            percentage:
+              safeSpent > 0
+                ? clamp(
+                    Math.round(
+                      (categoryData.amount /
+                        safeSpent) *
+                        100
+                    ),
+                    0,
+                    100
+                  )
+                : 0,
+
+            color:
+              CATEGORY_META[name]
+                ?.color ||
+              CATEGORY_META.Other.color,
+
+            icon:
+              CATEGORY_META[name]
+                ?.icon ||
+              CATEGORY_META.Other.icon,
+          })
         )
-      : 0;
+        .sort(
+          (first, second) =>
+            second.amount -
+            first.amount
+        );
+    }, [
+      safeExpenses,
+      safeSpent,
+    ]);
 
-  const balanceAfterExpense =
-    safeBalance - amountNumber;
+  const topCategory =
+    categorySummary[0] ?? null;
 
-  const categoryTotals = useMemo(() => {
-    return safeExpenses.reduce<Record<string, number>>(
-      (result, expense) => {
-        const expenseCategory =
-          expense.category || "Other";
+  /* =========================
+     FILTERED EXPENSES
+  ========================= */
 
-        result[expenseCategory] =
-          (result[expenseCategory] ?? 0) +
-          Number(expense.amount || 0);
+  const filteredExpenses =
+    useMemo(() => {
+      const normalizedSearch =
+        search
+          .trim()
+          .toLowerCase();
 
-        return result;
-      },
-      {}
-    );
-  }, [safeExpenses]);
+      const filtered =
+        safeExpenses.filter(
+          (expense) => {
+            const matchesSearch =
+              !normalizedSearch ||
+              expense.name
+                .toLowerCase()
+                .includes(
+                  normalizedSearch
+                ) ||
+              expense.category
+                .toLowerCase()
+                .includes(
+                  normalizedSearch
+                );
 
-  const categoryZones = useMemo(() => {
-    return CATEGORIES.map((item) => {
-      const spent = categoryTotals[item.name] ?? 0;
+            const matchesCategory =
+              selectedCategory ===
+                "All" ||
+              expense.category ===
+                selectedCategory;
 
-      const percent =
-        safeSpent > 0
-          ? Math.round((spent / safeSpent) * 100)
-          : 0;
+            return (
+              matchesSearch &&
+              matchesCategory
+            );
+          }
+        );
 
-      return {
-        ...item,
-        spent,
-        percent,
-      };
-    })
-      .filter((item) => item.spent > 0)
-      .sort((first, second) => second.spent - first.spent)
-      .slice(0, 4);
-  }, [categoryTotals, safeSpent]);
+      return [...filtered].sort(
+        (first, second) => {
+          const firstAmount =
+            Number(
+              first.amount
+            ) || 0;
 
-  const filteredExpenses = useMemo(() => {
-    const normalizedSearch = search
-      .trim()
-      .toLowerCase();
+          const secondAmount =
+            Number(
+              second.amount
+            ) || 0;
 
-    return [...safeExpenses]
-      .reverse()
-      .filter((expense) => {
-        const matchesSearch =
-          !normalizedSearch ||
-          expense.name
-            .toLowerCase()
-            .includes(normalizedSearch) ||
-          expense.category
-            .toLowerCase()
-            .includes(normalizedSearch);
+          const firstDate =
+            first.createdAt
+              ? new Date(
+                  first.createdAt
+                ).getTime()
+              : 0;
 
-        const matchesCategory =
-          filterCategory === "All" ||
-          expense.category === filterCategory;
+          const secondDate =
+            second.createdAt
+              ? new Date(
+                  second.createdAt
+                ).getTime()
+              : 0;
 
-        return matchesSearch && matchesCategory;
-      });
-  }, [safeExpenses, search, filterCategory]);
+          if (
+            sortBy === "highest"
+          ) {
+            return (
+              secondAmount -
+              firstAmount
+            );
+          }
 
-  const cityStatus =
-    budgetUsage >= 100
-      ? "Critical"
-      : budgetUsage >= 70
-        ? "Warning"
-        : "Protected";
+          if (
+            sortBy === "lowest"
+          ) {
+            return (
+              firstAmount -
+              secondAmount
+            );
+          }
 
-  function showNotice(message: string) {
-    setNotice(message);
+          if (
+            sortBy === "oldest"
+          ) {
+            return (
+              firstDate -
+              secondDate
+            );
+          }
 
-    window.setTimeout(() => {
-      setNotice("");
-    }, 2400);
-  }
+          return (
+            secondDate -
+            firstDate
+          );
+        }
+      );
+    }, [
+      safeExpenses,
+      search,
+      selectedCategory,
+      sortBy,
+    ]);
 
-  function clearForm() {
-    setName("");
-    setAmount("");
-    setCategory("Food");
-    setError("");
-  }
+  /* =========================
+     ADD EXPENSE
+  ========================= */
 
-  function handleSubmit(
+  function handleAddExpense(
     event: FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
 
-    const expenseName = name.trim();
-    const expenseAmount = Number(amount);
+    setError("");
+    setSuccess("");
 
-    if (!expenseName) {
-      setError("Enter an expense name.");
+    const name =
+      expenseName.trim();
+
+    const amount = Number(
+      expenseAmount
+    );
+
+    if (!name) {
+      setError(
+        "Please enter the expense name."
+      );
+
       return;
     }
 
     if (
-      !Number.isFinite(expenseAmount) ||
-      expenseAmount <= 0
+      !Number.isFinite(amount) ||
+      amount <= 0
     ) {
       setError(
-        "Enter a valid amount greater than zero."
+        "Please enter a valid amount greater than zero."
       );
+
+      return;
+    }
+
+    if (
+      !CATEGORIES.includes(
+        expenseCategory
+      )
+    ) {
+      setError(
+        "Please select a valid category."
+      );
+
       return;
     }
 
     addExpense({
-      name: expenseName,
-      amount: expenseAmount,
-      category,
+      name,
+      amount,
+      category:
+        expenseCategory,
+      createdAt:
+        new Date().toISOString(),
     });
 
-    const earnedXp = 10;
-    const earnedCoins = 3;
+    setExpenseName("");
+    setExpenseAmount("");
+    setExpenseCategory("Food");
 
-    const newXp = playerXp + earnedXp;
-    const newCoins = cityCoins + earnedCoins;
-
-    setPlayerXp(newXp);
-    setCityCoins(newCoins);
-
-    window.localStorage.setItem(
-      STORAGE_KEYS.xp,
-      String(newXp)
+    setSuccess(
+      `${name} was added successfully.`
     );
 
-    window.localStorage.setItem(
-      STORAGE_KEYS.coins,
-      String(newCoins)
-    );
-
-    clearForm();
-
-    showNotice(
-      `Expense recorded • +${earnedXp} XP • +${earnedCoins} City Coins`
-    );
+    window.setTimeout(() => {
+      setSuccess("");
+    }, 2600);
   }
 
-  function handleDelete(
-    id: number,
-    expenseName: string
-  ) {
-    removeExpense(id);
+  /* =========================
+     RESET FORM
+  ========================= */
 
-    showNotice(`${expenseName} was removed.`);
+  function resetForm() {
+    setExpenseName("");
+    setExpenseAmount("");
+    setExpenseCategory("Food");
+    setError("");
+    setSuccess("");
   }
 
-  function clearFilters() {
+  /* =========================
+     RESET FILTERS
+  ========================= */
+
+  function resetFilters() {
     setSearch("");
-    setFilterCategory("All");
+    setSelectedCategory("All");
+    setSortBy("newest");
   }
+
+  /* =========================
+     EXPORT CSV
+  ========================= */
 
   function exportExpenses() {
-    if (safeExpenses.length === 0) {
+    if (!hasExpenses) {
       return;
     }
 
-    const header = [
-      "Expense",
-      "Category",
-      "Amount",
+    const summaryRows = [
+      [
+        "CityWallet Expense Management Report",
+      ],
+
+      ["Monthly Budget", safeBudget],
+
+      ["Total Spent", safeSpent],
+
+      [
+        "Remaining Balance",
+        safeBalance,
+      ],
+
+      [
+        "Budget Usage",
+        `${safeBudgetUsage}%`,
+      ],
+
+      [
+        "Total Transactions",
+        safeExpenses.length,
+      ],
+
+      [],
+
+      [
+        "Expense Name",
+        "Category",
+        "Amount",
+        "Created At",
+      ],
     ];
 
-    const rows = safeExpenses.map((expense) => [
-      expense.name,
-      expense.category,
-      expense.amount,
-    ]);
+    const expenseRows =
+      safeExpenses.map(
+        (expense) => [
+          expense.name,
 
-    const csv = [header, ...rows]
+          expense.category,
+
+          Number(
+            expense.amount
+          ) || 0,
+
+          expense.createdAt || "",
+        ]
+      );
+
+    const csv = [
+      ...summaryRows,
+      ...expenseRows,
+    ]
       .map((row) =>
         row
           .map(
             (value) =>
-              `"${String(value).replace(
+              `"${String(
+                value ?? ""
+              ).replace(
                 /"/g,
                 '""'
               )}"`
@@ -474,711 +841,1190 @@ export default function ExpensesPage() {
       )
       .join("\n");
 
-    const blob = new Blob([csv], {
-      type: "text/csv;charset=utf-8;",
-    });
+    const blob = new Blob(
+      [csv],
+      {
+        type:
+          "text/csv;charset=utf-8;",
+      }
+    );
 
     const url =
-      window.URL.createObjectURL(blob);
+      window.URL.createObjectURL(
+        blob
+      );
 
     const downloadLink =
       document.createElement("a");
 
     downloadLink.href = url;
-    downloadLink.download =
-      "fincity-expenses.csv";
 
-    document.body.appendChild(downloadLink);
+    downloadLink.download =
+      "citywallet-expenses.csv";
+
+    document.body.appendChild(
+      downloadLink
+    );
+
     downloadLink.click();
+
     downloadLink.remove();
 
-    window.URL.revokeObjectURL(url);
-
-    showNotice("Expense report downloaded.");
-  }
-
-  if (!mounted) {
-    return <LoadingPage />;
+    window.URL.revokeObjectURL(
+      url
+    );
   }
 
   return (
-    <div className={styles.page}>
-      {notice && (
-        <div className={styles.notice} role="status">
-          <CheckIcon />
-          {notice}
-        </div>
-      )}
+    <main className={styles.page}>
+      {/* =====================
+          HERO
+      ===================== */}
 
       <section className={styles.hero}>
-        <div className={styles.heroGlow}></div>
+        <div
+          className={
+            styles.heroPattern
+          }
+        />
 
-        <div className={styles.vaultArea}>
-          <div className={styles.vaultBuilding}>
-            <div className={styles.vaultRoof}>
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
+        <div
+          className={styles.heroGlow}
+        />
 
-            <div className={styles.vaultSign}>
-              CITY VAULT
-            </div>
-
-            <div className={styles.vaultBody}>
-              <div className={styles.vaultDoor}>
-                <div className={styles.vaultWheel}>
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-              </div>
-
-              <div className={styles.vaultWindow}>
-                <CoinIcon />
-              </div>
-            </div>
-
-            <div className={styles.vaultBase}></div>
-          </div>
-
-          <div className={styles.vaultStatus}>
-            <span></span>
-            VAULT ONLINE
-          </div>
-        </div>
-
-        <div className={styles.heroContent}>
-          <span className={styles.heroEyebrow}>
-            CITY TREASURY
+        <div
+          className={
+            styles.heroContent
+          }
+        >
+          <span
+            className={
+              styles.heroEyebrow
+            }
+          >
+            ⚔ CITYWALLET EXPENSE COMMAND CENTER
           </span>
 
           <h1>
-            Expense
-            <strong> Management Vault</strong>
+            Control every expense.
+            <strong>
+              Protect your financial city.
+            </strong>
           </h1>
 
           <p>
-            Record every transaction, protect your budget
-            shield and watch each expense affect the
-            buildings in your financial city.
+            Track real transactions,
+            monitor spending pressure and
+            understand exactly where your
+            monthly budget is going.
           </p>
 
-          <div className={styles.cityAlert}>
-            <ShieldIcon />
-
-            <div>
-              <strong>
-                City protection status: {cityStatus}
-              </strong>
-
-              <span>
-                {budgetUsage < 70
-                  ? "Your city is protected. Continue tracking expenses to maintain stability."
-                  : budgetUsage < 100
-                    ? "The budget shield is weakening. Review optional expenses."
-                    : "The city budget shield is down. Reduce spending immediately."}
-              </span>
-            </div>
-          </div>
-
-          <div className={styles.heroActions}>
+          <div
+            className={
+              styles.heroActions
+            }
+          >
             <a
-              href="#expense-form"
-              className={styles.primaryAction}
+              href="#add-expense"
+              className={
+                styles.primaryButton
+              }
             >
               <PlusIcon />
-              Record Expense
+
+              Add New Expense
+
+              <ArrowIcon />
             </a>
 
             <Link
               href="/city/insights"
-              className={styles.secondaryAction}
+              className={
+                styles.aiButton
+              }
             >
-              <ChartIcon />
-              Open AI Advisor
-            </Link>
+              <SparkIcon />
 
-            <Link
-              href="/city"
-              className={styles.secondaryAction}
-            >
-              Return to City
+              Analyze with FinBot
+
               <ArrowIcon />
             </Link>
+
+            <button
+              type="button"
+              className={
+                styles.exportButton
+              }
+              onClick={
+                exportExpenses
+              }
+              disabled={!hasExpenses}
+              title={
+                hasExpenses
+                  ? "Download your real expense data"
+                  : "Add an expense before exporting"
+              }
+            >
+              <DownloadIcon />
+
+              Export Expenses
+            </button>
           </div>
         </div>
 
-        <div className={styles.playerPanel}>
-          <div className={styles.levelOrb}>
-            <span>LEVEL</span>
-            <strong>{playerLevel}</strong>
-          </div>
-
-          <div className={styles.levelInformation}>
+        <div
+          className={
+            styles.heroBudget
+          }
+        >
+          <div
+            className={
+              styles.budgetRing
+            }
+            style={{
+              background:
+                hasExpenses
+                  ? `conic-gradient(
+                      #a78bfa 0% ${progressWidth}%,
+                      rgba(255, 255, 255, 0.1)
+                      ${progressWidth}% 100%
+                    )`
+                  : `conic-gradient(
+                      rgba(255, 255, 255, 0.1)
+                      0% 100%
+                    )`,
+            }}
+          >
             <div>
-              <span>Builder XP</span>
+              <span>
+                BUDGET USAGE
+              </span>
+
               <strong>
-                {numberFormatter.format(playerXp)}
+                {hasExpenses
+                  ? `${Math.round(
+                      safeBudgetUsage
+                    )}%`
+                  : "—"}
               </strong>
-            </div>
 
-            <div className={styles.levelTrack}>
-              <span
-                style={{
-                  width: `${levelProgress}%`,
-                }}
-              ></span>
+              <small>
+                {hasExpenses
+                  ? `${numberFormatter.format(
+                      safeSpent
+                    )} SAR spent`
+                  : "No activity yet"}
+              </small>
             </div>
-
-            <small>
-              {currentLevelXp} / 500 XP to next level
-            </small>
           </div>
 
-          <div className={styles.coinBalance}>
-            <CoinIcon />
+          <div
+            className={`${styles.statusBadge} ${budgetStatus.tone}`}
+          >
+            <span />
 
-            <div>
-              <span>City Coins</span>
-              <strong>{cityCoins}</strong>
-            </div>
+            {budgetStatus.label}
           </div>
         </div>
       </section>
 
-      <section className={styles.statGrid}>
-        <article className={styles.statCard}>
+      {/* =====================
+          SUMMARY CARDS
+      ===================== */}
+
+      <section
+        className={styles.summaryGrid}
+      >
+        <article
+          className={`${styles.summaryCard} ${styles.spentCard}`}
+        >
           <div
-            className={`${styles.statIcon} ${styles.budgetIcon}`}
+            className={
+              styles.summaryIcon
+            }
           >
             <WalletIcon />
           </div>
 
           <div>
-            <span>Monthly Budget</span>
+            <span>
+              TOTAL SPENT
+            </span>
 
             <strong>
-              {numberFormatter.format(safeBudget)} SAR
+              {numberFormatter.format(
+                safeSpent
+              )}{" "}
+              <small>SAR</small>
             </strong>
 
-            <p>Active city budget</p>
+            <p>
+              From{" "}
+              {safeExpenses.length}{" "}
+              recorded{" "}
+              {safeExpenses.length === 1
+                ? "transaction"
+                : "transactions"}
+            </p>
           </div>
         </article>
 
-        <article className={styles.statCard}>
+        <article
+          className={`${styles.summaryCard} ${styles.remainingCard}`}
+        >
           <div
-            className={`${styles.statIcon} ${styles.spentIcon}`}
-          >
-            <ReceiptIcon />
-          </div>
-
-          <div>
-            <span>Total Spent</span>
-
-            <strong>
-              {numberFormatter.format(safeSpent)} SAR
-            </strong>
-
-            <p>{budgetUsage}% of budget used</p>
-          </div>
-        </article>
-
-        <article className={styles.statCard}>
-          <div
-            className={`${styles.statIcon} ${styles.balanceIcon}`}
+            className={
+              styles.summaryIcon
+            }
           >
             <ShieldIcon />
           </div>
 
           <div>
-            <span>Available Balance</span>
+            <span>
+              REMAINING BUDGET
+            </span>
 
             <strong
               className={
-                safeBalance >= 0
-                  ? styles.positive
-                  : styles.negative
+                safeBalance < 0
+                  ? styles.negativeValue
+                  : ""
               }
             >
-              {numberFormatter.format(safeBalance)} SAR
+              {numberFormatter.format(
+                safeBalance
+              )}{" "}
+              <small>SAR</small>
             </strong>
 
             <p>
               {safeBalance >= 0
-                ? "Protected funds"
-                : "Budget exceeded"}
+                ? "Available from your real monthly budget"
+                : "Recorded spending exceeds your budget"}
             </p>
           </div>
         </article>
 
-        <article className={styles.statCard}>
+        <article
+          className={`${styles.summaryCard} ${styles.usageCard}`}
+        >
           <div
-            className={`${styles.statIcon} ${styles.transactionIcon}`}
+            className={
+              styles.summaryIcon
+            }
           >
             <ChartIcon />
           </div>
 
           <div>
-            <span>Transactions</span>
+            <span>
+              BUDGET USAGE
+            </span>
 
-            <strong>{safeExpenses.length}</strong>
+            <strong>
+              {hasExpenses
+                ? `${Math.round(
+                    safeBudgetUsage
+                  )}%`
+                : "—"}
+            </strong>
 
-            <p>Recorded this month</p>
+            <p>
+              {budgetStatus.message}
+            </p>
+          </div>
+        </article>
+
+        <article
+          className={`${styles.summaryCard} ${styles.topCategoryCard}`}
+        >
+          <div
+            className={
+              styles.summaryIcon
+            }
+          >
+            <ReceiptIcon />
+          </div>
+
+          <div>
+            <span>
+              TOP SPENDING ZONE
+            </span>
+
+            <strong>
+              {topCategory
+                ? topCategory.name
+                : "—"}
+            </strong>
+
+            <p>
+              {topCategory
+                ? `${numberFormatter.format(
+                    topCategory.amount
+                  )} SAR · ${topCategory.percentage}% of recorded spending`
+                : "Available after your first expense"}
+            </p>
           </div>
         </article>
       </section>
 
-      <div className={styles.mainGrid}>
+      {/* =====================
+          MAIN MANAGEMENT GRID
+      ===================== */}
+
+      <div
+        className={styles.managementGrid}
+      >
+        {/* ADD EXPENSE */}
+
         <section
-          className={styles.formPanel}
-          id="expense-form"
+          className={
+            styles.addExpensePanel
+          }
+          id="add-expense"
         >
-          <div className={styles.panelHeader}>
+          <div
+            className={
+              styles.panelHeader
+            }
+          >
             <div>
-              <span className={styles.panelEyebrow}>
-                NEW CITY TRANSACTION
+              <span
+                className={
+                  styles.sectionEyebrow
+                }
+              >
+                ⚡ NEW TRANSACTION
               </span>
 
-              <h2>Record an Expense</h2>
+              <h2>
+                Add Expense
+              </h2>
 
               <p>
-                Select the affected city zone and enter the
-                transaction details.
+                Record a real transaction
+                and update your city
+                finances instantly.
               </p>
             </div>
 
-            <div className={styles.formReward}>
-              <CoinIcon />
+            <div
+              className={
+                styles.formStatus
+              }
+            >
+              <span>
+                LIVE UPDATE
+              </span>
 
-              <div>
-                <span>Logging reward</span>
-                <strong>+10 XP · +3 Coins</strong>
-              </div>
+              <strong>
+                Budget connected
+              </strong>
             </div>
           </div>
 
           {error && (
-            <div className={styles.errorMessage}>
-              {error}
+            <div
+              className={styles.error}
+              role="alert"
+            >
+              ⚠ {error}
+            </div>
+          )}
+
+          {success && (
+            <div
+              className={
+                styles.success
+              }
+              role="status"
+            >
+              ✓ {success}
             </div>
           )}
 
           <form
-            className={styles.form}
-            onSubmit={handleSubmit}
+            className={
+              styles.expenseForm
+            }
+            onSubmit={
+              handleAddExpense
+            }
           >
-            <label className={styles.field}>
-              <span>Expense name</span>
+            <label
+              className={
+                styles.fullField
+              }
+            >
+              <span>
+                Expense name
+              </span>
 
               <input
                 type="text"
-                value={name}
-                onChange={(event) => {
-                  setName(event.target.value);
-                  setError("");
-                }}
-                placeholder="Example: Lunch, fuel or electricity"
-                maxLength={60}
+                value={expenseName}
+                onChange={(event) =>
+                  setExpenseName(
+                    event.target.value
+                  )
+                }
+                placeholder="Example: Groceries"
+                maxLength={100}
               />
             </label>
 
-            <label className={styles.field}>
+            <label>
               <span>Amount</span>
 
-              <div className={styles.amountField}>
+              <div
+                className={
+                  styles.amountField
+                }
+              >
                 <input
                   type="number"
-                  value={amount}
-                  onChange={(event) => {
-                    setAmount(event.target.value);
-                    setError("");
-                  }}
-                  placeholder="0"
-                  min="0"
+                  min="0.01"
                   step="0.01"
+                  value={
+                    expenseAmount
+                  }
+                  onChange={(event) =>
+                    setExpenseAmount(
+                      event.target.value
+                    )
+                  }
+                  placeholder="0.00"
                 />
 
-                <strong>SAR</strong>
-              </div>
-            </label>
-
-            <div className={styles.field}>
-              <span>Affected city zone</span>
-
-              <div className={styles.categoryGrid}>
-                {CATEGORIES.map((item) => (
-                  <button
-                    type="button"
-                    key={item.name}
-                    className={`${styles.categoryButton} ${
-                      category === item.name
-                        ? styles.activeCategory
-                        : ""
-                    }`}
-                    style={
-                      {
-                        "--category-color": item.color,
-                      } as React.CSSProperties
-                    }
-                    onClick={() =>
-                      setCategory(item.name)
-                    }
-                  >
-                    <span
-                      className={styles.categoryIcon}
-                    >
-                      {item.icon}
-                    </span>
-
-                    <span
-                      className={styles.categoryText}
-                    >
-                      <strong>{item.name}</strong>
-                      <small>{item.building}</small>
-                    </span>
-
-                    <span
-                      className={styles.categoryCheck}
-                    >
-                      {category === item.name && (
-                        <CheckIcon />
-                      )}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className={styles.impactPreview}>
-              <div
-                className={styles.previewCategory}
-                style={{
-                  background: selectedCategory.color,
-                }}
-              >
-                {selectedCategory.icon}
-              </div>
-
-              <div className={styles.previewInformation}>
-                <span>Transaction impact preview</span>
-
                 <strong>
-                  {selectedCategory.building}
-                </strong>
-
-                <p>
-                  This expense will use approximately{" "}
-                  {expenseImpact}% of your monthly budget.
-                </p>
-              </div>
-
-              <div className={styles.previewBalance}>
-                <span>Balance after</span>
-
-                <strong
-                  className={
-                    balanceAfterExpense >= 0
-                      ? styles.positive
-                      : styles.negative
-                  }
-                >
-                  {numberFormatter.format(
-                    balanceAfterExpense
-                  )}{" "}
                   SAR
                 </strong>
               </div>
+            </label>
+
+            <label>
+              <span>Category</span>
+
+              <select
+                value={
+                  expenseCategory
+                }
+                onChange={(event) =>
+                  setExpenseCategory(
+                    event.target.value
+                  )
+                }
+              >
+                {CATEGORIES.map(
+                  (category) => (
+                    <option
+                      key={category}
+                      value={category}
+                    >
+                      {category}
+                    </option>
+                  )
+                )}
+              </select>
+            </label>
+
+            <div
+              className={
+                styles.selectedCategory
+              }
+            >
+              <div
+                className={
+                  styles.selectedCategoryIcon
+                }
+                style={{
+                  background:
+                    CATEGORY_META[
+                      expenseCategory
+                    ]?.color ||
+                    CATEGORY_META.Other
+                      .color,
+                }}
+              >
+                {CATEGORY_META[
+                  expenseCategory
+                ]?.icon ||
+                  CATEGORY_META.Other
+                    .icon}
+              </div>
+
+              <div>
+                <span>
+                  SELECTED ZONE
+                </span>
+
+                <strong>
+                  {expenseCategory}
+                </strong>
+              </div>
             </div>
 
-            <div className={styles.formActions}>
+            <div
+              className={
+                styles.formActions
+              }
+            >
               <button
-                type="button"
-                className={styles.clearButton}
-                onClick={clearForm}
+                type="submit"
+                className={
+                  styles.submitButton
+                }
               >
-                Clear Form
+                <PlusIcon />
+
+                Add Expense
+
+                <ArrowIcon />
               </button>
 
               <button
-                type="submit"
-                className={styles.submitButton}
+                type="button"
+                className={
+                  styles.resetButton
+                }
+                onClick={resetForm}
               >
-                <PlusIcon />
-                Record Expense
+                <ResetIcon />
+
+                Clear Form
               </button>
             </div>
           </form>
-
-          <div className={styles.budgetShield}>
-            <div className={styles.shieldHeader}>
-              <div>
-                <span>Budget Shield Strength</span>
-                <strong>
-                  {Math.max(0, 100 - budgetUsage)}%
-                </strong>
-              </div>
-
-              <span>
-                {numberFormatter.format(safeSpent)} /{" "}
-                {numberFormatter.format(safeBudget)} SAR
-              </span>
-            </div>
-
-            <div className={styles.shieldTrack}>
-              <span
-                className={
-                  budgetUsage >= 100
-                    ? styles.dangerShield
-                    : budgetUsage >= 70
-                      ? styles.warningShield
-                      : styles.healthyShield
-                }
-                style={{
-                  width: `${Math.min(
-                    budgetUsage,
-                    100
-                  )}%`,
-                }}
-              ></span>
-            </div>
-          </div>
         </section>
 
-        <section className={styles.zonePanel}>
-          <div className={styles.panelHeader}>
+        {/* CATEGORY PRESSURE */}
+
+        <section
+          className={
+            styles.categoryPanel
+          }
+        >
+          <div
+            className={
+              styles.panelHeader
+            }
+          >
             <div>
-              <span className={styles.panelEyebrow}>
-                CITY ZONE SCANNER
+              <span
+                className={
+                  styles.sectionEyebrow
+                }
+              >
+                ◉ SPENDING ZONES
               </span>
 
-              <h2>Most Active Zones</h2>
+              <h2>
+                Category Pressure
+              </h2>
 
               <p>
-                Buildings currently receiving the most
-                financial pressure.
+                Based only on your actual
+                recorded expenses.
               </p>
             </div>
-
-            <Link
-              href="/city/insights"
-              className={styles.panelAction}
-            >
-              Full Analysis
-              <ArrowIcon />
-            </Link>
           </div>
 
-          {categoryZones.length === 0 ? (
-            <div className={styles.emptyZones}>
-              <div className={styles.emptyScanner}>
-                <span></span>
-                <span></span>
+          {categorySummary.length ===
+          0 ? (
+            <div
+              className={
+                styles.emptyState
+              }
+            >
+              <div
+                className={
+                  styles.emptyIcon
+                }
+              >
                 <ReceiptIcon />
               </div>
 
-              <strong>No city activity detected</strong>
+              <strong>
+                No spending zones yet
+              </strong>
 
               <p>
-                Record your first expense to activate the
-                zone scanner.
+                Add your first expense to
+                activate category analysis.
               </p>
+
+              <a
+                href="#add-expense"
+                className={
+                  styles.emptyAction
+                }
+              >
+                <PlusIcon />
+
+                Add First Expense
+
+                <ArrowIcon />
+              </a>
             </div>
           ) : (
-            <div className={styles.zoneList}>
-              {categoryZones.map((zone, index) => (
-                <article
-                  className={styles.zoneItem}
-                  key={zone.name}
-                >
-                  <div
-                    className={styles.zoneRank}
-                    style={{
-                      background: zone.color,
-                    }}
+            <div
+              className={
+                styles.categoryList
+              }
+            >
+              {categorySummary.map(
+                (
+                  category,
+                  index
+                ) => (
+                  <button
+                    type="button"
+                    key={
+                      category.name
+                    }
+                    className={`${styles.categoryItem} ${
+                      selectedCategory ===
+                      category.name
+                        ? styles.categoryItemActive
+                        : ""
+                    }`}
+                    onClick={() =>
+                      setSelectedCategory(
+                        selectedCategory ===
+                          category.name
+                          ? "All"
+                          : category.name
+                      )
+                    }
                   >
-                    {index + 1}
-                  </div>
+                    <div
+                      className={
+                        styles.categoryRank
+                      }
+                      style={{
+                        background:
+                          category.color,
+                      }}
+                    >
+                      {category.icon}
+                    </div>
 
-                  <div className={styles.zoneIcon}>
-                    {zone.icon}
-                  </div>
+                    <div
+                      className={
+                        styles.categoryInformation
+                      }
+                    >
+                      <div
+                        className={
+                          styles.categoryTop
+                        }
+                      >
+                        <strong>
+                          {
+                            category.name
+                          }
+                        </strong>
 
-                  <div className={styles.zoneInformation}>
-                    <div className={styles.zoneTop}>
-                      <div>
-                        <strong>{zone.name}</strong>
-                        <span>{zone.building}</span>
+                        <span>
+                          {numberFormatter.format(
+                            category.amount
+                          )}{" "}
+                          SAR
+                        </span>
                       </div>
 
-                      <strong>
-                        {numberFormatter.format(zone.spent)}{" "}
-                        SAR
-                      </strong>
+                      <div
+                        className={
+                          styles.categoryTrack
+                        }
+                      >
+                        <span
+                          style={{
+                            width: `${category.percentage}%`,
+
+                            background:
+                              category.color,
+                          }}
+                        />
+                      </div>
+
+                      <small>
+                        {
+                          category.transactions
+                        }{" "}
+                        {category.transactions ===
+                        1
+                          ? "transaction"
+                          : "transactions"}
+                      </small>
                     </div>
 
-                    <div className={styles.zoneTrack}>
-                      <span
-                        style={{
-                          width: `${zone.percent}%`,
-                          background: zone.color,
-                        }}
-                      ></span>
-                    </div>
-                  </div>
-
-                  <span className={styles.zonePercent}>
-                    {zone.percent}%
-                  </span>
-                </article>
-              ))}
+                    <strong
+                      className={
+                        styles.categoryPercentage
+                      }
+                    >
+                      {
+                        category.percentage
+                      }
+                      %
+                    </strong>
+                  </button>
+                )
+              )}
             </div>
           )}
         </section>
       </div>
 
-      <section className={styles.transactionsPanel}>
-        <div className={styles.panelHeader}>
+      {/* =====================
+          BUDGET PRESSURE
+      ===================== */}
+
+      <section
+        className={
+          styles.budgetPanel
+        }
+      >
+        <div
+          className={
+            styles.budgetPanelTop
+          }
+        >
           <div>
-            <span className={styles.panelEyebrow}>
-              TREASURY TRANSACTION LOG
+            <span
+              className={
+                styles.sectionEyebrow
+              }
+            >
+              🛡 BUDGET SHIELD STATUS
             </span>
 
-            <h2>Recorded Expenses</h2>
+            <h2>
+              Monthly Budget Pressure
+            </h2>
 
             <p>
-              Search, filter, export and manage all city
-              transactions.
+              {budgetStatus.message}
             </p>
           </div>
 
-          <button
-            type="button"
-            className={styles.exportButton}
-            onClick={exportExpenses}
-            disabled={safeExpenses.length === 0}
+          <div
+            className={`${styles.largeStatusBadge} ${budgetStatus.tone}`}
           >
-            <DownloadIcon />
-            Export CSV
-          </button>
+            <span />
+
+            {budgetStatus.label}
+          </div>
         </div>
 
-        <div className={styles.filters}>
-          <label className={styles.searchField}>
+        <div
+          className={
+            styles.budgetProgressHeader
+          }
+        >
+          <span>
+            {numberFormatter.format(
+              safeSpent
+            )}{" "}
+            SAR spent
+          </span>
+
+          <strong>
+            {numberFormatter.format(
+              safeBudget
+            )}{" "}
+            SAR budget
+          </strong>
+        </div>
+
+        <div
+          className={
+            styles.budgetTrack
+          }
+        >
+          <span
+            className={
+              safeBudgetUsage >= 100
+                ? styles.budgetDanger
+                : safeBudgetUsage >= 70
+                  ? styles.budgetWarning
+                  : styles.budgetSafe
+            }
+            style={{
+              width: `${progressWidth}%`,
+            }}
+          />
+        </div>
+
+        <div
+          className={
+            styles.budgetMarkers
+          }
+        >
+          <span>0%</span>
+          <span>70%</span>
+          <span>100%</span>
+        </div>
+      </section>
+
+      {/* =====================
+          TRANSACTIONS
+      ===================== */}
+
+      <section
+        className={
+          styles.transactionsPanel
+        }
+      >
+        <div
+          className={
+            styles.transactionsHeader
+          }
+        >
+          <div>
+            <span
+              className={
+                styles.sectionEyebrow
+              }
+            >
+              📜 CITY TRANSACTION VAULT
+            </span>
+
+            <h2>
+              Expense History
+            </h2>
+
+            <p>
+              Search, filter and review your
+              real recorded transactions.
+            </p>
+          </div>
+
+          <div
+            className={
+              styles.transactionCount
+            }
+          >
+            <span>
+              SHOWING
+            </span>
+
+            <strong>
+              {filteredExpenses.length}
+
+              <small>
+                /{safeExpenses.length}
+              </small>
+            </strong>
+          </div>
+        </div>
+
+        {/* FILTERS */}
+
+        <div
+          className={
+            styles.filterBar
+          }
+        >
+          <label
+            className={
+              styles.searchField
+            }
+          >
             <SearchIcon />
 
             <input
               type="search"
               value={search}
               onChange={(event) =>
-                setSearch(event.target.value)
+                setSearch(
+                  event.target.value
+                )
               }
-              placeholder="Search transactions..."
+              placeholder="Search expense or category..."
             />
           </label>
 
-          <select
-            value={filterCategory}
-            onChange={(event) =>
-              setFilterCategory(event.target.value)
+          <label
+            className={
+              styles.selectField
             }
-            className={styles.filterSelect}
           >
-            <option value="All">All categories</option>
+            <FilterIcon />
 
-            {CATEGORIES.map((item) => (
-              <option
-                key={item.name}
-                value={item.name}
-              >
-                {item.name}
-              </option>
-            ))}
-          </select>
-
-          {(search || filterCategory !== "All") && (
-            <button
-              type="button"
-              className={styles.clearFilters}
-              onClick={clearFilters}
+            <select
+              value={
+                selectedCategory
+              }
+              onChange={(event) =>
+                setSelectedCategory(
+                  event.target.value
+                )
+              }
             >
-              Clear filters
-            </button>
-          )}
+              <option value="All">
+                All Categories
+              </option>
 
-          <span className={styles.resultCount}>
-            {filteredExpenses.length} results
-          </span>
+              {CATEGORIES.map(
+                (category) => (
+                  <option
+                    key={category}
+                    value={category}
+                  >
+                    {category}
+                  </option>
+                )
+              )}
+            </select>
+          </label>
+
+          <label
+            className={
+              styles.selectField
+            }
+          >
+            <ChartIcon />
+
+            <select
+              value={sortBy}
+              onChange={(event) =>
+                setSortBy(
+                  event.target
+                    .value as SortOption
+                )
+              }
+            >
+              <option value="newest">
+                Newest first
+              </option>
+
+              <option value="oldest">
+                Oldest first
+              </option>
+
+              <option value="highest">
+                Highest amount
+              </option>
+
+              <option value="lowest">
+                Lowest amount
+              </option>
+            </select>
+          </label>
+
+          <button
+            type="button"
+            className={
+              styles.clearFiltersButton
+            }
+            onClick={resetFilters}
+            disabled={
+              !search &&
+              selectedCategory ===
+                "All" &&
+              sortBy === "newest"
+            }
+          >
+            <ResetIcon />
+
+            Reset Filters
+          </button>
         </div>
 
-        {filteredExpenses.length === 0 ? (
-          <div className={styles.emptyTransactions}>
-            <ReceiptIcon />
+        {/* CATEGORY CHIPS */}
+
+        <div
+          className={
+            styles.categoryChips
+          }
+        >
+          <button
+            type="button"
+            className={
+              selectedCategory === "All"
+                ? styles.activeChip
+                : ""
+            }
+            onClick={() =>
+              setSelectedCategory(
+                "All"
+              )
+            }
+          >
+            All
+
+            <span>
+              {safeExpenses.length}
+            </span>
+          </button>
+
+          {categorySummary.map(
+            (category) => (
+              <button
+                type="button"
+                key={category.name}
+                className={
+                  selectedCategory ===
+                  category.name
+                    ? styles.activeChip
+                    : ""
+                }
+                onClick={() =>
+                  setSelectedCategory(
+                    category.name
+                  )
+                }
+              >
+                {category.icon}
+
+                {category.name}
+
+                <span>
+                  {
+                    category.transactions
+                  }
+                </span>
+              </button>
+            )
+          )}
+        </div>
+
+        {/* TRANSACTION LIST */}
+
+        {safeExpenses.length === 0 ? (
+          <div
+            className={
+              styles.largeEmptyState
+            }
+          >
+            <div
+              className={
+                styles.emptyIcon
+              }
+            >
+              <ReceiptIcon />
+            </div>
 
             <strong>
-              {safeExpenses.length === 0
-                ? "No transactions recorded"
-                : "No matching transactions"}
+              Your transaction vault is empty
             </strong>
 
             <p>
-              {safeExpenses.length === 0
-                ? "Use the expense vault to record your first city transaction."
-                : "Change the search or category filter."}
+              Add your first real expense
+              to begin tracking your
+              financial city.
             </p>
 
-            {safeExpenses.length === 0 ? (
-              <a href="#expense-form">
-                <PlusIcon />
-                Record First Expense
-              </a>
-            ) : (
-              <button
-                type="button"
-                onClick={clearFilters}
-              >
-                Clear Filters
-              </button>
-            )}
+            <a
+              href="#add-expense"
+              className={
+                styles.emptyAction
+              }
+            >
+              <PlusIcon />
+
+              Add First Expense
+
+              <ArrowIcon />
+            </a>
+          </div>
+        ) : filteredExpenses.length ===
+          0 ? (
+          <div
+            className={
+              styles.largeEmptyState
+            }
+          >
+            <div
+              className={
+                styles.emptyIcon
+              }
+            >
+              <SearchIcon />
+            </div>
+
+            <strong>
+              No matching expenses
+            </strong>
+
+            <p>
+              No real transactions match
+              your current search and
+              filters.
+            </p>
+
+            <button
+              type="button"
+              className={
+                styles.emptyAction
+              }
+              onClick={resetFilters}
+            >
+              <ResetIcon />
+
+              Reset Filters
+            </button>
           </div>
         ) : (
-          <div className={styles.transactionList}>
+          <div
+            className={
+              styles.transactionList
+            }
+          >
             {filteredExpenses.map(
-              (expense, index) => {
-                const expenseCategory =
-                  CATEGORIES.find(
-                    (item) =>
-                      item.name === expense.category
-                  ) ?? CATEGORIES[8];
+              (
+                expense,
+                index
+              ) => {
+                const category =
+                  expense.category ||
+                  "Other";
 
-                const impact =
+                const categoryMeta =
+                  CATEGORY_META[
+                    category
+                  ] ||
+                  CATEGORY_META.Other;
+
+                const amount =
+                  Number(
+                    expense.amount
+                  ) || 0;
+
+                const budgetImpact =
                   safeBudget > 0
-                    ? Math.max(
-                        1,
-                        Math.round(
-                          (expense.amount /
-                            safeBudget) *
-                            100
-                        )
-                      )
-                    : 0;
+                    ? (
+                        (amount /
+                          safeBudget) *
+                        100
+                      ).toFixed(1)
+                    : "0.0";
 
                 return (
                   <article
-                    className={styles.transactionItem}
-                    key={expense.id}
+                    className={
+                      styles.transactionItem
+                    }
+                    key={
+                      expense.id ??
+                      `${expense.name}-${expense.createdAt}-${index}`
+                    }
                   >
-                    <span
+                    <div
                       className={
-                        styles.transactionNumber
+                        styles.transactionIndex
                       }
                     >
-                      {String(index + 1).padStart(
+                      {String(
+                        index + 1
+                      ).padStart(
                         2,
                         "0"
                       )}
-                    </span>
+                    </div>
 
                     <div
                       className={
@@ -1186,39 +2032,59 @@ export default function ExpensesPage() {
                       }
                       style={{
                         background:
-                          expenseCategory.color,
+                          `${categoryMeta.color}18`,
+
+                        color:
+                          categoryMeta.color,
                       }}
                     >
-                      {expenseCategory.icon}
+                      {
+                        categoryMeta.icon
+                      }
                     </div>
 
                     <div
                       className={
-                        styles.transactionInformation
+                        styles.transactionInfo
                       }
                     >
-                      <strong>{expense.name}</strong>
+                      <strong>
+                        {expense.name}
+                      </strong>
 
                       <span>
-                        {expenseCategory.building}
+                        {category}
                       </span>
                     </div>
 
-                    <span
+                    <div
                       className={
-                        styles.transactionCategory
+                        styles.transactionDate
                       }
                     >
-                      {expense.category}
-                    </span>
+                      <span>
+                        RECORDED
+                      </span>
+
+                      <strong>
+                        {formatExpenseDate(
+                          expense.createdAt
+                        )}
+                      </strong>
+                    </div>
 
                     <div
                       className={
                         styles.transactionImpact
                       }
                     >
-                      <span>City impact</span>
-                      <strong>-{impact}%</strong>
+                      <span>
+                        BUDGET IMPACT
+                      </span>
+
+                      <strong>
+                        {budgetImpact}%
+                      </strong>
                     </div>
 
                     <strong
@@ -1226,25 +2092,12 @@ export default function ExpensesPage() {
                         styles.transactionAmount
                       }
                     >
+                      -
                       {numberFormatter.format(
-                        expense.amount
+                        amount
                       )}{" "}
                       SAR
                     </strong>
-
-                    <button
-                      type="button"
-                      className={styles.deleteButton}
-                      onClick={() =>
-                        handleDelete(
-                          expense.id,
-                          expense.name
-                        )
-                      }
-                      aria-label={`Delete ${expense.name}`}
-                    >
-                      <TrashIcon />
-                    </button>
                   </article>
                 );
               }
@@ -1252,6 +2105,57 @@ export default function ExpensesPage() {
           </div>
         )}
       </section>
-    </div>
+
+      {/* =====================
+          AI CTA
+      ===================== */}
+
+      <section
+        className={styles.aiPanel}
+      >
+        <div
+          className={
+            styles.aiPanelIcon
+          }
+        >
+          <SparkIcon />
+        </div>
+
+        <div
+          className={
+            styles.aiPanelContent
+          }
+        >
+          <span>
+            GEMINI AI CONNECTED
+          </span>
+
+          <h2>
+            Ready for deeper financial analysis?
+          </h2>
+
+          <p>
+            FinBot can analyze your real
+            expenses, categories, budget
+            usage and financial indicators
+            through your connected Gemini
+            AI system.
+          </p>
+        </div>
+
+        <Link
+          href="/city/insights"
+          className={
+            styles.aiPanelButton
+          }
+        >
+          <SparkIcon />
+
+          Open AI Insights
+
+          <ArrowIcon />
+        </Link>
+      </section>
+    </main>
   );
 }

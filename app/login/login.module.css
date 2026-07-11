@@ -6,6 +6,8 @@
   align-items: center;
   justify-content: center;
 
+  color: #172033;
+
   background:
     radial-gradient(
       circle at top,
@@ -13,6 +15,12 @@
       transparent 35%
     ),
     #f5f7fb;
+
+  font-family:
+    "Segoe UI",
+    Arial,
+    Helvetica,
+    sans-serif;
 }
 
 .card {
@@ -24,19 +32,15 @@
 
   background: #ffffff;
 
-  box-shadow: 0 25px 65px
-    rgba(23, 32, 51, 0.1);
-}
-
-.header {
-  margin-bottom: 28px;
+  box-shadow:
+    0 25px 65px rgba(23, 32, 51, 0.1);
 }
 
 .logo {
   width: fit-content;
   margin-bottom: 42px;
 
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 10px;
 
@@ -47,24 +51,28 @@
   text-decoration: none;
 }
 
-.logo span {
+.logoMark {
   width: 40px;
   height: 40px;
-
-  border-radius: 12px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
+  border-radius: 12px;
+
   background: #22c55e;
   color: #ffffff;
 
-  font-size: 16px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 900;
 
-  box-shadow: 0 9px 20px
-    rgba(34, 197, 94, 0.22);
+  box-shadow:
+    0 9px 20px rgba(34, 197, 94, 0.22);
+}
+
+.header {
+  margin-bottom: 28px;
 }
 
 .label {
@@ -78,18 +86,18 @@
 }
 
 .header h1 {
-  margin-top: 9px;
+  margin: 9px 0 0;
 
   color: #172033;
 
   font-size: 34px;
-  font-weight: 750;
+  font-weight: 800;
   letter-spacing: -1px;
   line-height: 1.15;
 }
 
 .header p {
-  margin-top: 9px;
+  margin: 9px 0 0;
 
   color: #778397;
 
@@ -118,20 +126,20 @@
   gap: 18px;
 }
 
-.form label {
+.field {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.form label span {
+.field > span {
   color: #344054;
 
   font-size: 12px;
   font-weight: 700;
 }
 
-.form input {
+.field input {
   width: 100%;
   height: 51px;
   padding: 0 15px;
@@ -148,23 +156,85 @@
 
   transition:
     border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
+    box-shadow 0.2s ease;
 }
 
-.form input::placeholder {
+.field input::placeholder {
   color: #a0aaba;
 }
 
-.form input:focus {
+.field input:focus {
   border-color: #22c55e;
-  background: #ffffff;
 
-  box-shadow: 0 0 0 4px
-    rgba(34, 197, 94, 0.11);
+  box-shadow:
+    0 0 0 4px rgba(34, 197, 94, 0.11);
 }
 
-.form button {
+.passwordField {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+}
+
+.passwordField input {
+  padding-right: 72px;
+}
+
+.showButton {
+  position: absolute;
+  right: 8px;
+
+  height: 35px;
+  padding: 0 11px;
+
+  border: 0;
+  border-radius: 10px;
+
+  background: #f2f4f7;
+  color: #172033;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.showButton:hover {
+  background: #22c55e;
+  color: #ffffff;
+}
+
+.options {
+  margin-top: -4px;
+
+  display: flex;
+  justify-content: flex-end;
+}
+
+.forgotButton {
+  padding: 0;
+
+  border: 0;
+  background: transparent;
+
+  color: #16a34a;
+
+  font-size: 12px;
+  font-weight: 750;
+
+  cursor: pointer;
+}
+
+.forgotButton:hover {
+  text-decoration: underline;
+}
+
+.submitButton {
   width: 100%;
   height: 51px;
   margin-top: 5px;
@@ -183,24 +253,30 @@
   transition:
     transform 0.2s ease,
     background 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
 }
 
-.form button:hover {
+.submitButton:hover:not(:disabled) {
   transform: translateY(-2px);
 
   background: #22c55e;
 
-  box-shadow: 0 13px 25px
-    rgba(34, 197, 94, 0.22);
+  box-shadow:
+    0 13px 25px rgba(34, 197, 94, 0.22);
 }
 
-.form button:active {
+.submitButton:active:not(:disabled) {
   transform: translateY(0);
 }
 
-.registerText {
-  margin-top: 24px;
+.submitButton:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.footerText {
+  margin: 24px 0 0;
 
   color: #778397;
 
@@ -208,15 +284,34 @@
   text-align: center;
 }
 
-.registerText a {
+.footerText a {
   color: #16a34a;
 
   font-weight: 750;
   text-decoration: none;
 }
 
-.registerText a:hover {
+.footerText a:hover {
   text-decoration: underline;
+}
+
+.back {
+  width: fit-content;
+  margin: 18px auto 0;
+
+  display: block;
+
+  color: #98a2b3;
+
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: none;
+
+  transition: color 0.2s ease;
+}
+
+.back:hover {
+  color: #172033;
 }
 
 @media (max-width: 520px) {

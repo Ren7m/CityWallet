@@ -8,6 +8,7 @@ import {
 
 import { useAuth } from "@/context/AuthContext";
 import { useBudget } from "@/context/BudgetContext";
+import { useGame } from "@/context/GameContext";
 
 import CityView from "./components/CityView";
 import CityFinanceStatus from "./components/CityFinanceStatus";
@@ -27,6 +28,24 @@ const CATEGORIES = [
   "Other",
 ];
 
+type QuestItem = {
+  id?: string;
+
+  title?: string;
+
+  description?: string;
+
+  progress?: number;
+
+  completed?: boolean;
+
+  claimed?: boolean;
+
+  rewardXp?: number;
+
+  rewardCoins?: number;
+};
+
 export default function CityPage() {
   const { user } = useAuth();
 
@@ -40,14 +59,28 @@ export default function CityPage() {
     budgetUsage,
   } = useBudget();
 
+  const {
+    xp,
+    coins,
+    streak,
+    level,
+    levelProgress,
+    cityHealth,
+    quests,
+  } = useGame();
+
   const [expenseName, setExpenseName] =
     useState("");
 
-  const [expenseAmount, setExpenseAmount] =
-    useState("");
+  const [
+    expenseAmount,
+    setExpenseAmount,
+  ] = useState("");
 
-  const [expenseCategory, setExpenseCategory] =
-    useState("Food");
+  const [
+    expenseCategory,
+    setExpenseCategory,
+  ] = useState("Food");
 
   const [error, setError] =
     useState("");
@@ -56,10 +89,41 @@ export default function CityPage() {
     useState("");
 
   const formatter = useMemo(() => {
-    return new Intl.NumberFormat("en-US", {
-      maximumFractionDigits: 2,
-    });
+    return new Intl.NumberFormat(
+      "en-US",
+      {
+        maximumFractionDigits: 2,
+      }
+    );
   }, []);
+
+  /*
+    نتأكد أن quests عبارة عن Array
+    ثم نعرّف شكل العناصر داخلها.
+  */
+
+  const safeQuests = useMemo<
+    QuestItem[]
+  >(() => {
+    if (!Array.isArray(quests)) {
+      return [];
+    }
+
+    return quests as QuestItem[];
+  }, [quests]);
+
+  /*
+    لا نظهر صحة مدينة وهمية
+    قبل وجود نشاط مالي حقيقي.
+  */
+
+  const hasFinancialData =
+    Number(budget) > 0 &&
+    expenses.length > 0;
+
+  /*
+    آخر 4 مصروفات.
+  */
 
   const recentExpenses = useMemo(() => {
     return [...expenses]
@@ -67,10 +131,119 @@ export default function CityPage() {
       .slice(0, 4);
   }, [expenses]);
 
+  /*
+    أول مهمة غير مستلمة.
+  */
+
+  const activeQuest =
+    useMemo<QuestItem | null>(() => {
+      if (safeQuests.length === 0) {
+        return null;
+      }
+
+      return (
+        safeQuests.find(
+          (quest) =>
+            quest.claimed !== true
+        ) ?? safeQuests[0]
+      );
+    }, [safeQuests]);
+
+  /*
+    عدد المهمات المكتملة.
+  */
+
+  const completedQuests =
+    safeQuests.filter(
+      (quest) =>
+        quest.completed === true
+    ).length;
+
+  /*
+    نسبة استخدام الميزانية.
+  */
+
   const progressWidth = Math.min(
-    Math.max(budgetUsage, 0),
+    Math.max(
+      Number(budgetUsage) || 0,
+      0
+    ),
     100
   );
+
+  /*
+    نسبة تقدم المستوى.
+  */
+
+  const safeLevelProgress = Math.min(
+    Math.max(
+      Number(levelProgress) || 0,
+      0
+    ),
+    100
+  );
+
+  /*
+    بيانات المهمة الحالية.
+  */
+
+  const activeQuestProgress = Math.min(
+    Math.max(
+      Number(activeQuest?.progress) ||
+        0,
+      0
+    ),
+    100
+  );
+
+  const activeQuestRewardXp =
+    Number(activeQuest?.rewardXp) || 0;
+
+  const activeQuestRewardCoins =
+    Number(activeQuest?.rewardCoins) || 0;
+
+  /*
+    حالة صحة المدينة.
+  */
+
+  const healthStatus = useMemo(() => {
+    if (!hasFinancialData) {
+      return {
+        label: "No data yet",
+
+        className:
+          styles.healthWarning,
+      };
+    }
+
+    if (cityHealth >= 80) {
+      return {
+        label: "Thriving",
+
+        className:
+          styles.healthGood,
+      };
+    }
+
+    if (cityHealth >= 50) {
+      return {
+        label: "Stable",
+
+        className:
+          styles.healthWarning,
+      };
+    }
+
+    return {
+      label: "At Risk",
+
+      className:
+        styles.healthDanger,
+    };
+  }, [
+    cityHealth,
+    hasFinancialData,
+  ]);
 
   function handleAddExpense(
     event: FormEvent<HTMLFormElement>
@@ -78,14 +251,18 @@ export default function CityPage() {
     event.preventDefault();
 
     setError("");
+
     setSuccess("");
 
-    const amount = Number(expenseAmount);
+    const amount = Number(
+      expenseAmount
+    );
 
     if (!expenseName.trim()) {
       setError(
         "Please enter the expense name."
       );
+
       return;
     }
 
@@ -96,18 +273,25 @@ export default function CityPage() {
       setError(
         "Please enter a valid amount."
       );
+
       return;
     }
 
     addExpense({
       name: expenseName.trim(),
+
       amount,
+
       category: expenseCategory,
-      createdAt: new Date().toISOString(),
+
+      createdAt:
+        new Date().toISOString(),
     });
 
     setExpenseName("");
+
     setExpenseAmount("");
+
     setExpenseCategory("Food");
 
     setSuccess(
@@ -121,12 +305,30 @@ export default function CityPage() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.dashboardGrid}>
-        <div className={styles.mainColumn}>
-          <section className={styles.welcomeCard}>
+      <div
+        className={
+          styles.dashboardGrid
+        }
+      >
+        <div
+          className={
+            styles.mainColumn
+          }
+        >
+          {/* WELCOME */}
+
+          <section
+            className={
+              styles.welcomeCard
+            }
+          >
             <div>
-              <span className={styles.eyebrow}>
-                MY FINANCIAL CITY
+              <span
+                className={
+                  styles.eyebrow
+                }
+              >
+                🏙 MY FINANCIAL CITY
               </span>
 
               <h1>
@@ -138,39 +340,421 @@ export default function CityPage() {
               </h1>
 
               <p>
-                Manage your spending and watch
-                your city respond to your
-                financial decisions.
+                Manage your money,
+                complete financial
+                missions and watch your
+                city respond to every
+                decision.
               </p>
             </div>
 
-            <div className={styles.budgetStatus}>
-              <span>Budget usage</span>
+            {/* PLAYER LEVEL */}
 
-              <strong>
-                {budgetUsage}%
-              </strong>
+            <div
+              className={
+                styles.playerBadge
+              }
+            >
+              <div
+                className={
+                  styles.playerBadgeTop
+                }
+              >
+                <div
+                  className={
+                    styles.playerLevelIcon
+                  }
+                >
+                  ⭐
+                </div>
+
+                <div>
+                  <span>
+                    PLAYER LEVEL
+                  </span>
+
+                  <strong>
+                    Level {level}
+                  </strong>
+                </div>
+              </div>
+
+              <div
+                className={
+                  styles.playerXpRow
+                }
+              >
+                <span>
+                  {xp} total XP
+                </span>
+
+                <span>
+                  {Math.round(
+                    safeLevelProgress
+                  )}
+                  %
+                </span>
+              </div>
+
+              <div
+                className={
+                  styles.playerProgress
+                }
+              >
+                <span
+                  style={{
+                    width: `${safeLevelProgress}%`,
+                  }}
+                />
+              </div>
             </div>
           </section>
 
-          <section className={styles.citySection}>
+          {/* GAME HUD */}
+
+          <section
+            className={styles.gameHud}
+          >
+            {/* LEVEL */}
+
+            <article
+              className={`${styles.hudCard} ${styles.levelHud}`}
+            >
+              <div
+                className={styles.hudIcon}
+              >
+                🏆
+              </div>
+
+              <div
+                className={
+                  styles.hudContent
+                }
+              >
+                <span>LEVEL</span>
+
+                <strong>{level}</strong>
+
+                <small>
+                  {xp} total XP
+                </small>
+              </div>
+            </article>
+
+            {/* STREAK */}
+
+            <article
+              className={`${styles.hudCard} ${styles.streakHud}`}
+            >
+              <div
+                className={styles.hudIcon}
+              >
+                🔥
+              </div>
+
+              <div
+                className={
+                  styles.hudContent
+                }
+              >
+                <span>STREAK</span>
+
+                <strong>
+                  {streak}
+
+                  <small>
+                    {streak === 1
+                      ? " day"
+                      : " days"}
+                  </small>
+                </strong>
+
+                <small>
+                  Based on real activity
+                </small>
+              </div>
+            </article>
+
+            {/* COINS */}
+
+            <article
+              className={`${styles.hudCard} ${styles.coinsHud}`}
+            >
+              <div
+                className={styles.hudIcon}
+              >
+                🪙
+              </div>
+
+              <div
+                className={
+                  styles.hudContent
+                }
+              >
+                <span>COINS</span>
+
+                <strong>
+                  {coins}
+                </strong>
+
+                <small>
+                  Earned from rewards
+                </small>
+              </div>
+            </article>
+
+            {/* CITY HEALTH */}
+
+            <article
+              className={`${styles.hudCard} ${styles.healthHud}`}
+            >
+              <div
+                className={styles.hudIcon}
+              >
+                💚
+              </div>
+
+              <div
+                className={
+                  styles.hudContent
+                }
+              >
+                <span>
+                  CITY HEALTH
+                </span>
+
+                <strong>
+                  {hasFinancialData
+                    ? `${cityHealth}%`
+                    : "—"}
+                </strong>
+
+                <small
+                  className={
+                    healthStatus.className
+                  }
+                >
+                  {healthStatus.label}
+                </small>
+              </div>
+            </article>
+          </section>
+
+          {/* CITY */}
+
+          <section
+            className={
+              styles.citySection
+            }
+          >
             <CityView />
           </section>
 
+          {/* FINANCE STATUS */}
+
           <CityFinanceStatus />
 
-          <section className={styles.statsSection}>
+          {/* ACTIVE MISSION */}
+
+          <section
+            className={
+              styles.missionCard
+            }
+          >
+            <div
+              className={
+                styles.missionGlow
+              }
+            />
+
+            <div
+              className={
+                styles.missionHeader
+              }
+            >
+              <div
+                className={
+                  styles.missionHeading
+                }
+              >
+                <div
+                  className={
+                    styles.missionIcon
+                  }
+                >
+                  ⚔️
+                </div>
+
+                <div>
+                  <span>
+                    ACTIVE MISSION
+                  </span>
+
+                  <h2>
+                    {activeQuest?.title ||
+                      "No active mission"}
+                  </h2>
+                </div>
+              </div>
+
+              <div
+                className={
+                  styles.missionCounter
+                }
+              >
+                <span>
+                  MISSIONS
+                </span>
+
+                <strong>
+                  {completedQuests}
+
+                  <small>
+                    /{safeQuests.length}
+                  </small>
+                </strong>
+              </div>
+            </div>
+
+            {activeQuest ? (
+              <>
+                <p
+                  className={
+                    styles.missionDescription
+                  }
+                >
+                  {activeQuest.description ||
+                    "Complete this mission to improve your financial progress."}
+                </p>
+
+                <div
+                  className={
+                    styles.missionProgressTop
+                  }
+                >
+                  <span>
+                    MISSION PROGRESS
+                  </span>
+
+                  <strong>
+                    {activeQuestProgress}%
+                  </strong>
+                </div>
+
+                <div
+                  className={
+                    styles.missionProgress
+                  }
+                >
+                  <span
+                    style={{
+                      width: `${activeQuestProgress}%`,
+                    }}
+                  />
+                </div>
+
+                <div
+                  className={
+                    styles.missionBottom
+                  }
+                >
+                  <div
+                    className={
+                      styles.missionRewards
+                    }
+                  >
+                    <span>
+                      REWARDS
+                    </span>
+
+                    <div>
+                      <strong>
+                        ⭐ +
+                        {
+                          activeQuestRewardXp
+                        }{" "}
+                        XP
+                      </strong>
+
+                      <strong>
+                        🪙 +
+                        {
+                          activeQuestRewardCoins
+                        }{" "}
+                        Coins
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div
+                    className={
+                      styles.missionStatus
+                    }
+                  >
+                    {activeQuest.completed
+                      ? "✓ Completed"
+                      : "Mission in progress"}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div
+                className={
+                  styles.allMissionsComplete
+                }
+              >
+                <div>🏆</div>
+
+                <strong>
+                  No active missions
+                </strong>
+
+                <p>
+                  New missions will appear
+                  here when available.
+                </p>
+              </div>
+            )}
+          </section>
+
+          {/* STATS */}
+
+          <section
+            className={
+              styles.statsSection
+            }
+          >
             <Stats />
           </section>
         </div>
 
-        <aside className={styles.rightPanel}>
-          <section className={styles.summaryCard}>
-            <div className={styles.cardHeading}>
-              <div>
-                <span>FINANCIAL SUMMARY</span>
+        {/* RIGHT PANEL */}
 
-                <h2>Monthly overview</h2>
+        <aside
+          className={
+            styles.rightPanel
+          }
+        >
+          {/* FINANCIAL SUMMARY */}
+
+          <section
+            className={
+              styles.summaryCard
+            }
+          >
+            <div
+              className={
+                styles.cardHeading
+              }
+            >
+              <div>
+                <span>
+                  💰 FINANCIAL SUMMARY
+                </span>
+
+                <h2>
+                  Monthly overview
+                </h2>
               </div>
 
               <strong
@@ -180,11 +764,18 @@ export default function CityPage() {
                     : styles.balanceNegative
                 }
               >
-                {formatter.format(balance)} SAR
+                {formatter.format(
+                  balance
+                )}{" "}
+                SAR
               </strong>
             </div>
 
-            <div className={styles.progressTrack}>
+            <div
+              className={
+                styles.progressTrack
+              }
+            >
               <span
                 className={
                   budgetUsage >= 100
@@ -199,7 +790,11 @@ export default function CityPage() {
               />
             </div>
 
-            <div className={styles.summaryGrid}>
+            <div
+              className={
+                styles.summaryGrid
+              }
+            >
               <div>
                 <span>Salary</span>
 
@@ -234,7 +829,9 @@ export default function CityPage() {
               </div>
 
               <div>
-                <span>Remaining</span>
+                <span>
+                  Remaining
+                </span>
 
                 <strong
                   className={
@@ -252,12 +849,26 @@ export default function CityPage() {
             </div>
           </section>
 
-          <section className={styles.expenseCard}>
-            <div className={styles.cardHeading}>
-              <div>
-                <span>NEW TRANSACTION</span>
+          {/* ADD EXPENSE */}
 
-                <h2>Add Expense</h2>
+          <section
+            className={
+              styles.expenseCard
+            }
+          >
+            <div
+              className={
+                styles.cardHeading
+              }
+            >
+              <div>
+                <span>
+                  ⚔️ NEW TRANSACTION
+                </span>
+
+                <h2>
+                  Add Expense
+                </h2>
               </div>
             </div>
 
@@ -272,7 +883,9 @@ export default function CityPage() {
 
             {success && (
               <div
-                className={styles.success}
+                className={
+                  styles.success
+                }
                 role="status"
               >
                 {success}
@@ -280,11 +893,17 @@ export default function CityPage() {
             )}
 
             <form
-              className={styles.expenseForm}
-              onSubmit={handleAddExpense}
+              className={
+                styles.expenseForm
+              }
+              onSubmit={
+                handleAddExpense
+              }
             >
               <label>
-                <span>Expense name</span>
+                <span>
+                  Expense name
+                </span>
 
                 <input
                   type="text"
@@ -299,9 +918,15 @@ export default function CityPage() {
               </label>
 
               <label>
-                <span>Amount</span>
+                <span>
+                  Amount
+                </span>
 
-                <div className={styles.amountField}>
+                <div
+                  className={
+                    styles.amountField
+                  }
+                >
                   <input
                     type="number"
                     min="1"
@@ -315,15 +940,21 @@ export default function CityPage() {
                     placeholder="0"
                   />
 
-                  <strong>SAR</strong>
+                  <strong>
+                    SAR
+                  </strong>
                 </div>
               </label>
 
               <label>
-                <span>Category</span>
+                <span>
+                  Category
+                </span>
 
                 <select
-                  value={expenseCategory}
+                  value={
+                    expenseCategory
+                  }
                   onChange={(event) =>
                     setExpenseCategory(
                       event.target.value
@@ -344,17 +975,31 @@ export default function CityPage() {
               </label>
 
               <button type="submit">
-                Add Expense
+                + Add Expense
               </button>
             </form>
           </section>
 
-          <section className={styles.recentCard}>
-            <div className={styles.cardHeading}>
-              <div>
-                <span>RECENT ACTIVITY</span>
+          {/* RECENT ACTIVITY */}
 
-                <h2>Latest expenses</h2>
+          <section
+            className={
+              styles.recentCard
+            }
+          >
+            <div
+              className={
+                styles.cardHeading
+              }
+            >
+              <div>
+                <span>
+                  📜 RECENT ACTIVITY
+                </span>
+
+                <h2>
+                  Latest expenses
+                </h2>
               </div>
 
               <small>
@@ -362,23 +1007,39 @@ export default function CityPage() {
               </small>
             </div>
 
-            {recentExpenses.length === 0 ? (
-              <div className={styles.emptyState}>
+            {recentExpenses.length ===
+            0 ? (
+              <div
+                className={
+                  styles.emptyState
+                }
+              >
                 <strong>
                   No expenses yet
                 </strong>
 
                 <p>
-                  Add your first expense using
-                  the form above.
+                  Add your first expense
+                  to start your financial
+                  journey.
                 </p>
               </div>
             ) : (
-              <div className={styles.expenseList}>
+              <div
+                className={
+                  styles.expenseList
+                }
+              >
                 {recentExpenses.map(
-                  (expense) => (
+                  (
+                    expense,
+                    index
+                  ) => (
                     <article
-                      key={expense.id}
+                      key={
+                        expense.id ??
+                        `${expense.name}-${index}`
+                      }
                       className={
                         styles.expenseItem
                       }

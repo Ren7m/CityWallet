@@ -1,21 +1,14 @@
 "use client";
 
-import {
-  useMemo,
-  useState,
-} from "react";
+import { useMemo } from "react";
 
 import {
-  useAuth,
-} from "@/context/AuthContext";
+  useRouter,
+} from "next/navigation";
 
-import {
-  useBudget,
-} from "@/context/BudgetContext";
-
-import {
-  useGame,
-} from "@/context/GameContext";
+import { useAuth } from "@/context/AuthContext";
+import { useBudget } from "@/context/BudgetContext";
+import { useGame } from "@/context/GameContext";
 
 import styles from "./MonsterCard.module.css";
 
@@ -35,10 +28,11 @@ function getWeekNumber() {
   );
 
   return Math.ceil(
-    (daysPassed +
+    (
+      daysPassed +
       firstDay.getDay() +
-      1) /
-      7
+      1
+    ) / 7
   );
 }
 
@@ -51,50 +45,54 @@ function getDaysLeftInWeek() {
     : 7 - currentDay;
 }
 
+function clamp(
+  value: number,
+  minimum: number,
+  maximum: number
+) {
+  return Math.min(
+    Math.max(
+      value,
+      minimum
+    ),
+    maximum
+  );
+}
+
 export default function MonsterCard() {
+  const router = useRouter();
+
   const { user } = useAuth();
-  const { expenses } = useBudget();
+
+  const { expenses } =
+    useBudget();
 
   const {
-    monsterHp,
-    monsterMaxHp,
-    monsterDefeated,
-    availableAttacks,
-    attackMonster,
-    parkUnlocked,
+    monster,
   } = useGame();
 
-  const [hit, setHit] =
-    useState(false);
+  const topExpense = useMemo(() => {
+    if (expenses.length === 0) {
+      return null;
+    }
 
-  const topExpense =
-    useMemo(() => {
-      if (expenses.length === 0) {
-        return null;
-      }
-
-      return [...expenses].sort(
-        (first, second) =>
+    return [...expenses].sort(
+      (
+        first,
+        second
+      ) =>
+        (
           Number(
-            second.amount || 0
-          ) -
+            second.amount
+          ) || 0
+        ) -
+        (
           Number(
-            first.amount || 0
-          )
-      )[0];
-    }, [expenses]);
-
-  const topExpenseName =
-    topExpense?.name ||
-    "Spending";
-
-  const topExpenseAmount =
-    Number(
-      topExpense?.amount || 0
-    );
-
-  const monsterName =
-    `${topExpenseName} Monster`;
+            first.amount
+          ) || 0
+        )
+    )[0];
+  }, [expenses]);
 
   const playerName =
     user?.name?.trim() ||
@@ -103,12 +101,43 @@ export default function MonsterCard() {
   const firstName =
     playerName.split(/\s+/)[0];
 
-  const healthPercentage =
-    Math.round(
-      (monsterHp /
-        monsterMaxHp) *
-        100
+  const topExpenseName =
+    topExpense?.name ||
+    "your spending";
+
+  const topExpenseAmount =
+    Number(
+      topExpense?.amount
+    ) || 0;
+
+  const monsterMaxHp =
+    Math.max(
+      Number(
+        monster.maxHp
+      ) || 0,
+      0
     );
+
+  const monsterHp =
+    clamp(
+      Number(monster.hp) || 0,
+      0,
+      monsterMaxHp
+    );
+
+  const healthPercentage =
+    monsterMaxHp > 0
+      ? clamp(
+          Math.round(
+            (
+              monsterHp /
+              monsterMaxHp
+            ) * 100
+          ),
+          0,
+          100
+        )
+      : 0;
 
   const weekNumber =
     getWeekNumber();
@@ -116,51 +145,56 @@ export default function MonsterCard() {
   const daysLeft =
     getDaysLeftInWeek();
 
-  function handleAttack() {
-    const attacked =
-      attackMonster();
+  function getDescription() {
+    if (
+      monster.rewardClaimed
+    ) {
+      return `${firstName}, you defeated the monster and already collected your real weekly victory reward.`;
+    }
 
-    if (!attacked) {
+    if (monster.defeated) {
+      return `${firstName}, you defeated the monster. Your victory reward of ${monster.rewardXp} XP and ${monster.rewardCoins} Coins is ready to claim.`;
+    }
+
+    if (
+      expenses.length === 0
+    ) {
+      return `${firstName}, record your first real expense to activate your Weekly Monster battle progress.`;
+    }
+
+    return `${topExpenseName} is currently your highest recorded expense at ${topExpenseAmount.toLocaleString(
+      "en-US",
+      {
+        maximumFractionDigits: 2,
+      }
+    )} SAR. Keep tracking real expenses and completing financial quests to weaken ${monster.name}.`;
+  }
+
+  function handleBattleAction() {
+    if (monster.defeated) {
       return;
     }
 
-    setHit(true);
-
-    window.setTimeout(() => {
-      setHit(false);
-    }, 350);
-  }
-
-  function getDescription() {
-    if (monsterDefeated) {
-      return `${firstName}, you defeated the monster and unlocked the City Park. Return to your city to see your new reward.`;
-    }
-
-    if (expenses.length === 0) {
-      return `${firstName}, record your first expense to earn three attacks against the Weekly Monster.`;
-    }
-
-    if (availableAttacks === 0) {
-      return `${firstName}, record another expense to earn three more attacks.`;
-    }
-
-    return `${topExpenseName} is your highest expense at ${topExpenseAmount.toLocaleString(
-      "en-US"
-    )} SAR. You currently have ${availableAttacks} attacks available.`;
+    router.push(
+      "/city/expenses"
+    );
   }
 
   return (
     <section className={styles.card}>
       <div className={styles.top}>
         <span>
-          🔥 Week {weekNumber} •{" "}
-          {monsterDefeated
+          🔥 Week {weekNumber}
+          {" • "}
+          {monster.defeated
             ? "Completed"
             : "Active"}
         </span>
 
         <div className={styles.time}>
-          <small>Time left</small>
+          <small>
+            Time left
+          </small>
 
           <b>
             {daysLeft}{" "}
@@ -171,113 +205,146 @@ export default function MonsterCard() {
         </div>
       </div>
 
-      <h2>Defeat the Monster</h2>
+      <h2>
+        Defeat the Monster
+      </h2>
 
       <div
-        className={`${styles.monster} ${
-          hit ? styles.hit : ""
-        }`}
+        className={styles.monster}
       >
         <div
-          className={styles.hornLeft}
-        ></div>
+          className={
+            styles.hornLeft
+          }
+        />
 
         <div
-          className={styles.hornRight}
-        ></div>
+          className={
+            styles.hornRight
+          }
+        />
 
         <div className={styles.body}>
           <div
-            className={styles.eyeLeft}
-          ></div>
+            className={
+              styles.eyeLeft
+            }
+          />
 
           <div
-            className={styles.eyeRight}
-          ></div>
+            className={
+              styles.eyeRight
+            }
+          />
 
           <div
             className={
               styles.pupilLeft
             }
-          ></div>
+          />
 
           <div
             className={
               styles.pupilRight
             }
-          ></div>
+          />
 
           <div
-            className={styles.browLeft}
-          ></div>
+            className={
+              styles.browLeft
+            }
+          />
 
           <div
-            className={styles.browRight}
-          ></div>
+            className={
+              styles.browRight
+            }
+          />
 
           <div
             className={
               styles.cheekLeft
             }
-          ></div>
+          />
 
           <div
             className={
               styles.cheekRight
             }
-          ></div>
+          />
 
           <div
             className={styles.mouth}
-          ></div>
+          />
 
-          <div className={styles.teeth}>
-            <span></span>
-            <span></span>
-            <span></span>
+          <div
+            className={styles.teeth}
+          >
+            <span />
+            <span />
+            <span />
           </div>
 
           <div
-            className={styles.handLeft}
-          ></div>
+            className={
+              styles.handLeft
+            }
+          />
 
           <div
-            className={styles.handRight}
-          ></div>
+            className={
+              styles.handRight
+            }
+          />
 
           <div
-            className={styles.footLeft}
-          ></div>
+            className={
+              styles.footLeft
+            }
+          />
 
           <div
-            className={styles.footRight}
-          ></div>
+            className={
+              styles.footRight
+            }
+          />
         </div>
 
         <div
           className={styles.shadow}
-        ></div>
+        />
       </div>
 
-      <h1>{monsterName}</h1>
+      <h1>
+        {monster.name}
+      </h1>
 
-      <p className={styles.description}>
+      <p
+        className={
+          styles.description
+        }
+      >
         {getDescription()}
       </p>
 
-      <div className={styles.progress}>
+      <div
+        className={styles.progress}
+      >
         <div
           style={{
             width: `${healthPercentage}%`,
           }}
-        ></div>
+        />
       </div>
 
       <div className={styles.percent}>
-        <span>Monster health</span>
+        <span>
+          Monster health
+        </span>
 
         <b>
-          {monsterHp} /{" "}
+          {monsterHp}
+          {" / "}
           {monsterMaxHp} HP
         </b>
       </div>
@@ -285,26 +352,27 @@ export default function MonsterCard() {
       <button
         type="button"
         className={styles.attack}
-        onClick={handleAttack}
+        onClick={
+          handleBattleAction
+        }
         disabled={
-          availableAttacks === 0 ||
-          monsterDefeated
+          monster.defeated
         }
       >
-        {monsterDefeated
+        {monster.defeated
           ? "🎉 Monster Defeated!"
-          : availableAttacks > 0
-            ? `⚔️ Attack Monster — ${availableAttacks} available`
-            : "Record an expense to attack"}
+          : expenses.length === 0
+            ? "⚔️ Record First Expense to Attack"
+            : "⚔️ Track Expense to Keep Attacking"}
       </button>
 
-      {monsterDefeated && (
-        <div className={styles.defeated}>
-          🎉 Monster Defeated!
-          +250 XP, +100 Coins and{" "}
-          {parkUnlocked
-            ? "City Park unlocked."
-            : "a new city reward unlocked."}
+      {monster.defeated && (
+        <div
+          className={styles.defeated}
+        >
+          {monster.rewardClaimed
+            ? "🎉 Monster defeated and victory reward claimed."
+            : `🎉 Monster defeated! Victory reward ready: +${monster.rewardXp} XP and +${monster.rewardCoins} Coins.`}
         </div>
       )}
     </section>

@@ -10,15 +10,27 @@ import {
   type ReactNode,
 } from "react";
 
+import { useAuth } from "@/context/AuthContext";
 import { useBudget } from "@/context/BudgetContext";
 
-type GameQuest = {
+/* =========================
+   TYPES
+========================= */
+
+export type GameQuest = {
   id: string;
   title: string;
+  description: string;
+  progress: number;
+  completed: boolean;
+  claimed: boolean;
+  rewardXp: number;
+  rewardCoins: number;
 };
 
-type MonsterData = {
+export type WeeklyMonster = {
   name: string;
+  description: string;
   maxHp: number;
   hp: number;
   damage: number;
@@ -26,6 +38,16 @@ type MonsterData = {
   rewardClaimed: boolean;
   rewardXp: number;
   rewardCoins: number;
+};
+
+type QuestReward = {
+  xp: number;
+  coins: number;
+};
+
+type StoredGameData = {
+  claimedQuestIds: string[];
+  monsterRewardClaimed: boolean;
 };
 
 type GameContextType = {
@@ -39,48 +61,69 @@ type GameContextType = {
   levelProgress: number;
 
   cityHealth: number;
-
-  monsterHp: number;
-  monsterMaxHp: number;
-  monsterDefeated: boolean;
-
-  availableAttacks: number;
-  parkUnlocked: boolean;
-
-  monster: MonsterData;
-
-  attackMonster: () => boolean;
-  claimMonsterReward: () => boolean;
+  hasFinancialData: boolean;
 
   quests: GameQuest[];
-  claimQuest: (questId: string) => boolean;
+
+  claimQuest: (
+    questId: string
+  ) => boolean;
+
+  monster: WeeklyMonster;
+
+  claimMonsterReward: () => boolean;
 
   resetGameProgress: () => void;
 };
 
-type StoredGameData = {
-  xp: number;
-  coins: number;
-  monsterHp: number;
-  availableAttacks: number;
-  processedExpenseIds: string[];
-  unlockedUpgrades: string[];
-  rewardGranted: boolean;
-};
+/* =========================
+   CONSTANTS
+========================= */
 
-const GameContext =
-  createContext<GameContextType | null>(null);
-
-const STORAGE_KEY = "fincity-game-progress";
-
-const MONSTER_MAX_HP = 100;
-const ATTACK_DAMAGE = 35;
-const ATTACKS_PER_EXPENSE = 3;
-const XP_PER_EXPENSE = 10;
 const XP_PER_LEVEL = 250;
 
-const MONSTER_REWARD_XP = 250;
-const MONSTER_REWARD_COINS = 100;
+const QUEST_REWARDS: Record<
+  string,
+  QuestReward
+> = {
+  "first-expense": {
+    xp: 30,
+    coins: 10,
+  },
+
+  "expense-tracker": {
+    xp: 80,
+    coins: 20,
+  },
+
+  "budget-guardian": {
+    xp: 120,
+    coins: 35,
+  },
+
+  "savings-builder": {
+    xp: 150,
+    coins: 40,
+  },
+};
+
+const MONSTER_REWARD = {
+  xp: 250,
+  coins: 100,
+};
+
+/* =========================
+   CONTEXT
+========================= */
+
+const GameContext =
+  createContext<GameContextType | null>(
+    null
+  );
+
+/* =========================
+   HELPERS
+========================= */
 
 function clamp(
   value: number,
@@ -93,108 +136,209 @@ function clamp(
   );
 }
 
+function getLocalDateKey(
+  date = new Date()
+) {
+  const year = date.getFullYear();
+
+  const month = String(
+    date.getMonth() + 1
+  ).padStart(2, "0");
+
+  const day = String(
+    date.getDate()
+  ).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function shiftDate(
+  date: Date,
+  numberOfDays: number
+) {
+  const result = new Date(date);
+
+  result.setDate(
+    result.getDate() + numberOfDays
+  );
+
+  return result;
+}
+
+function calculateStreak(
+  expenses: {
+    createdAt?: string;
+  }[]
+) {
+  if (expenses.length === 0) {
+    return 0;
+  }
+
+  const activeDays =
+    new Set<string>();
+
+  expenses.forEach((expense) => {
+    if (!expense.createdAt) {
+      return;
+    }
+
+    const expenseDate = new Date(
+      expense.createdAt
+    );
+
+    if (
+      Number.isNaN(
+        expenseDate.getTime()
+      )
+    ) {
+      return;
+    }
+
+    activeDays.add(
+      getLocalDateKey(expenseDate)
+    );
+  });
+
+  if (activeDays.size === 0) {
+    return 0;
+  }
+
+  const today = new Date();
+
+  const yesterday = shiftDate(
+    today,
+    -1
+  );
+
+  const todayKey =
+    getLocalDateKey(today);
+
+  const yesterdayKey =
+    getLocalDateKey(yesterday);
+
+  let currentDate: Date;
+
+  if (activeDays.has(todayKey)) {
+    currentDate = today;
+  } else if (
+    activeDays.has(yesterdayKey)
+  ) {
+    currentDate = yesterday;
+  } else {
+    return 0;
+  }
+
+  let streak = 0;
+
+  while (true) {
+    const currentKey =
+      getLocalDateKey(currentDate);
+
+    if (
+      !activeDays.has(currentKey)
+    ) {
+      break;
+    }
+
+    streak += 1;
+
+    currentDate = shiftDate(
+      currentDate,
+      -1
+    );
+  }
+
+  return streak;
+}
+
+/* =========================
+   PROVIDER
+========================= */
+
 export function GameProvider({
   children,
 }: {
   children: ReactNode;
 }) {
+  const { user } = useAuth();
+
   const {
     budget,
     expenses,
     totalSpent,
+    balance,
   } = useBudget();
 
-  const [xp, setXp] = useState(0);
-  const [coins, setCoins] = useState(0);
-
-  const [monsterHp, setMonsterHp] =
-    useState(MONSTER_MAX_HP);
-
   const [
-    availableAttacks,
-    setAvailableAttacks,
-  ] = useState(0);
-
-  const [
-    processedExpenseIds,
-    setProcessedExpenseIds,
+    claimedQuestIds,
+    setClaimedQuestIds,
   ] = useState<string[]>([]);
 
   const [
-    unlockedUpgrades,
-    setUnlockedUpgrades,
-  ] = useState<string[]>([]);
-
-  const [
-    rewardGranted,
-    setRewardGranted,
+    monsterRewardClaimed,
+    setMonsterRewardClaimed,
   ] = useState(false);
 
-  const [isReady, setIsReady] =
-    useState(false);
+  const [
+    isReady,
+    setIsReady,
+  ] = useState(false);
+
+  /* =========================
+     STORAGE
+  ========================= */
+
+  const storageKey = useMemo(() => {
+    const userIdentifier =
+      user?.email
+        ?.trim()
+        .toLowerCase() ||
+      "guest";
+
+    return `citywallet-game-data:${userIdentifier}`;
+  }, [user?.email]);
 
   useEffect(() => {
-    const savedData =
-      window.localStorage.getItem(
-        STORAGE_KEY
+    setIsReady(false);
+
+    setClaimedQuestIds([]);
+
+    setMonsterRewardClaimed(false);
+
+    const storedGame =
+      window.sessionStorage.getItem(
+        storageKey
       );
 
-    if (savedData) {
+    if (storedGame) {
       try {
         const parsed =
           JSON.parse(
-            savedData
+            storedGame
           ) as Partial<StoredGameData>;
 
-        setXp(
-          Number(parsed.xp ?? 0)
-        );
-
-        setCoins(
-          Number(parsed.coins ?? 0)
-        );
-
-        setMonsterHp(
-          Number(
-            parsed.monsterHp ??
-              MONSTER_MAX_HP
-          )
-        );
-
-        setAvailableAttacks(
-          Number(
-            parsed.availableAttacks ?? 0
-          )
-        );
-
-        setProcessedExpenseIds(
+        setClaimedQuestIds(
           Array.isArray(
-            parsed.processedExpenseIds
+            parsed.claimedQuestIds
           )
-            ? parsed.processedExpenseIds
+            ? parsed.claimedQuestIds
             : []
         );
 
-        setUnlockedUpgrades(
-          Array.isArray(
-            parsed.unlockedUpgrades
+        setMonsterRewardClaimed(
+          Boolean(
+            parsed.monsterRewardClaimed
           )
-            ? parsed.unlockedUpgrades
-            : []
-        );
-
-        setRewardGranted(
-          Boolean(parsed.rewardGranted)
         );
       } catch {
-        window.localStorage.removeItem(
-          STORAGE_KEY
+        window.sessionStorage.removeItem(
+          storageKey
         );
       }
     }
 
     setIsReady(true);
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     if (!isReady) {
@@ -202,270 +346,542 @@ export function GameProvider({
     }
 
     const gameData: StoredGameData = {
-      xp,
-      coins,
-      monsterHp,
-      availableAttacks,
-      processedExpenseIds,
-      unlockedUpgrades,
-      rewardGranted,
+      claimedQuestIds,
+      monsterRewardClaimed,
     };
 
-    window.localStorage.setItem(
-      STORAGE_KEY,
+    window.sessionStorage.setItem(
+      storageKey,
       JSON.stringify(gameData)
     );
   }, [
-    xp,
-    coins,
-    monsterHp,
-    availableAttacks,
-    processedExpenseIds,
-    unlockedUpgrades,
-    rewardGranted,
+    claimedQuestIds,
+    monsterRewardClaimed,
     isReady,
+    storageKey,
   ]);
 
-  useEffect(() => {
-    if (!isReady) {
-      return;
-    }
+  /* =========================
+     FINANCIAL VALUES
+  ========================= */
 
-    const newExpenseIds = expenses
-      .map((expense) =>
-        String(expense.id)
-      )
-      .filter(
-        (expenseId) =>
-          !processedExpenseIds.includes(
-            expenseId
-          )
-      );
+  const currentBudget =
+    Number(budget) || 0;
 
-    if (newExpenseIds.length === 0) {
-      return;
-    }
+  const currentSpent =
+    Number(totalSpent) || 0;
 
-    setProcessedExpenseIds(
-      (current) => [
-        ...current,
-        ...newExpenseIds,
-      ]
-    );
-
-    setAvailableAttacks(
-      (current) =>
-        current +
-        newExpenseIds.length *
-          ATTACKS_PER_EXPENSE
-    );
-
-    setXp(
-      (current) =>
-        current +
-        newExpenseIds.length *
-          XP_PER_EXPENSE
-    );
-  }, [
-    expenses,
-    processedExpenseIds,
-    isReady,
-  ]);
-
-  const safeBudget = Number(
-    budget || 0
-  );
-
-  const safeSpent = Number(
-    totalSpent || 0
-  );
+  const currentBalance =
+    Number(balance) || 0;
 
   const budgetUsage =
-    safeBudget > 0
-      ? (safeSpent / safeBudget) * 100
+    currentBudget > 0
+      ? Math.round(
+          (currentSpent /
+            currentBudget) *
+            100
+        )
       : 0;
 
-  const cityHealth = clamp(
-    Math.round(
-      100 -
-        Math.max(
-          budgetUsage - 60,
-          0
-        ) *
-          2
-    ),
-    0,
-    100
-  );
+  const hasFinancialData =
+    currentBudget > 0 &&
+    expenses.length > 0;
 
-  const monsterDefeated =
-    monsterHp === 0;
+  /* =========================
+     STREAK
+  ========================= */
+
+  const streak = useMemo(() => {
+    return calculateStreak(
+      expenses
+    );
+  }, [expenses]);
+
+  /* =========================
+     QUESTS
+  ========================= */
+
+  const quests =
+    useMemo<GameQuest[]>(() => {
+      const firstExpenseProgress =
+        Math.min(
+          expenses.length * 100,
+          100
+        );
+
+      const fiveExpensesProgress =
+        Math.min(
+          Math.round(
+            (expenses.length / 5) *
+              100
+          ),
+          100
+        );
+
+      const disciplineProgress =
+        currentBudget > 0 &&
+        expenses.length > 0
+          ? clamp(
+              Math.round(
+                ((100 -
+                  budgetUsage) /
+                  30) *
+                  100
+              ),
+              0,
+              100
+            )
+          : 0;
+
+      const requiredSavings =
+        currentBudget * 0.25;
+
+      const savingsProgress =
+        expenses.length > 0 &&
+        requiredSavings > 0
+          ? clamp(
+              Math.round(
+                (Math.max(
+                  currentBalance,
+                  0
+                ) /
+                  requiredSavings) *
+                  100
+              ),
+              0,
+              100
+            )
+          : 0;
+
+      return [
+        {
+          id: "first-expense",
+
+          title: "First Step",
+
+          description:
+            "Record your first expense in CityWallet.",
+
+          progress:
+            firstExpenseProgress,
+
+          completed:
+            expenses.length >= 1,
+
+          claimed:
+            claimedQuestIds.includes(
+              "first-expense"
+            ),
+
+          rewardXp:
+            QUEST_REWARDS[
+              "first-expense"
+            ].xp,
+
+          rewardCoins:
+            QUEST_REWARDS[
+              "first-expense"
+            ].coins,
+        },
+
+        {
+          id: "expense-tracker",
+
+          title: "Expense Tracker",
+
+          description:
+            "Record five financial transactions.",
+
+          progress:
+            fiveExpensesProgress,
+
+          completed:
+            expenses.length >= 5,
+
+          claimed:
+            claimedQuestIds.includes(
+              "expense-tracker"
+            ),
+
+          rewardXp:
+            QUEST_REWARDS[
+              "expense-tracker"
+            ].xp,
+
+          rewardCoins:
+            QUEST_REWARDS[
+              "expense-tracker"
+            ].coins,
+        },
+
+        {
+          id: "budget-guardian",
+
+          title: "Budget Guardian",
+
+          description:
+            "Record at least three expenses while keeping budget usage at 70% or lower.",
+
+          progress:
+            disciplineProgress,
+
+          completed:
+            expenses.length >= 3 &&
+            budgetUsage <= 70,
+
+          claimed:
+            claimedQuestIds.includes(
+              "budget-guardian"
+            ),
+
+          rewardXp:
+            QUEST_REWARDS[
+              "budget-guardian"
+            ].xp,
+
+          rewardCoins:
+            QUEST_REWARDS[
+              "budget-guardian"
+            ].coins,
+        },
+
+        {
+          id: "savings-builder",
+
+          title: "Savings Builder",
+
+          description:
+            "Keep at least 25% of your monthly budget available.",
+
+          progress:
+            savingsProgress,
+
+          completed:
+            expenses.length > 0 &&
+            currentBudget > 0 &&
+            currentBalance >=
+              requiredSavings,
+
+          claimed:
+            claimedQuestIds.includes(
+              "savings-builder"
+            ),
+
+          rewardXp:
+            QUEST_REWARDS[
+              "savings-builder"
+            ].xp,
+
+          rewardCoins:
+            QUEST_REWARDS[
+              "savings-builder"
+            ].coins,
+        },
+      ];
+    }, [
+      expenses.length,
+      currentBudget,
+      currentBalance,
+      budgetUsage,
+      claimedQuestIds,
+    ]);
+
+  /* =========================
+     XP
+  ========================= */
+
+  const xp = useMemo(() => {
+    const expenseXp =
+      expenses.length * 5;
+
+    const questXp =
+      claimedQuestIds.reduce(
+        (
+          total,
+          questId
+        ) => {
+          const reward =
+            QUEST_REWARDS[questId];
+
+          return (
+            total +
+            (reward?.xp ?? 0)
+          );
+        },
+        0
+      );
+
+    const monsterXp =
+      monsterRewardClaimed
+        ? MONSTER_REWARD.xp
+        : 0;
+
+    return (
+      expenseXp +
+      questXp +
+      monsterXp
+    );
+  }, [
+    expenses.length,
+    claimedQuestIds,
+    monsterRewardClaimed,
+  ]);
+
+  /* =========================
+     COINS
+  ========================= */
+
+  const coins = useMemo(() => {
+    const questCoins =
+      claimedQuestIds.reduce(
+        (
+          total,
+          questId
+        ) => {
+          const reward =
+            QUEST_REWARDS[questId];
+
+          return (
+            total +
+            (reward?.coins ?? 0)
+          );
+        },
+        0
+      );
+
+    const monsterCoins =
+      monsterRewardClaimed
+        ? MONSTER_REWARD.coins
+        : 0;
+
+    return (
+      questCoins +
+      monsterCoins
+    );
+  }, [
+    claimedQuestIds,
+    monsterRewardClaimed,
+  ]);
+
+  /* =========================
+     LEVEL
+  ========================= */
 
   const level =
-    Math.floor(xp / XP_PER_LEVEL) + 1;
+    Math.floor(
+      xp / XP_PER_LEVEL
+    ) + 1;
 
   const currentLevelXp =
     xp % XP_PER_LEVEL;
 
-  const levelProgress = Math.round(
-    (currentLevelXp /
-      XP_PER_LEVEL) *
-      100
-  );
-
-  const streak =
-    expenses.length > 0 ? 1 : 0;
-
-  const parkUnlocked =
-    unlockedUpgrades.includes(
-      "city-park"
+  const levelProgress =
+    Math.round(
+      (currentLevelXp /
+        XP_PER_LEVEL) *
+        100
     );
 
-  const attackMonster =
-    useCallback(() => {
+  /* =========================
+     CITY HEALTH
+  ========================= */
+
+  const cityHealth =
+    !hasFinancialData
+      ? 0
+      : clamp(
+          100 -
+            Math.max(
+              0,
+              budgetUsage - 50
+            ) *
+              2,
+          0,
+          100
+        );
+
+  /* =========================
+     CLAIM QUEST
+  ========================= */
+
+  const claimQuest = useCallback(
+    (
+      questId: string
+    ) => {
+      const quest = quests.find(
+        (item) =>
+          item.id === questId
+      );
+
       if (
-        availableAttacks <= 0 ||
-        monsterHp <= 0
+        !quest ||
+        !quest.completed ||
+        quest.claimed
       ) {
         return false;
       }
 
-      const nextHp = Math.max(
-        monsterHp - ATTACK_DAMAGE,
+      setClaimedQuestIds(
+        (current) => [
+          ...current,
+          quest.id,
+        ]
+      );
+
+      return true;
+    },
+    [quests]
+  );
+
+  /* =========================
+     MONSTER
+  ========================= */
+
+  const monster =
+    useMemo<WeeklyMonster>(() => {
+      const trackingDamage =
+        Math.min(
+          expenses.length * 55,
+          300
+        );
+
+      const disciplineDamage =
+        expenses.length > 0 &&
+        currentBudget > 0
+          ? clamp(
+              100 -
+                budgetUsage,
+              0,
+              100
+            ) * 5
+          : 0;
+
+      const questDamage =
+        claimedQuestIds.length *
+        100;
+
+      const totalDamage = clamp(
+        Math.round(
+          trackingDamage +
+            disciplineDamage +
+            questDamage
+        ),
+        0,
+        1000
+      );
+
+      const hp = Math.max(
+        1000 - totalDamage,
         0
       );
 
-      setAvailableAttacks(
-        (current) =>
-          Math.max(current - 1, 0)
-      );
+      return {
+        name:
+          "Impulse Monster",
 
-      setMonsterHp(nextHp);
+        description:
+          "Defeat the monster by tracking expenses, completing quests and staying within your budget.",
 
-      if (
-        nextHp === 0 &&
-        !rewardGranted
-      ) {
-        setRewardGranted(true);
+        maxHp: 1000,
 
-        setXp(
-          (current) =>
-            current +
-            MONSTER_REWARD_XP
-        );
+        hp,
 
-        setCoins(
-          (current) =>
-            current +
-            MONSTER_REWARD_COINS
-        );
+        damage: totalDamage,
 
-        setUnlockedUpgrades(
-          (current) =>
-            current.includes(
-              "city-park"
-            )
-              ? current
-              : [
-                  ...current,
-                  "city-park",
-                ]
-        );
-      }
+        defeated:
+          hp === 0 ||
+          monsterRewardClaimed,
 
-      return true;
+        rewardClaimed:
+          monsterRewardClaimed,
+
+        rewardXp:
+          MONSTER_REWARD.xp,
+
+        rewardCoins:
+          MONSTER_REWARD.coins,
+      };
     }, [
-      availableAttacks,
-      monsterHp,
-      rewardGranted,
+      expenses.length,
+      currentBudget,
+      budgetUsage,
+      claimedQuestIds.length,
+      monsterRewardClaimed,
     ]);
+
+  /* =========================
+     CLAIM MONSTER REWARD
+  ========================= */
 
   const claimMonsterReward =
     useCallback(() => {
-      return false;
-    }, []);
+      if (
+        !monster.defeated ||
+        monsterRewardClaimed
+      ) {
+        return false;
+      }
+
+      setMonsterRewardClaimed(
+        true
+      );
+
+      return true;
+    }, [
+      monster.defeated,
+      monsterRewardClaimed,
+    ]);
+
+  /* =========================
+     RESET GAME
+  ========================= */
 
   const resetGameProgress =
     useCallback(() => {
-      setXp(0);
-      setCoins(0);
+      setClaimedQuestIds([]);
 
-      setMonsterHp(
-        MONSTER_MAX_HP
+      setMonsterRewardClaimed(
+        false
       );
 
-      setAvailableAttacks(0);
-      setProcessedExpenseIds([]);
-      setUnlockedUpgrades([]);
-      setRewardGranted(false);
-
-      window.localStorage.removeItem(
-        STORAGE_KEY
+      window.sessionStorage.removeItem(
+        storageKey
       );
-    }, []);
+    }, [storageKey]);
 
-  const monster =
-    useMemo<MonsterData>(
-      () => ({
-        name:
-          "Weekly Spending Monster",
-
-        maxHp: MONSTER_MAX_HP,
-        hp: monsterHp,
-
-        damage:
-          MONSTER_MAX_HP -
-          monsterHp,
-
-        defeated: monsterDefeated,
-
-        rewardClaimed:
-          rewardGranted,
-
-        rewardXp:
-          MONSTER_REWARD_XP,
-
-        rewardCoins:
-          MONSTER_REWARD_COINS,
-      }),
-      [
-        monsterHp,
-        monsterDefeated,
-        rewardGranted,
-      ]
-    );
+  /* =========================
+     VALUE
+  ========================= */
 
   const value =
     useMemo<GameContextType>(
       () => ({
         xp,
+
         coins,
+
         streak,
 
         level,
+
         currentLevelXp,
+
         xpRequiredForNextLevel:
           XP_PER_LEVEL,
+
         levelProgress,
 
         cityHealth,
 
-        monsterHp,
-        monsterMaxHp:
-          MONSTER_MAX_HP,
-        monsterDefeated,
+        hasFinancialData,
 
-        availableAttacks,
-        parkUnlocked,
+        quests,
+
+        claimQuest,
 
         monster,
 
-        attackMonster,
         claimMonsterReward,
-
-        quests: [],
-
-        claimQuest: () => false,
 
         resetGameProgress,
       }),
@@ -477,23 +893,27 @@ export function GameProvider({
         currentLevelXp,
         levelProgress,
         cityHealth,
-        monsterHp,
-        monsterDefeated,
-        availableAttacks,
-        parkUnlocked,
+        hasFinancialData,
+        quests,
+        claimQuest,
         monster,
-        attackMonster,
         claimMonsterReward,
         resetGameProgress,
       ]
     );
 
   return (
-    <GameContext.Provider value={value}>
+    <GameContext.Provider
+      value={value}
+    >
       {children}
     </GameContext.Provider>
   );
 }
+
+/* =========================
+   HOOK
+========================= */
 
 export function useGame() {
   const context =

@@ -1,16 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useMemo } from "react";
 
 import { useBudget } from "@/context/BudgetContext";
 import { useFinancialAnalysis } from "@/context/FinancialAnalysisContext";
 
+import {
+  useAIInsights,
+} from "./hooks/useAIInsights";
+
 import styles from "./insights.module.css";
+
+/* =========================
+   TYPES
+========================= */
 
 type CategoryData = {
   name: string;
@@ -19,40 +23,59 @@ type CategoryData = {
   color: string;
 };
 
-type MissionData = {
-  title: string;
-  description: string;
-  current: number;
-  target: number;
-  progress: number;
-  progressText: string;
-  completed: boolean;
-  reward: number;
-};
+/* =========================
+   CONSTANTS
+========================= */
 
 const CATEGORY_COLORS = [
-  "#ff7a18",
-  "#38bdf8",
   "#8b5cf6",
-  "#facc15",
   "#22c55e",
-  "#ef4444",
+  "#f59e0b",
+  "#38bdf8",
+  "#f43f5e",
   "#14b8a6",
+  "#6366f1",
   "#64748b",
 ];
 
-const STORAGE_KEYS = {
-  missionActive:
-    "citywallet-smart-mission-active",
-  rewardClaimed:
-    "citywallet-smart-reward-claimed",
-  advisorTokens:
-    "citywallet-advisor-tokens",
-};
+/* =========================
+   HELPERS
+========================= */
+
+function clamp(
+  value: number,
+  minimum: number,
+  maximum: number
+) {
+  return Math.min(
+    Math.max(value, minimum),
+    maximum
+  );
+}
+
+/* =========================
+   ICONS
+========================= */
+
+function SparkIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path d="m12 3 1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3Z" />
+
+      <path d="m19 15 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z" />
+    </svg>
+  );
+}
 
 function PlusIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
       <path d="M12 5v14M5 12h14" />
     </svg>
   );
@@ -60,38 +83,78 @@ function PlusIcon() {
 
 function DownloadIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
       <path d="M12 3v12" />
+
       <path d="m7 10 5 5 5-5" />
+
       <path d="M5 20h14" />
     </svg>
   );
 }
 
-function RefreshIcon() {
+function TargetIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M20 7v5h-5" />
-      <path d="M4 17v-5h5" />
-      <path d="M6.1 8a7 7 0 0 1 11.5-2L20 8" />
-      <path d="m4 16 2.4 2A7 7 0 0 0 18 16" />
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="8"
+      />
+
+      <circle
+        cx="12"
+        cy="12"
+        r="4"
+      />
+
+      <path d="m14 10 6-6" />
+
+      <path d="M17 4h3v3" />
     </svg>
   );
 }
 
-function SparkIcon() {
+function ReceiptIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="m12 3 1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3Z" />
-      <path d="m19 15 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z" />
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z" />
+
+      <path d="M9 8h6M9 12h6M9 16h3" />
+    </svg>
+  );
+}
+
+function ArrowIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path d="M5 12h14" />
+
+      <path d="m14 7 5 5-5 5" />
     </svg>
   );
 }
 
 function ShieldIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
       <path d="M12 3 20 6v6c0 5-3.4 8-8 9-4.6-1-8-4-8-9V6l8-3Z" />
+
       <path d="m8.5 12 2.2 2.2 4.8-5" />
     </svg>
   );
@@ -99,8 +162,16 @@ function ShieldIcon() {
 
 function CoinIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <ellipse cx="12" cy="7" rx="7" ry="3.5" />
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <ellipse
+        cx="12"
+        cy="7"
+        rx="7"
+        ry="3.5"
+      />
 
       <path d="M5 7v5c0 2 3.1 3.5 7 3.5s7-1.5 7-3.5V7" />
 
@@ -109,71 +180,67 @@ function CoinIcon() {
   );
 }
 
-function TargetIcon() {
+function AlertIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="12" r="8" />
-      <circle cx="12" cy="12" r="4" />
-      <path d="m14 10 6-6" />
-      <path d="M17 4h3v3" />
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path d="M12 3 2.8 20h18.4L12 3Z" />
+
+      <path d="M12 9v5M12 17h.01" />
     </svg>
   );
 }
 
-function ReceiptIcon() {
+function ChartIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z" />
-      <path d="M9 8h6M9 12h6M9 16h3" />
-    </svg>
-  );
-}
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path d="M4 20V10" />
 
-function ArrowIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 12h14" />
-      <path d="m14 7 5 5-5 5" />
+      <path d="M10 20V4" />
+
+      <path d="M16 20v-7" />
+
+      <path d="M22 20H2" />
     </svg>
   );
 }
 
 function CheckIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
       <path d="m5 12 4 4L19 6" />
     </svg>
   );
 }
 
-function AlertIcon() {
+function EyeIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 3 2.8 20h18.4L12 3Z" />
-      <path d="M12 9v5M12 17h.01" />
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
+
+      <circle
+        cx="12"
+        cy="12"
+        r="2.5"
+      />
     </svg>
   );
 }
 
-function LoadingPage() {
-  return (
-    <div className={styles.loadingPage}>
-      <div className={styles.loadingHero} />
-
-      <div className={styles.loadingStats}>
-        <span />
-        <span />
-        <span />
-        <span />
-      </div>
-
-      <div className={styles.loadingContent}>
-        <span />
-        <span />
-      </div>
-    </div>
-  );
-}
+/* =========================
+   PAGE
+========================= */
 
 export default function InsightsPage() {
   const {
@@ -184,117 +251,155 @@ export default function InsightsPage() {
   } = useBudget();
 
   const {
-    survey,
     monthlyIncome,
+
     monthlyBudget,
+
     totalSpent: analyzedTotalSpent,
+
     remainingBalance,
+
     budgetUsage,
+
     savingsAmount,
+
     savingsRate,
+
     safeDailyLimit,
+
     financialScore,
+
     financialProfile,
+
     riskLevel,
+
     categories,
+
     recommendations,
+
     weeklyChallenge,
+
     behaviorSummary,
+
     cityMessage,
   } = useFinancialAnalysis();
 
-  const [mounted, setMounted] =
-    useState(false);
+  /* =========================
+     GEMINI AI
+  ========================= */
 
-  const [missionActive, setMissionActive] =
-    useState(false);
+  const {
+    aiInsight,
+    isAnalyzing,
+    aiError,
+    analyzeFinancialData,
+  } = useAIInsights();
 
-  const [rewardClaimed, setRewardClaimed] =
-    useState(false);
-
-  const [advisorTokens, setAdvisorTokens] =
-    useState(0);
-
-  const [analyzing, setAnalyzing] =
-    useState(false);
-
-  const [lastUpdated, setLastUpdated] =
-    useState("Ready");
-
-  const [notice, setNotice] =
-    useState("");
-
-  useEffect(() => {
-    const storedMission =
-      window.localStorage.getItem(
-        STORAGE_KEYS.missionActive
-      );
-
-    const storedReward =
-      window.localStorage.getItem(
-        STORAGE_KEYS.rewardClaimed
-      );
-
-    const storedTokens =
-      window.localStorage.getItem(
-        STORAGE_KEYS.advisorTokens
-      );
-
-    setMissionActive(
-      storedMission === "true"
-    );
-
-    setRewardClaimed(
-      storedReward === "true"
-    );
-
-    setAdvisorTokens(
-      Number(storedTokens ?? 0) || 0
-    );
-
-    setLastUpdated(
-      new Intl.DateTimeFormat("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-      }).format(new Date())
-    );
-
-    setMounted(true);
-  }, []);
+  /* =========================
+     FORMATTER
+  ========================= */
 
   const numberFormatter = useMemo(() => {
-    return new Intl.NumberFormat("en-US", {
-      maximumFractionDigits: 0,
-    });
+    return new Intl.NumberFormat(
+      "en-US",
+      {
+        maximumFractionDigits: 1,
+      }
+    );
   }, []);
 
+  /* =========================
+     SAFE REAL DATA
+  ========================= */
+
+  const safeExpenses = Array.isArray(
+    expenses
+  )
+    ? expenses
+    : [];
+
+  const safeCategories = Array.isArray(
+    categories
+  )
+    ? categories
+    : [];
+
+  const safeRecommendations =
+    Array.isArray(recommendations)
+      ? recommendations
+      : [];
+
   const safeBudget = Number(
-    monthlyBudget || budget || 0
+    monthlyBudget ?? budget ?? 0
   );
 
   const safeSpent = Number(
-    analyzedTotalSpent || totalSpent || 0
+    analyzedTotalSpent ??
+      totalSpent ??
+      0
   );
 
   const safeBalance = Number(
-    remainingBalance ?? balance ?? 0
+    remainingBalance ??
+      balance ??
+      0
   );
 
-  const safeExpenses = expenses ?? [];
+  const safeIncome = Number(
+    monthlyIncome ?? 0
+  );
 
-  const budgetUsed = budgetUsage;
+  const safeSavings = Number(
+    savingsAmount ?? 0
+  );
 
-  const savedAmount = savingsAmount;
+  const safeSavingsRate = Math.max(
+    Number(savingsRate) || 0,
+    0
+  );
 
-  const cityHealth = financialScore;
+  const safeBudgetUsage = Math.max(
+    Number(budgetUsage) || 0,
+    0
+  );
+
+  const safeDailyLimitValue = Math.max(
+    Number(safeDailyLimit) || 0,
+    0
+  );
+
+  const hasFinancialData =
+    safeExpenses.length > 0;
+
+  const safeFinancialScore =
+    hasFinancialData
+      ? clamp(
+          Number(financialScore) || 0,
+          0,
+          100
+        )
+      : null;
+
+  /* =========================
+     CATEGORIES
+  ========================= */
 
   const categoryData =
     useMemo<CategoryData[]>(() => {
-      const visible =
-        categories.slice(0, 5);
+      const sorted = [
+        ...safeCategories,
+      ].sort(
+        (first, second) =>
+          Number(second.amount || 0) -
+          Number(first.amount || 0)
+      );
 
-      const hidden =
-        categories.slice(5);
+      const visible = sorted.slice(
+        0,
+        5
+      );
+
+      const hidden = sorted.slice(5);
 
       const combined = [...visible];
 
@@ -303,14 +408,20 @@ export default function InsightsPage() {
           name: "Other",
 
           amount: hidden.reduce(
-            (sum, item) =>
-              sum + item.amount,
+            (total, category) =>
+              total +
+              Number(
+                category.amount || 0
+              ),
             0
           ),
 
           percentage: hidden.reduce(
-            (sum, item) =>
-              sum + item.percentage,
+            (total, category) =>
+              total +
+              Number(
+                category.percentage || 0
+              ),
             0
           ),
         });
@@ -319,8 +430,18 @@ export default function InsightsPage() {
       return combined.map(
         (category, index) => ({
           name: category.name,
-          amount: category.amount,
-          percent: category.percentage,
+
+          amount: Number(
+            category.amount || 0
+          ),
+
+          percent: clamp(
+            Number(
+              category.percentage
+            ) || 0,
+            0,
+            100
+          ),
 
           color:
             CATEGORY_COLORS[
@@ -329,24 +450,29 @@ export default function InsightsPage() {
             ],
         })
       );
-    }, [categories]);
+    }, [safeCategories]);
 
   const highestCategory =
-    categoryData[0];
+    categoryData[0] ?? null;
+
+  /* =========================
+     DONUT
+  ========================= */
 
   const donutGradient = useMemo(() => {
     if (
       categoryData.length === 0 ||
       safeSpent <= 0
     ) {
-      return "#dbe4ee 0% 100%";
+      return "#e7e9ef 0% 100%";
     }
 
     let currentPercent = 0;
 
     return categoryData
       .map((category, index) => {
-        const start = currentPercent;
+        const start =
+          currentPercent;
 
         const end =
           index ===
@@ -363,172 +489,229 @@ export default function InsightsPage() {
         return `${category.color} ${start}% ${end}%`;
       })
       .join(", ");
-  }, [categoryData, safeSpent]);
+  }, [
+    categoryData,
+    safeSpent,
+  ]);
 
-  const mission =
-    useMemo<MissionData>(() => {
-      return {
-        title: weeklyChallenge.title,
-
-        description:
-          weeklyChallenge.description,
-
-        current:
-          weeklyChallenge.progress,
-
-        target: 100,
-
-        progress:
-          weeklyChallenge.progress,
-
-        progressText:
-          weeklyChallenge.target,
-
-        completed:
-          weeklyChallenge.completed,
-
-        reward:
-          weeklyChallenge.rewardCoins,
-      };
-    }, [weeklyChallenge]);
-
-  const threatLevel =
-    safeBalance < 0
-      ? "Critical"
-      : riskLevel;
+  /* =========================
+     FINBOT MESSAGE
+  ========================= */
 
   const advisorMessage = useMemo(() => {
-    const primaryRecommendation =
-      recommendations[0];
-
-    if (primaryRecommendation) {
+    if (isAnalyzing) {
       return {
         title:
-          primaryRecommendation.title,
+          "FinBot is analyzing your financial city",
 
-        description: `${primaryRecommendation.description} ${primaryRecommendation.action}`,
+        description:
+          "Gemini is reviewing your real spending, budget, balance, expense categories and current financial indicators.",
+      };
+    }
+
+    if (aiError) {
+      return {
+        title:
+          "AI analysis is temporarily unavailable",
+
+        description: aiError,
+      };
+    }
+
+    if (aiInsight) {
+      return {
+        title: aiInsight.title,
+
+        description:
+          aiInsight.summary,
+      };
+    }
+
+    if (!hasFinancialData) {
+      return {
+        title:
+          "Your financial scanner is waiting",
+
+        description:
+          "Record your first expense to unlock real Gemini AI analysis, category insights, risk detection and personalized recommendations.",
       };
     }
 
     return {
-      title: financialProfile,
+      title:
+        "FinBot is ready to analyze your real data",
 
       description:
-        behaviorSummary ||
-        cityMessage,
+        "Run Gemini analysis to receive personalized financial insights based only on your actual CityWallet activity.",
     };
   }, [
-    recommendations,
-    financialProfile,
-    behaviorSummary,
-    cityMessage,
+    isAnalyzing,
+    aiError,
+    aiInsight,
+    hasFinancialData,
   ]);
+
+  /* =========================
+     RISK
+  ========================= */
+
+  const threatLevel =
+    hasFinancialData
+      ? safeBalance < 0
+        ? "Critical"
+        : riskLevel ||
+          "Not available"
+      : "No data";
+
+  const threatClass =
+    threatLevel === "Critical"
+      ? styles.critical
+
+      : threatLevel === "High"
+        ? styles.high
+
+        : threatLevel === "Medium"
+          ? styles.medium
+
+          : threatLevel === "Low"
+            ? styles.low
+
+            : styles.waiting;
+
+  /* =========================
+     REAL ACTIVE MISSION
+  ========================= */
+
+  const missionProgress = clamp(
+    Number(
+      weeklyChallenge?.progress
+    ) || 0,
+    0,
+    100
+  );
+
+  const missionReward = Number(
+    weeklyChallenge?.rewardCoins || 0
+  );
+
+  /* =========================
+     RECENT EXPENSES
+  ========================= */
 
   const recentExpenses = useMemo(() => {
     return [...safeExpenses]
       .reverse()
-      .slice(0, 4);
+      .slice(0, 5);
   }, [safeExpenses]);
 
-  function showNotice(message: string) {
-    setNotice(message);
+  /* =========================
+     VISIBLE RECOMMENDATIONS
+  ========================= */
 
-    window.setTimeout(() => {
-      setNotice("");
-    }, 2200);
-  }
+  const visibleRecommendations =
+    aiInsight
+      ? aiInsight.recommendations
+      : safeRecommendations;
 
-  function activateMission() {
-    setMissionActive(true);
-    setRewardClaimed(false);
+  /* =========================
+     REAL GEMINI ANALYSIS
+  ========================= */
 
-    window.localStorage.setItem(
-      STORAGE_KEYS.missionActive,
-      "true"
-    );
-
-    window.localStorage.setItem(
-      STORAGE_KEYS.rewardClaimed,
-      "false"
-    );
-
-    showNotice(
-      "Smart mission activated successfully."
-    );
-  }
-
-  function claimReward() {
-    if (
-      !missionActive ||
-      !mission.completed ||
-      rewardClaimed
-    ) {
+  async function handleAIAnalysis() {
+    if (!hasFinancialData) {
       return;
     }
 
-    const newTokens =
-      advisorTokens + mission.reward;
+    await analyzeFinancialData({
+      monthlyIncome:
+        safeIncome,
 
-    setAdvisorTokens(newTokens);
-    setRewardClaimed(true);
+      monthlyBudget:
+        safeBudget,
 
-    window.localStorage.setItem(
-      STORAGE_KEYS.advisorTokens,
-      String(newTokens)
-    );
+      totalSpent:
+        safeSpent,
 
-    window.localStorage.setItem(
-      STORAGE_KEYS.rewardClaimed,
-      "true"
-    );
+      remainingBalance:
+        safeBalance,
 
-    showNotice(
-      `Reward claimed: +${mission.reward} Advisor Tokens`
-    );
+      budgetUsage:
+        safeBudgetUsage,
+
+      savingsAmount:
+        safeSavings,
+
+      savingsRate:
+        safeSavingsRate,
+
+      safeDailyLimit:
+        safeDailyLimitValue,
+
+      financialScore:
+        safeFinancialScore,
+
+      riskLevel:
+        threatLevel,
+
+      expenses: safeExpenses.map(
+        (expense) => ({
+          name:
+            expense.name,
+
+          amount:
+            Number(
+              expense.amount
+            ) || 0,
+
+          category:
+            expense.category,
+
+          createdAt:
+            expense.createdAt,
+        })
+      ),
+
+      categories:
+        safeCategories.map(
+          (category) => ({
+            name:
+              category.name,
+
+            amount:
+              Number(
+                category.amount
+              ) || 0,
+
+            percentage:
+              Number(
+                category.percentage
+              ) || 0,
+          })
+        ),
+
+      weeklyChallenge,
+    });
   }
 
-  function refreshAnalysis() {
-    if (analyzing) {
-      return;
-    }
-
-    setAnalyzing(true);
-    setNotice("");
-
-    window.setTimeout(() => {
-      setAnalyzing(false);
-
-      setLastUpdated(
-        new Intl.DateTimeFormat(
-          "en-US",
-          {
-            hour: "numeric",
-            minute: "2-digit",
-          }
-        ).format(new Date())
-      );
-
-      showNotice(
-        "Financial analysis refreshed."
-      );
-    }, 800);
-  }
+  /* =========================
+     CSV EXPORT
+  ========================= */
 
   function exportReport() {
+    if (!hasFinancialData) {
+      return;
+    }
+
     const summaryRows = [
       [
-        "CityWallet Smart Financial Report",
+        "CityWallet Financial Analysis",
       ],
 
-      [
-        "Monthly Budget",
-        safeBudget,
-      ],
+      ["Monthly Income", safeIncome],
 
-      [
-        "Total Spent",
-        safeSpent,
-      ],
+      ["Monthly Budget", safeBudget],
+
+      ["Total Spent", safeSpent],
 
       [
         "Remaining Balance",
@@ -537,57 +720,37 @@ export default function InsightsPage() {
 
       [
         "Budget Usage",
-        `${budgetUsed}%`,
+        `${safeBudgetUsage}%`,
+      ],
+
+      [
+        "Savings Amount",
+        safeSavings,
       ],
 
       [
         "Savings Rate",
-        `${savingsRate}%`,
-      ],
-
-      [
-        "Monthly Income",
-        monthlyIncome,
+        `${safeSavingsRate}%`,
       ],
 
       [
         "Financial Score",
-        financialScore,
+        safeFinancialScore ?? "",
       ],
 
       [
         "Financial Profile",
-        financialProfile,
+        financialProfile || "",
       ],
 
       [
         "Risk Level",
-        riskLevel,
+        threatLevel,
       ],
 
       [
         "Safe Daily Limit",
-        safeDailyLimit,
-      ],
-
-      [
-        "Survey Goal",
-        survey.financialGoal,
-      ],
-
-      [
-        "Spending Behavior",
-        survey.spendingBehavior,
-      ],
-
-      [
-        "Saving Habit",
-        survey.savingHabit,
-      ],
-
-      [
-        "Challenge Preference",
-        survey.challengePreference,
+        safeDailyLimitValue,
       ],
 
       [],
@@ -602,7 +765,9 @@ export default function InsightsPage() {
     const expenseRows =
       safeExpenses.map((expense) => [
         expense.name,
+
         expense.category,
+
         expense.amount,
       ]);
 
@@ -625,12 +790,18 @@ export default function InsightsPage() {
       )
       .join("\n");
 
-    const blob = new Blob([csv], {
-      type: "text/csv;charset=utf-8;",
-    });
+    const blob = new Blob(
+      [csv],
+      {
+        type:
+          "text/csv;charset=utf-8;",
+      }
+    );
 
     const url =
-      window.URL.createObjectURL(blob);
+      window.URL.createObjectURL(
+        blob
+      );
 
     const downloadLink =
       document.createElement("a");
@@ -638,51 +809,45 @@ export default function InsightsPage() {
     downloadLink.href = url;
 
     downloadLink.download =
-      "citywallet-smart-report.csv";
+      "citywallet-financial-analysis.csv";
 
     document.body.appendChild(
       downloadLink
     );
 
     downloadLink.click();
+
     downloadLink.remove();
 
     window.URL.revokeObjectURL(url);
-
-    showNotice(
-      "Financial report downloaded."
-    );
-  }
-
-  if (!mounted) {
-    return <LoadingPage />;
   }
 
   return (
-    <div className={styles.page}>
-      {notice && (
-        <div
-          className={styles.notice}
-          role="status"
-        >
-          <CheckIcon />
-
-          {notice}
-        </div>
-      )}
+    <main className={styles.page}>
+      {/* =====================
+          HERO
+      ===================== */}
 
       <section className={styles.hero}>
-        <div className={styles.heroGlow} />
+        <div
+          className={styles.heroGrid}
+        />
 
-        <div className={styles.advisorArea}>
+        <div
+          className={styles.heroGlow}
+        />
+
+        {/* FINBOT */}
+
+        <div
+          className={styles.finbotArea}
+        >
           <div
-            className={
-              styles.advisorPlatform
-            }
+            className={styles.finbot}
           >
             <div
               className={
-                styles.advisorAntenna
+                styles.finbotAntenna
               }
             >
               <span />
@@ -690,12 +855,12 @@ export default function InsightsPage() {
 
             <div
               className={
-                styles.advisorHead
+                styles.finbotHead
               }
             >
               <div
                 className={
-                  styles.advisorScreen
+                  styles.finbotScreen
                 }
               >
                 <span />
@@ -704,18 +869,18 @@ export default function InsightsPage() {
 
               <div
                 className={
-                  styles.advisorSpeaker
+                  styles.finbotSpeaker
                 }
               >
-                <span />
-                <span />
-                <span />
+                <i />
+                <i />
+                <i />
               </div>
             </div>
 
             <div
               className={
-                styles.advisorBody
+                styles.finbotBody
               }
             >
               <SparkIcon />
@@ -729,51 +894,69 @@ export default function InsightsPage() {
           >
             <span />
 
-            SMART COACH ONLINE
+            {isAnalyzing
+              ? "FINBOT ANALYZING"
+              : "GEMINI CONNECTED"}
           </div>
         </div>
 
-        <div className={styles.heroContent}>
+        {/* HERO CONTENT */}
+
+        <div
+          className={
+            styles.heroContent
+          }
+        >
           <span
             className={
               styles.heroEyebrow
             }
           >
-            SMART FINANCIAL HQ
+            ✦ AI FINANCIAL COMMAND CENTER
           </span>
 
           <h1>
-            Welcome to the
-
+            Understand your money.
             <strong>
-              Smart Command Center
+              Protect your city.
             </strong>
           </h1>
 
           <p>
-            The smart coach analyzes your
-            spending, detects financial
-            threats and creates missions
-            that improve your city.
+            FinBot uses Gemini AI to
+            analyze your real CityWallet
+            financial activity and turn it
+            into personalized insights,
+            warnings and next actions.
           </p>
 
           <div
             className={
-              styles.advisorMessage
+              styles.aiMessage
             }
           >
-            <SparkIcon />
+            <div
+              className={
+                styles.aiMessageIcon
+              }
+            >
+              <SparkIcon />
+            </div>
 
             <div>
+              <span>
+                FINBOT INSIGHT
+              </span>
+
               <strong>
                 {advisorMessage.title}
               </strong>
 
-              <span>
+              <p>
                 {
                   advisorMessage.description
                 }
-              </span>
+              </p>
             </div>
           </div>
 
@@ -785,82 +968,196 @@ export default function InsightsPage() {
             <button
               type="button"
               className={
-                styles.refreshButton
+                styles.primaryButton
               }
-              onClick={refreshAnalysis}
-              disabled={analyzing}
+              onClick={
+                handleAIAnalysis
+              }
+              disabled={
+                isAnalyzing ||
+                !hasFinancialData
+              }
+              title={
+                hasFinancialData
+                  ? "Analyze your real financial data with Gemini AI"
+                  : "Add your first expense before running AI analysis"
+              }
             >
-              <RefreshIcon />
+              <SparkIcon />
 
-              {analyzing
-                ? "Scanning City..."
-                : "Refresh Analysis"}
+              {isAnalyzing
+                ? "FinBot is analyzing..."
+                : aiInsight
+                  ? "Analyze Again"
+                  : "Analyze with FinBot"}
+
+              {!isAnalyzing && (
+                <ArrowIcon />
+              )}
             </button>
 
             <Link
               href="/city/expenses"
-              className={styles.addButton}
+              className={
+                styles.secondaryButton
+              }
             >
               <PlusIcon />
 
-              Add Expense
+              Add New Expense
             </Link>
+
+            <a
+              href="#spending-breakdown"
+              className={
+                styles.ghostButton
+              }
+            >
+              <EyeIcon />
+
+              View Spending Map
+            </a>
+
+            <button
+              type="button"
+              className={
+                styles.ghostButton
+              }
+              onClick={exportReport}
+              disabled={!hasFinancialData}
+              title={
+                hasFinancialData
+                  ? "Download your real financial report"
+                  : "Add an expense before exporting a report"
+              }
+            >
+              <DownloadIcon />
+
+              Export Report
+            </button>
           </div>
         </div>
 
-        <div className={styles.heroStats}>
-          <div className={styles.scoreOrb}>
-            <div
-              className={
-                styles.scoreRing
-              }
-              style={{
-                background: `conic-gradient(
-                  #4ade80 0% ${financialScore}%,
-                  rgba(255, 255, 255, 0.12) ${financialScore}% 100%
-                )`,
-              }}
-            >
-              <div>
-                <strong>
-                  {financialScore}
-                </strong>
+        {/* SCORE */}
 
-                <span>City Score</span>
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.tokenCard}>
-            <CoinIcon />
-
+        <div
+          className={
+            styles.heroScore
+          }
+        >
+          <div
+            className={
+              styles.scoreRing
+            }
+            style={{
+              background:
+                safeFinancialScore ===
+                null
+                  ? `conic-gradient(
+                      rgba(255, 255, 255, 0.1)
+                      0% 100%
+                    )`
+                  : `conic-gradient(
+                      #a78bfa
+                      0%
+                      ${safeFinancialScore}%,
+                      rgba(255, 255, 255, 0.1)
+                      ${safeFinancialScore}%
+                      100%
+                    )`,
+            }}
+          >
             <div>
               <span>
-                Advisor Tokens
+                FINANCIAL SCORE
               </span>
 
               <strong>
-                {numberFormatter.format(
-                  advisorTokens
-                )}
+                {safeFinancialScore ??
+                  "—"}
               </strong>
+
+              <small>
+                {safeFinancialScore !==
+                null
+                  ? "/ 100"
+                  : "No data yet"}
+              </small>
             </div>
           </div>
 
           <div
             className={
-              styles.updatedText
+              styles.profileCard
             }
           >
-            Last scan: {lastUpdated}
+            <span>
+              FINANCIAL PROFILE
+            </span>
+
+            <strong>
+              {hasFinancialData
+                ? financialProfile ||
+                  "Not available"
+                : "Waiting for data"}
+            </strong>
           </div>
         </div>
       </section>
 
-      <section className={styles.statGrid}>
-        <article className={styles.statCard}>
+      {/* =====================
+          QUICK STATUS
+      ===================== */}
+
+      <section
+        className={styles.statGrid}
+      >
+        {/* SCORE */}
+
+        <article
+          className={`${styles.statCard} ${styles.scoreCard}`}
+        >
           <div
-            className={`${styles.statIcon} ${styles.healthIcon}`}
+            className={styles.statIcon}
+          >
+            <ChartIcon />
+          </div>
+
+          <div
+            className={
+              styles.statContent
+            }
+          >
+            <span>
+              FINANCIAL SCORE
+            </span>
+
+            <strong>
+              {safeFinancialScore ??
+                "—"}
+
+              {safeFinancialScore !==
+                null && (
+                <small>/100</small>
+              )}
+            </strong>
+
+            <p>
+              {hasFinancialData
+                ? financialProfile ||
+                  "Analysis available"
+                : "Add financial activity to calculate your score."}
+            </p>
+          </div>
+        </article>
+
+        {/* BUDGET */}
+
+        <article
+          className={`${styles.statCard} ${styles.budgetCard}`}
+        >
+          <div
+            className={styles.statIcon}
           >
             <ShieldIcon />
           </div>
@@ -870,53 +1167,23 @@ export default function InsightsPage() {
               styles.statContent
             }
           >
-            <span>City Health</span>
+            <span>
+              BUDGET SHIELD
+            </span>
 
             <strong>
-              {cityHealth}%
-            </strong>
-
-            <p>
-              Overall financial stability
-            </p>
-          </div>
-
-          <div
-            className={
-              styles.miniProgress
-            }
-          >
-            <span
-              style={{
-                width: `${cityHealth}%`,
-              }}
-            />
-          </div>
-        </article>
-
-        <article className={styles.statCard}>
-          <div
-            className={`${styles.statIcon} ${styles.budgetIcon}`}
-          >
-            <ReceiptIcon />
-          </div>
-
-          <div
-            className={
-              styles.statContent
-            }
-          >
-            <span>Budget Shield</span>
-
-            <strong>
-              {budgetUsed}%
+              {hasFinancialData
+                ? `${Math.round(
+                    safeBudgetUsage
+                  )}%`
+                : "—"}
             </strong>
 
             <p>
               {numberFormatter.format(
                 safeSpent
               )}{" "}
-              /{" "}
+              of{" "}
               {numberFormatter.format(
                 safeBudget
               )}{" "}
@@ -924,25 +1191,32 @@ export default function InsightsPage() {
             </p>
           </div>
 
-          <span
-            className={`${styles.riskBadge} ${
-              threatLevel === "Critical"
-                ? styles.criticalBadge
-                : threatLevel === "High"
-                  ? styles.highBadge
-                  : threatLevel ===
-                      "Medium"
-                    ? styles.mediumBadge
-                    : styles.lowBadge
-            }`}
+          <div
+            className={
+              styles.statProgress
+            }
           >
-            {threatLevel}
-          </span>
+            <span
+              style={{
+                width: `${hasFinancialData
+                  ? clamp(
+                      safeBudgetUsage,
+                      0,
+                      100
+                    )
+                  : 0}%`,
+              }}
+            />
+          </div>
         </article>
 
-        <article className={styles.statCard}>
+        {/* SAVINGS */}
+
+        <article
+          className={`${styles.statCard} ${styles.savingsCard}`}
+        >
           <div
-            className={`${styles.statIcon} ${styles.savingIcon}`}
+            className={styles.statIcon}
           >
             <CoinIcon />
           </div>
@@ -952,42 +1226,54 @@ export default function InsightsPage() {
               styles.statContent
             }
           >
-            <span>Green Reserve</span>
+            <span>
+              SAVINGS RESERVE
+            </span>
 
             <strong>
-              {savingsRate}%
+              {hasFinancialData
+                ? `${numberFormatter.format(
+                    safeSavingsRate
+                  )}%`
+                : "—"}
             </strong>
 
             <p>
               {numberFormatter.format(
-                savedAmount
+                safeSavings
               )}{" "}
-              SAR saved
+              SAR currently available
             </p>
           </div>
 
           <div
             className={
-              styles.miniProgress
+              styles.statProgress
             }
           >
             <span
               style={{
-                width: `${Math.min(
-                  (savingsRate / 25) *
-                    100,
-                  100
-                )}%`,
+                width: `${hasFinancialData
+                  ? clamp(
+                      safeSavingsRate,
+                      0,
+                      100
+                    )
+                  : 0}%`,
               }}
             />
           </div>
         </article>
 
-        <article className={styles.statCard}>
+        {/* SAFE DAILY */}
+
+        <article
+          className={`${styles.statCard} ${styles.dailyCard}`}
+        >
           <div
-            className={`${styles.statIcon} ${styles.threatIcon}`}
+            className={styles.statIcon}
           >
-            <AlertIcon />
+            <TargetIcon />
           </div>
 
           <div
@@ -995,40 +1281,103 @@ export default function InsightsPage() {
               styles.statContent
             }
           >
-            <span>Main Threat</span>
+            <span>
+              SAFE DAILY LIMIT
+            </span>
 
             <strong>
-              {highestCategory?.name ??
-                "No threat"}
+              {hasFinancialData
+                ? numberFormatter.format(
+                    safeDailyLimitValue
+                  )
+                : "—"}
+
+              {hasFinancialData && (
+                <small> SAR</small>
+              )}
             </strong>
 
             <p>
-              {highestCategory
-                ? `${highestCategory.percent}% of total spending`
-                : "Add expenses to scan"}
+              {hasFinancialData
+                ? "Recommended daily spending pace based on your current data."
+                : "Available after financial activity is recorded."}
             </p>
           </div>
-
-          <Link
-            href="/city/expenses"
-            className={
-              styles.smallAction
-            }
-          >
-            Review
-          </Link>
         </article>
       </section>
 
-      <div className={styles.gameGrid}>
+      {/* =====================
+          PROFILE BAR
+      ===================== */}
+
+      <section
+        className={styles.profileBar}
+      >
+        <div
+          className={
+            styles.profileBarIcon
+          }
+        >
+          <AlertIcon />
+        </div>
+
+        <div
+          className={
+            styles.profileBarContent
+          }
+        >
+          <span>
+            CURRENT RISK LEVEL
+          </span>
+
+          <strong>
+            {threatLevel}
+          </strong>
+        </div>
+
+        <div
+          className={`${styles.riskBadge} ${threatClass}`}
+        >
+          {threatLevel}
+        </div>
+
+        <p>
+          {aiInsight
+            ? aiInsight.summary
+            : hasFinancialData
+              ? behaviorSummary ||
+                cityMessage ||
+                "Your current financial status is ready for review."
+              : "Add your first expense to activate financial risk analysis."}
+        </p>
+
+        <Link
+          href="/city/expenses"
+          className={
+            styles.compactButton
+          }
+        >
+          <ReceiptIcon />
+
+          Review Expenses
+
+          <ArrowIcon />
+        </Link>
+      </section>
+
+      {/* =====================
+          REAL GEMINI ANALYSIS
+      ===================== */}
+
+      {aiInsight && (
         <section
           className={
-            styles.missionPanel
+            styles.recommendationsPanel
           }
         >
           <div
             className={
-              styles.panelHeading
+              styles.panelHeader
             }
           >
             <div>
@@ -1037,31 +1386,299 @@ export default function InsightsPage() {
                   styles.sectionEyebrow
                 }
               >
-                ACTIVE SMART MISSION
+                ✦ GEMINI AI ANALYSIS
               </span>
 
-              <h2>{mission.title}</h2>
+              <h2>
+                {aiInsight.title}
+              </h2>
 
               <p>
-                {mission.description}
+                {aiInsight.analysis}
               </p>
+            </div>
+
+            <button
+              type="button"
+              className={
+                styles.panelActionButton
+              }
+              onClick={
+                handleAIAnalysis
+              }
+              disabled={isAnalyzing}
+            >
+              <SparkIcon />
+
+              {isAnalyzing
+                ? "Analyzing..."
+                : "Refresh AI Analysis"}
+            </button>
+          </div>
+
+          <div
+            className={
+              styles.recommendationGrid
+            }
+          >
+            <article
+              className={
+                styles.recommendationCard
+              }
+            >
+              <div
+                className={
+                  styles.recommendationNumber
+                }
+              >
+                01
+              </div>
+
+              <div
+                className={
+                  styles.recommendationIcon
+                }
+              >
+                🧠
+              </div>
+
+              <span>
+                AI SUMMARY
+              </span>
+
+              <strong>
+                Financial Overview
+              </strong>
+
+              <p>
+                {aiInsight.summary}
+              </p>
+            </article>
+
+            <article
+              className={
+                styles.recommendationCard
+              }
+            >
+              <div
+                className={
+                  styles.recommendationNumber
+                }
+              >
+                02
+              </div>
+
+              <div
+                className={
+                  styles.recommendationIcon
+                }
+              >
+                {aiInsight.warning
+                  ? "⚠️"
+                  : "🛡️"}
+              </div>
+
+              <span>
+                FINANCIAL WARNING
+              </span>
+
+              <strong>
+                {aiInsight.warning
+                  ? "Attention Required"
+                  : "No Specific Warning"}
+              </strong>
+
+              <p>
+                {aiInsight.warning ||
+                  "Gemini did not identify a specific financial warning from the supplied data."}
+              </p>
+            </article>
+
+            <article
+              className={
+                styles.recommendationCard
+              }
+            >
+              <div
+                className={
+                  styles.recommendationNumber
+                }
+              >
+                03
+              </div>
+
+              <div
+                className={
+                  styles.recommendationIcon
+                }
+              >
+                🌱
+              </div>
+
+              <span>
+                EXPECTED DIRECTION
+              </span>
+
+              <strong>
+                Possible Improvement
+              </strong>
+
+              <p>
+                {
+                  aiInsight.expectedResult
+                }
+              </p>
+            </article>
+          </div>
+        </section>
+      )}
+
+      {/* =====================
+          AI ACTION PLAN
+      ===================== */}
+
+      {aiInsight &&
+        aiInsight.actions.length > 0 && (
+          <section
+            className={
+              styles.recommendationsPanel
+            }
+          >
+            <div
+              className={
+                styles.panelHeader
+              }
+            >
+              <div>
+                <span
+                  className={
+                    styles.sectionEyebrow
+                  }
+                >
+                  ⚡ GEMINI ACTION PLAN
+                </span>
+
+                <h2>
+                  Your Next Three Actions
+                </h2>
+
+                <p>
+                  Practical actions generated
+                  from your actual CityWallet
+                  financial data.
+                </p>
+              </div>
             </div>
 
             <div
               className={
-                styles.missionReward
+                styles.recommendationGrid
               }
             >
-              <CoinIcon />
+              {aiInsight.actions.map(
+                (action, index) => (
+                  <article
+                    className={
+                      styles.recommendationCard
+                    }
+                    key={`${action}-${index}`}
+                  >
+                    <div
+                      className={
+                        styles.recommendationNumber
+                      }
+                    >
+                      {String(
+                        index + 1
+                      ).padStart(2, "0")}
+                    </div>
 
-              <div>
-                <span>Reward</span>
+                    <div
+                      className={
+                        styles.recommendationIcon
+                      }
+                    >
+                      {index === 0
+                        ? "🎯"
+                        : index === 1
+                          ? "🛡️"
+                          : "⚡"}
+                    </div>
+
+                    <span>
+                      ACTION {index + 1}
+                    </span>
+
+                    <strong>
+                      Recommended Move
+                    </strong>
+
+                    <p>
+                      {action}
+                    </p>
+                  </article>
+                )
+              )}
+            </div>
+          </section>
+        )}
+
+      {/* =====================
+          MAIN GRID
+      ===================== */}
+
+      <div
+        className={styles.mainGrid}
+      >
+        {/* REAL ACTIVE MISSION */}
+
+        <section
+          className={
+            styles.missionPanel
+          }
+        >
+          <div
+            className={
+              styles.panelHeader
+            }
+          >
+            <div>
+              <span
+                className={
+                  styles.sectionEyebrow
+                }
+              >
+                ⚔ ACTIVE FINANCIAL MISSION
+              </span>
+
+              <h2>
+                {weeklyChallenge?.title ||
+                  "No active mission"}
+              </h2>
+
+              <p>
+                {weeklyChallenge?.description ||
+                  "Your next financial mission will appear here when enough data is available."}
+              </p>
+            </div>
+
+            {missionReward > 0 && (
+              <div
+                className={
+                  styles.rewardBadge
+                }
+              >
+                <span>
+                  🪙 REWARD
+                </span>
 
                 <strong>
-                  +{mission.reward}
+                  {missionReward}
                 </strong>
+
+                <small>Coins</small>
               </div>
-            </div>
+            )}
           </div>
 
           <div
@@ -1071,7 +1688,7 @@ export default function InsightsPage() {
           >
             <div
               className={
-                styles.targetVisual
+                styles.missionVisual
               }
             >
               <div
@@ -1087,19 +1704,19 @@ export default function InsightsPage() {
 
               <div
                 className={
-                  styles.targetStatus
+                  styles.missionVisualStatus
                 }
               >
                 <span>
-                  {mission.completed
-                    ? "MISSION COMPLETE"
-                    : missionActive
-                      ? "MISSION ACTIVE"
-                      : "MISSION LOCKED"}
+                  MISSION STATUS
                 </span>
 
                 <strong>
-                  {mission.progress}%
+                  {weeklyChallenge?.completed
+                    ? "COMPLETED"
+                    : hasFinancialData
+                      ? "IN PROGRESS"
+                      : "WAITING FOR DATA"}
                 </strong>
               </div>
             </div>
@@ -1115,13 +1732,11 @@ export default function InsightsPage() {
                 }
               >
                 <span>
-                  Mission progress
+                  CURRENT PROGRESS
                 </span>
 
                 <strong>
-                  {
-                    mission.progressText
-                  }
+                  {missionProgress}%
                 </strong>
               </div>
 
@@ -1132,10 +1747,19 @@ export default function InsightsPage() {
               >
                 <span
                   style={{
-                    width: `${mission.progress}%`,
+                    width: `${missionProgress}%`,
                   }}
                 />
               </div>
+
+              <p
+                className={
+                  styles.missionTarget
+                }
+              >
+                {weeklyChallenge?.target ||
+                  "Complete financial activity to unlock progress."}
+              </p>
 
               <div
                 className={
@@ -1144,13 +1768,13 @@ export default function InsightsPage() {
               >
                 <div
                   className={
-                    missionActive
+                    missionProgress > 0
                       ? styles.stepComplete
                       : ""
                   }
                 >
                   <span>
-                    {missionActive ? (
+                    {missionProgress > 0 ? (
                       <CheckIcon />
                     ) : (
                       "1"
@@ -1159,28 +1783,55 @@ export default function InsightsPage() {
 
                   <div>
                     <strong>
-                      Activate mission
+                      Start progress
                     </strong>
 
                     <p>
-                      Save the mission to
-                      your command center.
+                      Record real financial
+                      activity.
                     </p>
                   </div>
                 </div>
 
                 <div
                   className={
-                    mission.completed
+                    missionProgress >= 50
                       ? styles.stepComplete
                       : ""
                   }
                 >
                   <span>
-                    {mission.completed ? (
+                    {missionProgress >= 50 ? (
                       <CheckIcon />
                     ) : (
                       "2"
+                    )}
+                  </span>
+
+                  <div>
+                    <strong>
+                      Reach halfway
+                    </strong>
+
+                    <p>
+                      Continue improving your
+                      financial behavior.
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  className={
+                    weeklyChallenge?.completed
+                      ? styles.stepComplete
+                      : ""
+                  }
+                >
+                  <span>
+                    {weeklyChallenge?.completed ? (
+                      <CheckIcon />
+                    ) : (
+                      "3"
                     )}
                   </span>
 
@@ -1190,37 +1841,8 @@ export default function InsightsPage() {
                     </strong>
 
                     <p>
-                      Improve your
-                      financial behavior
-                      to reach the target.
-                    </p>
-                  </div>
-                </div>
-
-                <div
-                  className={
-                    rewardClaimed
-                      ? styles.stepComplete
-                      : ""
-                  }
-                >
-                  <span>
-                    {rewardClaimed ? (
-                      <CheckIcon />
-                    ) : (
-                      "3"
-                    )}
-                  </span>
-
-                  <div>
-                    <strong>
-                      Claim reward
-                    </strong>
-
-                    <p>
-                      Collect Advisor
-                      Tokens after
-                      completion.
+                      Reach the real mission
+                      target.
                     </p>
                   </div>
                 </div>
@@ -1231,81 +1853,57 @@ export default function InsightsPage() {
                   styles.missionActions
                 }
               >
-                {!missionActive && (
-                  <button
-                    type="button"
+                {weeklyChallenge?.completed ? (
+                  <div
                     className={
-                      styles.activateButton
+                      styles.completedMission
                     }
-                    onClick={
-                      activateMission
-                    }
-                  >
-                    <TargetIcon />
-
-                    Activate Mission
-                  </button>
-                )}
-
-                {missionActive &&
-                  !mission.completed && (
-                    <Link
-                      href="/city/expenses"
-                      className={
-                        styles.activateButton
-                      }
-                    >
-                      <ReceiptIcon />
-
-                      Open Expense Vault
-                    </Link>
-                  )}
-
-                {missionActive &&
-                  mission.completed &&
-                  !rewardClaimed && (
-                    <button
-                      type="button"
-                      className={
-                        styles.claimButton
-                      }
-                      onClick={claimReward}
-                    >
-                      <CoinIcon />
-
-                      Claim{" "}
-                      {mission.reward}{" "}
-                      Tokens
-                    </button>
-                  )}
-
-                {rewardClaimed && (
-                  <button
-                    type="button"
-                    className={
-                      styles.claimedButton
-                    }
-                    disabled
                   >
                     <CheckIcon />
 
-                    Reward Claimed
-                  </button>
+                    Mission completed
+                  </div>
+                ) : (
+                  <Link
+                    href="/city/expenses"
+                    className={
+                      styles.missionButton
+                    }
+                  >
+                    <ReceiptIcon />
+
+                    Continue Mission
+
+                    <ArrowIcon />
+                  </Link>
                 )}
+
+                <a
+                  href="#recommendations"
+                  className={
+                    styles.missionSecondaryButton
+                  }
+                >
+                  <SparkIcon />
+
+                  View Recommendations
+                </a>
               </div>
             </div>
           </div>
         </section>
 
+        {/* SPENDING */}
+
         <section
           className={
-            styles.breakdownPanel
+            styles.scannerPanel
           }
           id="spending-breakdown"
         >
           <div
             className={
-              styles.panelHeading
+              styles.panelHeader
             }
           >
             <div>
@@ -1314,17 +1912,16 @@ export default function InsightsPage() {
                   styles.sectionEyebrow
                 }
               >
-                CITY RESOURCE SCANNER
+                ◉ RESOURCE SCANNER
               </span>
 
               <h2>
-                Spending Breakdown
+                Spending Zones
               </h2>
 
               <p>
-                Financial pressure
-                detected in each city
-                zone.
+                Your actual expenses grouped
+                by financial category.
               </p>
             </div>
 
@@ -1334,6 +1931,7 @@ export default function InsightsPage() {
                 styles.exportButton
               }
               onClick={exportReport}
+              disabled={!hasFinancialData}
             >
               <DownloadIcon />
 
@@ -1343,7 +1941,7 @@ export default function InsightsPage() {
 
           <div
             className={
-              styles.breakdownContent
+              styles.scannerContent
             }
           >
             <div
@@ -1362,7 +1960,9 @@ export default function InsightsPage() {
                     styles.donutCenter
                   }
                 >
-                  <span>Total Spent</span>
+                  <span>
+                    TOTAL SPENT
+                  </span>
 
                   <strong>
                     {numberFormatter.format(
@@ -1378,52 +1978,60 @@ export default function InsightsPage() {
                 className={
                   styles.scanPulse
                 }
-              >
-                <span />
-              </div>
+              />
             </div>
 
-            <div
-              className={
-                styles.categoryList
-              }
-            >
-              {categoryData.length ===
-              0 ? (
+            {categoryData.length === 0 ? (
+              <div
+                className={
+                  styles.emptyState
+                }
+              >
                 <div
                   className={
-                    styles.emptyState
+                    styles.emptyIcon
                   }
                 >
                   <ReceiptIcon />
-
-                  <strong>
-                    Scanner waiting for
-                    data
-                  </strong>
-
-                  <p>
-                    Add an expense to
-                    reveal financial
-                    pressure zones.
-                  </p>
-
-                  <Link href="/city/expenses">
-                    Add First Expense
-                  </Link>
                 </div>
-              ) : (
-                categoryData.map(
+
+                <strong>
+                  No spending data yet
+                </strong>
+
+                <p>
+                  Add your first expense to
+                  reveal your category map.
+                </p>
+
+                <Link
+                  href="/city/expenses"
+                  className={
+                    styles.emptyButton
+                  }
+                >
+                  <PlusIcon />
+
+                  Add First Expense
+
+                  <ArrowIcon />
+                </Link>
+              </div>
+            ) : (
+              <div
+                className={
+                  styles.categoryList
+                }
+              >
+                {categoryData.map(
                   (
                     category,
                     index
                   ) => (
                     <article
+                      key={category.name}
                       className={
                         styles.categoryItem
-                      }
-                      key={
-                        category.name
                       }
                     >
                       <div
@@ -1483,38 +2091,228 @@ export default function InsightsPage() {
                           styles.categoryPercent
                         }
                       >
-                        {
+                        {Math.round(
                           category.percent
-                        }
+                        )}
                         %
                       </strong>
-
-                      <Link
-                        href="/city/expenses"
-                        className={
-                          styles.categoryAction
-                        }
-                        aria-label={`Review ${category.name} expenses`}
-                      >
-                        <ArrowIcon />
-                      </Link>
                     </article>
                   )
-                )
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
+
+          {highestCategory && (
+            <div
+              className={
+                styles.scannerInsight
+              }
+            >
+              <SparkIcon />
+
+              <div>
+                <span>
+                  TOP SPENDING ZONE
+                </span>
+
+                <strong>
+                  {highestCategory.name}
+                </strong>
+
+                <p>
+                  {Math.round(
+                    highestCategory.percent
+                  )}
+                  % of your recorded spending,
+                  totaling{" "}
+                  {numberFormatter.format(
+                    highestCategory.amount
+                  )}{" "}
+                  SAR.
+                </p>
+              </div>
+
+              <Link
+                href="/city/expenses"
+                className={
+                  styles.insightButton
+                }
+              >
+                Review
+
+                <ArrowIcon />
+              </Link>
+            </div>
+          )}
         </section>
       </div>
 
+      {/* =====================
+          AI-SUGGESTED MISSION
+      ===================== */}
+
+      {aiInsight && (
+        <section
+          className={
+            styles.missionPanel
+          }
+        >
+          <div
+            className={
+              styles.panelHeader
+            }
+          >
+            <div>
+              <span
+                className={
+                  styles.sectionEyebrow
+                }
+              >
+                ✦ AI-SUGGESTED MISSION
+              </span>
+
+              <h2>
+                {
+                  aiInsight
+                    .suggestedMission
+                    .title
+                }
+              </h2>
+
+              <p>
+                {
+                  aiInsight
+                    .suggestedMission
+                    .description
+                }
+              </p>
+            </div>
+          </div>
+
+          <div
+            className={
+              styles.missionArena
+            }
+          >
+            <div
+              className={
+                styles.missionVisual
+              }
+            >
+              <div
+                className={
+                  styles.targetRings
+                }
+              >
+                <span />
+                <span />
+
+                <TargetIcon />
+              </div>
+
+              <div
+                className={
+                  styles.missionVisualStatus
+                }
+              >
+                <span>
+                  AI STATUS
+                </span>
+
+                <strong>
+                  SUGGESTED ONLY
+                </strong>
+              </div>
+            </div>
+
+            <div
+              className={
+                styles.missionDetails
+              }
+            >
+              <div
+                className={
+                  styles.missionProgressTop
+                }
+              >
+                <span>
+                  MISSION TARGET
+                </span>
+              </div>
+
+              <p
+                className={
+                  styles.missionTarget
+                }
+              >
+                {
+                  aiInsight
+                    .suggestedMission
+                    .target
+                }
+              </p>
+
+              <div
+                className={
+                  styles.missionSteps
+                }
+              >
+                <div>
+                  <span>1</span>
+
+                  <div>
+                    <strong>
+                      Why FinBot selected this
+                    </strong>
+
+                    <p>
+                      {
+                        aiInsight
+                          .suggestedMission
+                          .reason
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className={
+                  styles.missionActions
+                }
+              >
+                <Link
+                  href="/city/expenses"
+                  className={
+                    styles.missionButton
+                  }
+                >
+                  <ReceiptIcon />
+
+                  Review Your Activity
+
+                  <ArrowIcon />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* =====================
+          RECOMMENDATIONS
+      ===================== */}
+
       <section
         className={
-          styles.activityPanel
+          styles.recommendationsPanel
         }
+        id="recommendations"
       >
         <div
           className={
-            styles.panelHeading
+            styles.panelHeader
           }
         >
           <div>
@@ -1523,7 +2321,193 @@ export default function InsightsPage() {
                 styles.sectionEyebrow
               }
             >
-              CITY TRANSACTION LOG
+              {aiInsight
+                ? "✦ GEMINI AI RECOMMENDATIONS"
+                : "✦ FINBOT RECOMMENDATIONS"}
+            </span>
+
+            <h2>
+              Your Next Financial Moves
+            </h2>
+
+            <p>
+              {aiInsight
+                ? "Personalized recommendations generated by Gemini from your real financial activity."
+                : "Suggestions generated from your current financial analysis."}
+            </p>
+          </div>
+
+          {hasFinancialData ? (
+            <button
+              type="button"
+              className={
+                styles.panelActionButton
+              }
+              onClick={
+                handleAIAnalysis
+              }
+              disabled={isAnalyzing}
+            >
+              <SparkIcon />
+
+              {isAnalyzing
+                ? "Analyzing..."
+                : aiInsight
+                  ? "Refresh AI Advice"
+                  : "Generate AI Advice"}
+            </button>
+          ) : (
+            <Link
+              href="/city/expenses"
+              className={
+                styles.panelActionButton
+              }
+            >
+              <PlusIcon />
+
+              Record New Activity
+            </Link>
+          )}
+        </div>
+
+        {visibleRecommendations.length ===
+        0 ? (
+          <div
+            className={
+              styles.recommendationsEmpty
+            }
+          >
+            <div
+              className={
+                styles.emptyIcon
+              }
+            >
+              <SparkIcon />
+            </div>
+
+            <strong>
+              More activity is needed
+            </strong>
+
+            <p>
+              Add financial activity to
+              unlock personalized
+              recommendations.
+            </p>
+
+            <Link
+              href="/city/expenses"
+              className={
+                styles.emptyButton
+              }
+            >
+              <PlusIcon />
+
+              Add Expense
+
+              <ArrowIcon />
+            </Link>
+          </div>
+        ) : (
+          <div
+            className={
+              styles.recommendationGrid
+            }
+          >
+            {visibleRecommendations
+              .slice(0, 3)
+              .map(
+                (
+                  recommendation,
+                  index
+                ) => (
+                  <article
+                    className={
+                      styles.recommendationCard
+                    }
+                    key={`${recommendation.title}-${index}`}
+                  >
+                    <div
+                      className={
+                        styles.recommendationNumber
+                      }
+                    >
+                      {String(
+                        index + 1
+                      ).padStart(2, "0")}
+                    </div>
+
+                    <div
+                      className={
+                        styles.recommendationIcon
+                      }
+                    >
+                      {index === 0
+                        ? "🎯"
+                        : index === 1
+                          ? "🛡️"
+                          : "⚡"}
+                    </div>
+
+                    <span>
+                      {aiInsight
+                        ? "GEMINI AI MOVE"
+                        : "FINBOT MOVE"}
+                    </span>
+
+                    <strong>
+                      {
+                        recommendation.title
+                      }
+                    </strong>
+
+                    <p>
+                      {
+                        recommendation.description
+                      }
+                    </p>
+
+                    {recommendation.action && (
+                      <div
+                        className={
+                          styles.recommendationAction
+                        }
+                      >
+                        <ArrowIcon />
+
+                        {
+                          recommendation.action
+                        }
+                      </div>
+                    )}
+                  </article>
+                )
+              )}
+          </div>
+        )}
+      </section>
+
+      {/* =====================
+          ACTIVITY
+      ===================== */}
+
+      <section
+        className={
+          styles.activityPanel
+        }
+      >
+        <div
+          className={
+            styles.panelHeader
+          }
+        >
+          <div>
+            <span
+              className={
+                styles.sectionEyebrow
+              }
+            >
+              📜 CITY TRANSACTION LOG
             </span>
 
             <h2>
@@ -1531,8 +2515,8 @@ export default function InsightsPage() {
             </h2>
 
             <p>
-              Latest recorded financial
-              activity.
+              Your latest recorded
+              transactions.
             </p>
           </div>
 
@@ -1554,22 +2538,34 @@ export default function InsightsPage() {
               styles.activityEmpty
             }
           >
-            <ReceiptIcon />
+            <div
+              className={
+                styles.emptyIcon
+              }
+            >
+              <ReceiptIcon />
+            </div>
 
             <strong>
-              No activity detected
+              No financial activity yet
             </strong>
 
             <p>
-              Record your first expense
-              to start the city
-              transaction log.
+              Record your first expense to
+              activate the transaction log.
             </p>
 
-            <Link href="/city/expenses">
+            <Link
+              href="/city/expenses"
+              className={
+                styles.emptyButton
+              }
+            >
               <PlusIcon />
 
-              Add Expense
+              Add First Expense
+
+              <ArrowIcon />
             </Link>
           </div>
         ) : (
@@ -1579,102 +2575,114 @@ export default function InsightsPage() {
             }
           >
             {recentExpenses.map(
-              (expense, index) => (
-                <article
-                  className={
-                    styles.activityItem
-                  }
-                  key={expense.id}
-                >
-                  <div
-                    className={
-                      styles.activityNumber
-                    }
-                  >
-                    {String(
-                      index + 1
-                    ).padStart(
-                      2,
-                      "0"
-                    )}
-                  </div>
+              (
+                expense,
+                index
+              ) => {
+                const impact =
+                  safeBudget > 0
+                    ? (
+                        (Number(
+                          expense.amount
+                        ) /
+                          safeBudget) *
+                        100
+                      ).toFixed(1)
+                    : "0.0";
 
-                  <div
+                return (
+                  <article
                     className={
-                      styles.activityIcon
+                      styles.activityItem
+                    }
+                    key={
+                      expense.id ??
+                      `${expense.name}-${index}`
                     }
                   >
-                    {expense.name
-                      .charAt(0)
-                      .toUpperCase()}
-                  </div>
+                    <div
+                      className={
+                        styles.activityNumber
+                      }
+                    >
+                      {String(
+                        index + 1
+                      ).padStart(
+                        2,
+                        "0"
+                      )}
+                    </div>
 
-                  <div
-                    className={
-                      styles.activityInfo
-                    }
-                  >
-                    <strong>
-                      {expense.name}
+                    <div
+                      className={
+                        styles.activityIcon
+                      }
+                    >
+                      {expense.name
+                        .charAt(0)
+                        .toUpperCase()}
+                    </div>
+
+                    <div
+                      className={
+                        styles.activityInfo
+                      }
+                    >
+                      <strong>
+                        {expense.name}
+                      </strong>
+
+                      <span>
+                        {
+                          expense.category
+                        }
+                      </span>
+                    </div>
+
+                    <div
+                      className={
+                        styles.activityImpact
+                      }
+                    >
+                      <span>
+                        BUDGET IMPACT
+                      </span>
+
+                      <strong>
+                        {impact}%
+                      </strong>
+                    </div>
+
+                    <strong
+                      className={
+                        styles.activityAmount
+                      }
+                    >
+                      {numberFormatter.format(
+                        Number(
+                          expense.amount
+                        ) || 0
+                      )}{" "}
+                      SAR
                     </strong>
 
-                    <span>
-                      {expense.category}{" "}
-                      zone
-                    </span>
-                  </div>
+                    <Link
+                      href="/city/expenses"
+                      className={
+                        styles.activityButton
+                      }
+                    >
+                      Review
 
-                  <div
-                    className={
-                      styles.activityImpact
-                    }
-                  >
-                    <span>
-                      City impact
-                    </span>
-
-                    <strong>
-                      -
-                      {safeBudget > 0
-                        ? Math.max(
-                            1,
-                            Math.round(
-                              (expense.amount /
-                                safeBudget) *
-                                100
-                            )
-                          )
-                        : 0}
-                      %
-                    </strong>
-                  </div>
-
-                  <strong
-                    className={
-                      styles.activityAmount
-                    }
-                  >
-                    {numberFormatter.format(
-                      expense.amount
-                    )}{" "}
-                    SAR
-                  </strong>
-
-                  <Link
-                    href="/city/expenses"
-                    className={
-                      styles.activityButton
-                    }
-                    aria-label={`Review ${expense.name}`}
-                  >
-                    Review
-                  </Link>
-                </article>
-              )
+                      <ArrowIcon />
+                    </Link>
+                  </article>
+                );
+              }
             )}
           </div>
         )}
       </section>
-    </div>
+    </main>
   );
 }

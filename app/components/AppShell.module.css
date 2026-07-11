@@ -1,0 +1,13 @@
+.app {
+  min-height: 100vh;
+}
+
+.appWithBottomNav {
+  min-height: 100vh;
+}
+
+@media (max-width: 820px) {
+  .appWithBottomNav {
+    padding-bottom: 92px;
+  }
+}

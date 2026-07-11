@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 
-import { useFinancialAnalysis } from "@/context/FinancialAnalysisContext";
+import { useBudget } from "@/context/BudgetContext";
+
+import {
+  useFinancialAnalysis,
+} from "@/context/FinancialAnalysisContext";
 
 import styles from "./AITip.module.css";
 
@@ -25,12 +29,54 @@ function getImpactIcon(
 
 export default function AITip() {
   const {
+    expenses,
+  } = useBudget();
+
+  const {
     behaviorSummary,
     recommendations,
     financialScore,
     financialProfile,
     safeDailyLimit,
   } = useFinancialAnalysis();
+
+  const hasFinancialData =
+    expenses.length > 0;
+
+  const numericScore =
+    Number(financialScore);
+
+  const displayedScore =
+    hasFinancialData &&
+    Number.isFinite(
+      numericScore
+    )
+      ? Math.round(
+          numericScore
+        )
+      : "—";
+
+  const displayedProfile =
+    hasFinancialData
+      ? financialProfile ||
+        "Financial activity detected"
+
+      : "Waiting for real financial data";
+
+  const displayedSummary =
+    hasFinancialData
+      ? behaviorSummary ||
+        "Your financial activity is ready for analysis."
+
+      : "Record your first real expense to activate personalized financial analysis.";
+
+  const dailyLimit =
+    Math.max(
+      Number(
+        safeDailyLimit
+      ) || 0,
+      0
+    );
 
   return (
     <section className={styles.card}>
@@ -46,7 +92,7 @@ export default function AITip() {
         </div>
 
         <div className={styles.score}>
-          {financialScore}
+          {displayedScore}
         </div>
       </div>
 
@@ -56,19 +102,30 @@ export default function AITip() {
         </div>
 
         <div>
-          <h3>{financialProfile}</h3>
+          <h3>
+            {displayedProfile}
+          </h3>
 
-          <p>{behaviorSummary}</p>
+          <p>
+            {displayedSummary}
+          </p>
 
-          <span>
-            Suggested daily limit:{" "}
-            <strong>
-              {safeDailyLimit.toLocaleString(
-                "en-US"
-              )}{" "}
-              SAR
-            </strong>
-          </span>
+          {hasFinancialData && (
+            <span>
+              Suggested daily limit:{" "}
+
+              <strong>
+                {dailyLimit.toLocaleString(
+                  "en-US",
+                  {
+                    maximumFractionDigits:
+                      2,
+                  }
+                )}{" "}
+                SAR
+              </strong>
+            </span>
+          )}
         </div>
       </div>
 
@@ -77,23 +134,30 @@ export default function AITip() {
           styles.recommendations
         }
       >
-        {recommendations.length === 0 ? (
+        {!hasFinancialData ? (
           <p className={styles.empty}>
-            Enter your income, budget and
-            expenses to receive
+            Record real financial
+            activity to receive
             personalized recommendations.
+          </p>
+        ) : recommendations.length ===
+          0 ? (
+          <p className={styles.empty}>
+            More financial activity is
+            needed before recommendations
+            can be generated.
           </p>
         ) : (
           recommendations.map(
-            (recommendation) => (
+            (
+              recommendation,
+              index
+            ) => (
               <article
-                key={
-                  recommendation.title
-                }
+                key={`${recommendation.title}-${index}`}
                 className={`${styles.recommendation} ${
                   styles[
-                    recommendation
-                      .impact
+                    recommendation.impact
                   ]
                 }`}
               >
@@ -120,11 +184,13 @@ export default function AITip() {
                     }
                   </p>
 
-                  <strong>
-                    {
-                      recommendation.action
-                    }
-                  </strong>
+                  {recommendation.action && (
+                    <strong>
+                      {
+                        recommendation.action
+                      }
+                    </strong>
+                  )}
                 </div>
               </article>
             )
@@ -138,7 +204,7 @@ export default function AITip() {
         </Link>
 
         <Link href="/city/insights">
-          View Report
+          View AI Insights
         </Link>
       </div>
     </section>

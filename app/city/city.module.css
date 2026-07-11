@@ -3,136 +3,464 @@
   min-height: calc(100vh - 92px);
   padding-bottom: 55px;
 
-  background: #f4f7fb;
+  background: #f5f7fa;
 }
 
 .dashboardGrid {
-  width: 96%;
-  max-width: 1600px;
+  width: min(96%, 1560px);
   margin: 0 auto;
-  padding-top: 25px;
+  padding-top: 24px;
 
   display: grid;
+
   grid-template-columns:
     minmax(0, 1fr)
     350px;
 
   align-items: start;
-  gap: 22px;
+  gap: 20px;
 }
 
 .mainColumn {
   min-width: 0;
 }
 
-.welcomeCard {
-  min-height: 110px;
-  margin-bottom: 20px;
-  padding: 23px 25px;
+/* WELCOME */
 
-  border: 1px solid #e2e8f0;
-  border-radius: 18px;
+.welcomeCard {
+  min-height: 104px;
+  margin-bottom: 16px;
+  padding: 20px 22px;
 
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
 
+  border: 1px solid #e4e8ed;
+  border-radius: 16px;
+
   background: #ffffff;
 
   box-shadow:
-    0 10px 30px
-      rgba(23, 32, 51, 0.05);
+    0 6px 22px
+    rgba(23, 32, 51, 0.04);
 }
 
 .eyebrow {
   color: #16a34a;
 
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
   letter-spacing: 1px;
 }
 
 .welcomeCard h1 {
-  margin-top: 5px;
+  margin: 5px 0 0;
 
   color: #172033;
 
-  font-size: 25px;
+  font-size: 23px;
   font-weight: 750;
-  letter-spacing: -0.6px;
+
+  letter-spacing: -0.5px;
 }
 
 .welcomeCard p {
-  margin-top: 5px;
+  margin: 5px 0 0;
 
-  color: #667085;
+  color: #748092;
 
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.6;
 }
 
-.budgetStatus {
-  min-width: 120px;
-  padding: 13px 16px;
+.cityStageBadge {
+  min-width: 130px;
+  padding: 12px 15px;
 
-  border-radius: 13px;
+  flex-shrink: 0;
 
-  background: #f0fdf4;
+  border-radius: 12px;
+
+  background: #f4f6f8;
 
   text-align: center;
 }
 
-.budgetStatus span {
+.cityStageBadge > span {
   display: block;
 
-  color: #4b6354;
+  color: #8490a0;
 
-  font-size: 9px;
-  font-weight: 700;
+  font-size: 8px;
+  font-weight: 650;
 }
 
-.budgetStatus strong {
+.cityStageBadge > strong {
   display: block;
+
   margin-top: 4px;
 
-  color: #15803d;
+  color: #172033;
 
-  font-size: 22px;
+  font-size: 14px;
   font-weight: 800;
 }
 
+.cityStageBadge.healthy {
+  background: #f0fdf4;
+}
+
+.cityStageBadge.healthy > strong {
+  color: #15803d;
+}
+
+.cityStageBadge.warning {
+  background: #fffaf0;
+}
+
+.cityStageBadge.warning > strong {
+  color: #b45309;
+}
+
+.cityStageBadge.danger {
+  background: #fff4f4;
+}
+
+.cityStageBadge.danger > strong {
+  color: #b91c1c;
+}
+
+/* CITY */
+
 .citySection {
   width: 100%;
-}
 
-.statsSection {
-  width: 100%;
-  margin-top: 24px;
-}
+  overflow: hidden;
 
-.rightPanel {
-  position: sticky;
-  top: 112px;
-
-  display: flex;
-  flex-direction: column;
-  gap: 17px;
-}
-
-.summaryCard,
-.expenseCard,
-.recentCard {
-  padding: 21px;
-
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e4e8ed;
   border-radius: 18px;
 
   background: #ffffff;
 
   box-shadow:
-    0 10px 28px
-      rgba(23, 32, 51, 0.05);
+    0 8px 28px
+    rgba(23, 32, 51, 0.045);
+}
+
+.statsSection {
+  width: 100%;
+  margin-top: 16px;
+}
+
+/* FINANCIAL PATH */
+
+.financialPathCard {
+  margin-top: 16px;
+  padding: 20px 22px;
+
+  border: 1px solid #e4e8ed;
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 6px 22px
+    rgba(23, 32, 51, 0.035);
+}
+
+.financialPathHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.financialPathHeader
+  > div
+  > span {
+  color: #16a34a;
+
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.financialPathHeader h2 {
+  margin: 4px 0 0;
+
+  color: #172033;
+
+  font-size: 16px;
+  font-weight: 750;
+}
+
+.financialPathHeader
+  > strong {
+  color: #172033;
+
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.financialPathHeader
+  > strong
+  small {
+  color: #98a2b3;
+
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.pathStages {
+  margin-top: 22px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, 1fr);
+
+  gap: 8px;
+}
+
+.pathStage,
+.pathStageActive,
+.pathStageComplete {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  color: #98a2b3;
+
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.pathStageActive {
+  color: #172033;
+}
+
+.pathStageComplete {
+  color: #15803d;
+}
+
+.stageMarker {
+  width: 27px;
+  height: 27px;
+  flex: 0 0 27px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid #dfe4ea;
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.pathStageActive
+  .stageMarker {
+  border-color: #22c55e;
+
+  color: #ffffff;
+  background: #22c55e;
+}
+
+.pathStageComplete
+  .stageMarker {
+  border-color: #bbf7d0;
+
+  color: #15803d;
+  background: #f0fdf4;
+}
+
+.pathProgress {
+  height: 5px;
+
+  margin-top: 14px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: #edf0f3;
+}
+
+.pathProgress > span {
+  display: block;
+
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: #22c55e;
+
+  transition: width 0.35s ease;
+}
+
+.pathDescription {
+  margin: 12px 0 0;
+
+  color: #748092;
+
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+/* INSIGHTS */
+
+.insightGrid {
+  margin-top: 16px;
+
+  display: grid;
+
+  grid-template-columns:
+    0.8fr
+    0.8fr
+    1.4fr;
+
+  gap: 12px;
+}
+
+.safeSpendCard,
+.forecastCard,
+.nextActionCard {
+  padding: 18px;
+
+  border: 1px solid #e4e8ed;
+  border-radius: 15px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 5px 20px
+    rgba(23, 32, 51, 0.035);
+}
+
+.safeSpendCard > span,
+.forecastCard > span,
+.nextActionTop > span {
+  color: #16a34a;
+
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.9px;
+}
+
+.safeSpendCard > strong,
+.forecastCard > strong {
+  display: block;
+
+  margin-top: 9px;
+
+  color: #172033;
+
+  font-size: 22px;
+  font-weight: 800;
+
+  letter-spacing: -0.5px;
+}
+
+.safeSpendCard
+  > strong
+  small,
+.forecastCard
+  > strong
+  small {
+  color: #98a2b3;
+
+  font-size: 8px;
+  font-weight: 650;
+}
+
+.safeSpendCard > p,
+.forecastCard > p {
+  margin: 8px 0 0;
+
+  color: #8490a0;
+
+  font-size: 9px;
+  line-height: 1.6;
+}
+
+.forecastPositive {
+  color: #15803d !important;
+}
+
+.forecastNegative {
+  color: #b91c1c !important;
+}
+
+.nextActionCard {
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff,
+      #fbfdfc
+    );
+}
+
+.nextActionTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nextActionTop small {
+  color: #8490a0;
+
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.nextActionCard h2 {
+  margin: 8px 0 0;
+
+  color: #172033;
+
+  font-size: 15px;
+  font-weight: 750;
+
+  letter-spacing: -0.3px;
+}
+
+.nextActionCard p {
+  margin: 7px 0 0;
+
+  color: #748092;
+
+  font-size: 9px;
+  line-height: 1.65;
+}
+
+/* RIGHT PANEL */
+
+.rightPanel {
+  position: sticky;
+  top: 108px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.summaryCard,
+.expenseCard,
+.recentCard {
+  padding: 18px;
+
+  border: 1px solid #e4e8ed;
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 6px 22px
+    rgba(23, 32, 51, 0.04);
 }
 
 .cardHeading {
@@ -147,25 +475,24 @@
 
   color: #16a34a;
 
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 800;
   letter-spacing: 0.9px;
 }
 
 .cardHeading h2 {
-  margin-top: 5px;
+  margin: 5px 0 0;
 
   color: #172033;
 
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 750;
-  letter-spacing: -0.3px;
 }
 
 .cardHeading > strong {
-  max-width: 130px;
+  max-width: 140px;
 
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 800;
   text-align: right;
 }
@@ -173,7 +500,7 @@
 .cardHeading small {
   color: #98a2b3;
 
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
 }
 
@@ -185,9 +512,11 @@
   color: #dc2626;
 }
 
+/* PROGRESS */
+
 .progressTrack {
-  height: 9px;
-  margin-top: 21px;
+  height: 7px;
+  margin-top: 18px;
 
   overflow: hidden;
 
@@ -198,6 +527,7 @@
 
 .progressTrack span {
   display: block;
+
   height: 100%;
 
   border-radius: inherit;
@@ -217,40 +547,44 @@
   background: #dc2626;
 }
 
+/* SUMMARY */
+
 .summaryGrid {
-  margin-top: 19px;
+  margin-top: 16px;
 
   display: grid;
+
   grid-template-columns:
     repeat(2, minmax(0, 1fr));
 
-  gap: 9px;
+  gap: 8px;
 }
 
 .summaryGrid div {
-  padding: 11px;
+  padding: 10px;
 
-  border-radius: 11px;
+  border-radius: 10px;
 
-  background: #f7f9fc;
+  background: #f7f9fb;
 }
 
 .summaryGrid span {
   display: block;
 
-  color: #667085;
+  color: #748092;
 
-  font-size: 9px;
-  font-weight: 700;
+  font-size: 8px;
+  font-weight: 650;
 }
 
 .summaryGrid strong {
   display: block;
+
   margin-top: 4px;
 
   color: #172033;
 
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 750;
 }
 
@@ -262,14 +596,40 @@
   color: #dc2626 !important;
 }
 
-.error,
-.success {
-  margin-top: 16px;
-  padding: 10px 12px;
+.summaryForecast {
+  margin-top: 14px;
+  padding-top: 13px;
 
-  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  border-top: 1px solid #edf0f3;
+}
+
+.summaryForecast span {
+  color: #8490a0;
+
+  font-size: 8px;
+}
+
+.summaryForecast strong {
+  color: #172033;
 
   font-size: 10px;
+  font-weight: 800;
+}
+
+/* MESSAGES */
+
+.error,
+.success {
+  margin-top: 14px;
+  padding: 9px 11px;
+
+  border-radius: 9px;
+
+  font-size: 9px;
   font-weight: 650;
   line-height: 1.5;
 }
@@ -288,40 +648,43 @@
   color: #15803d;
 }
 
+/* FORM */
+
 .expenseForm {
-  margin-top: 18px;
+  margin-top: 16px;
 
   display: flex;
   flex-direction: column;
-  gap: 13px;
+  gap: 12px;
 }
 
 .expenseForm label {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 6px;
 }
 
 .expenseForm label > span {
   color: #344054;
 
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
 }
 
 .expenseForm input,
 .expenseForm select {
   width: 100%;
-  height: 44px;
-  padding: 0 12px;
+  height: 42px;
+  padding: 0 11px;
 
-  border: 1px solid #d9e0e9;
-  border-radius: 11px;
+  border: 1px solid #dce2e9;
+  border-radius: 10px;
 
   background: #ffffff;
   color: #172033;
 
-  font-size: 11px;
+  font-family: inherit;
+  font-size: 10px;
 
   outline: none;
 
@@ -335,8 +698,8 @@
   border-color: #22c55e;
 
   box-shadow:
-    0 0 0 4px
-      rgba(34, 197, 94, 0.09);
+    0 0 0 3px
+    rgba(34, 197, 94, 0.08);
 }
 
 .expenseForm input::placeholder {
@@ -353,6 +716,7 @@
 
 .amountField strong {
   position: absolute;
+
   top: 50%;
   right: 12px;
 
@@ -360,7 +724,7 @@
 
   color: #98a2b3;
 
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 800;
 
   pointer-events: none;
@@ -368,15 +732,17 @@
 
 .expenseForm > button {
   width: 100%;
-  min-height: 45px;
+  min-height: 43px;
   margin-top: 2px;
 
-  border-radius: 11px;
+  border: 0;
+  border-radius: 10px;
 
   background: #172033;
   color: #ffffff;
 
-  font-size: 11px;
+  font-family: inherit;
+  font-size: 10px;
   font-weight: 750;
 
   cursor: pointer;
@@ -388,36 +754,39 @@
 }
 
 .expenseForm > button:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 
   background: #22c55e;
 
   box-shadow:
-    0 12px 22px
-      rgba(34, 197, 94, 0.18);
+    0 10px 22px
+    rgba(34, 197, 94, 0.17);
 }
 
+/* EXPENSE LIST */
+
 .expenseList {
-  margin-top: 15px;
+  margin-top: 13px;
 
   display: flex;
   flex-direction: column;
 }
 
 .expenseItem {
-  min-height: 59px;
-  padding: 9px 0;
-
-  border-bottom: 1px solid #edf1f5;
+  min-height: 57px;
+  padding: 8px 0;
 
   display: grid;
+
   grid-template-columns:
-    37px
+    36px
     minmax(0, 1fr)
     auto;
 
   align-items: center;
   gap: 10px;
+
+  border-bottom: 1px solid #edf1f5;
 }
 
 .expenseItem:last-child {
@@ -425,18 +794,18 @@
 }
 
 .expenseInitial {
-  width: 37px;
-  height: 37px;
-
-  border-radius: 11px;
+  width: 36px;
+  height: 36px;
 
   display: grid;
   place-items: center;
 
+  border-radius: 10px;
+
   background: #eaf8ef;
   color: #15803d;
 
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
 }
 
@@ -456,7 +825,7 @@
 .expenseInformation strong {
   color: #172033;
 
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
 }
 
@@ -465,16 +834,19 @@
 
   color: #98a2b3;
 
-  font-size: 9px;
+  font-size: 8px;
 }
 
 .expensePrice {
   color: #172033;
 
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 750;
+
   white-space: nowrap;
 }
+
+/* EMPTY */
 
 .emptyState {
   min-height: 120px;
@@ -490,25 +862,37 @@
 .emptyState strong {
   color: #172033;
 
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 750;
 }
 
 .emptyState p {
   max-width: 210px;
-  margin-top: 5px;
+
+  margin: 5px 0 0;
 
   color: #98a2b3;
 
-  font-size: 10px;
+  font-size: 9px;
   line-height: 1.5;
 }
+
+/* RESPONSIVE */
 
 @media (max-width: 1200px) {
   .dashboardGrid {
     grid-template-columns:
       minmax(0, 1fr)
       315px;
+  }
+
+  .insightGrid {
+    grid-template-columns:
+      1fr 1fr;
+  }
+
+  .nextActionCard {
+    grid-column: 1 / -1;
   }
 }
 
@@ -521,6 +905,7 @@
     position: static;
 
     display: grid;
+
     grid-template-columns:
       repeat(2, minmax(0, 1fr));
   }
@@ -530,32 +915,65 @@
   }
 }
 
+@media (max-width: 700px) {
+  .pathStages {
+    grid-template-columns:
+      repeat(2, 1fr);
+
+    gap: 12px;
+  }
+
+  .insightGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .nextActionCard {
+    grid-column: auto;
+  }
+}
+
 @media (max-width: 650px) {
   .page {
-    min-height: calc(100vh - 78px);
+    min-height:
+      calc(100vh - 78px);
+
     padding-bottom: 35px;
   }
 
   .dashboardGrid {
-    width: 92%;
-    padding-top: 18px;
+    width: calc(100% - 24px);
+    padding-top: 14px;
   }
 
   .welcomeCard {
-    padding: 19px;
+    min-height: auto;
+    padding: 17px;
 
     align-items: flex-start;
     flex-direction: column;
   }
 
   .welcomeCard h1 {
-    font-size: 22px;
+    font-size: 21px;
   }
 
-  .budgetStatus {
+  .cityStageBadge {
     width: 100%;
 
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
     text-align: left;
+  }
+
+  .cityStageBadge
+    > strong {
+    margin-top: 0;
+  }
+
+  .financialPathCard {
+    padding: 17px;
   }
 
   .rightPanel {
@@ -564,5 +982,704 @@
 
   .recentCard {
     grid-column: auto;
+  }
+}
+/* =========================
+   PLAYER BADGE
+========================= */
+
+.playerBadge {
+  width: 220px;
+  padding: 13px 14px;
+
+  flex-shrink: 0;
+
+  border: 1px solid #e5defd;
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #faf8ff,
+      #f5f1ff
+    );
+
+  box-shadow:
+    0 8px 22px
+    rgba(124, 58, 237, 0.08);
+}
+
+.playerBadgeTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.playerLevelIcon {
+  width: 36px;
+  height: 36px;
+
+  flex: 0 0 36px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 10px;
+
+  background: #ede9fe;
+
+  font-size: 17px;
+}
+
+.playerBadgeTop span {
+  display: block;
+
+  color: #8b7eb3;
+
+  font-size: 7px;
+  font-weight: 850;
+  letter-spacing: 0.9px;
+}
+
+.playerBadgeTop strong {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #5b21b6;
+
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.playerXpRow {
+  margin-top: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  color: #9387b4;
+
+  font-size: 7px;
+  font-weight: 700;
+}
+
+.playerProgress {
+  height: 6px;
+
+  margin-top: 6px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: #e5def6;
+}
+
+.playerProgress > span {
+  display: block;
+
+  height: 100%;
+
+  border-radius: inherit;
+
+  background:
+    linear-gradient(
+      90deg,
+      #7c3aed,
+      #a78bfa
+    );
+
+  transition: width 0.35s ease;
+}
+
+/* =========================
+   GAME HUD
+========================= */
+
+.gameHud {
+  margin-bottom: 14px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 10px;
+}
+
+.hudCard {
+  min-height: 82px;
+  padding: 13px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  overflow: hidden;
+
+  border: 1px solid #e3e8ef;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 6px 20px
+    rgba(23, 32, 51, 0.045);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.hudCard:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 10px 25px
+    rgba(23, 32, 51, 0.07);
+}
+
+.hudIcon {
+  width: 42px;
+  height: 42px;
+
+  flex: 0 0 42px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 12px;
+
+  font-size: 19px;
+}
+
+.levelHud .hudIcon {
+  background: #f3e8ff;
+}
+
+.streakHud .hudIcon {
+  background: #fff1e7;
+}
+
+.coinsHud .hudIcon {
+  background: #fff8dc;
+}
+
+.healthHud .hudIcon {
+  background: #eafaf0;
+}
+
+.hudContent {
+  min-width: 0;
+}
+
+.hudContent > span {
+  display: block;
+
+  color: #8c96a5;
+
+  font-size: 7px;
+  font-weight: 850;
+  letter-spacing: 0.8px;
+}
+
+.hudContent > strong {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #172033;
+
+  font-size: 18px;
+  font-weight: 850;
+  letter-spacing: -0.4px;
+}
+
+.hudContent > strong small {
+  color: #98a2b3;
+
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.hudContent > small {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #98a2b3;
+
+  font-size: 7px;
+  font-weight: 650;
+}
+
+.healthGood {
+  color: #16a34a !important;
+}
+
+.healthWarning {
+  color: #d97706 !important;
+}
+
+.healthDanger {
+  color: #dc2626 !important;
+}
+
+/* =========================
+   ACTIVE MISSION
+========================= */
+
+.missionCard {
+  position: relative;
+
+  margin-top: 16px;
+  padding: 20px;
+
+  overflow: hidden;
+
+  border: 1px solid #ded7fb;
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff 0%,
+      #fbf9ff 55%,
+      #f5f1ff 100%
+    );
+
+  box-shadow:
+    0 10px 30px
+    rgba(91, 33, 182, 0.07);
+}
+
+.missionGlow {
+  position: absolute;
+
+  width: 180px;
+  height: 180px;
+
+  top: -110px;
+  right: -70px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(139, 92, 246, 0.12);
+
+  filter: blur(12px);
+
+  pointer-events: none;
+}
+
+.missionHeader {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 16px;
+}
+
+.missionHeading {
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+}
+
+.missionIcon {
+  width: 44px;
+  height: 44px;
+
+  flex: 0 0 44px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid #ddd6fe;
+  border-radius: 12px;
+
+  background: #ede9fe;
+
+  font-size: 20px;
+
+  box-shadow:
+    0 8px 18px
+    rgba(124, 58, 237, 0.1);
+}
+
+.missionHeading span {
+  display: block;
+
+  color: #7c3aed;
+
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.missionHeading h2 {
+  margin: 5px 0 0;
+
+  color: #172033;
+
+  font-size: 17px;
+  font-weight: 850;
+  letter-spacing: -0.4px;
+}
+
+.missionCounter {
+  min-width: 75px;
+  padding: 9px 11px;
+
+  border: 1px solid #e5defd;
+  border-radius: 11px;
+
+  background:
+    rgba(255, 255, 255, 0.8);
+
+  text-align: center;
+}
+
+.missionCounter span {
+  display: block;
+
+  color: #978aaa;
+
+  font-size: 6px;
+  font-weight: 850;
+  letter-spacing: 0.7px;
+}
+
+.missionCounter strong {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #7c3aed;
+
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.missionCounter small {
+  color: #aaa0b8;
+
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.missionDescription {
+  position: relative;
+  z-index: 1;
+
+  max-width: 680px;
+
+  margin: 15px 0 0;
+
+  color: #667085;
+
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.missionProgressTop {
+  position: relative;
+  z-index: 1;
+
+  margin-top: 17px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.missionProgressTop span {
+  color: #8a7ba3;
+
+  font-size: 7px;
+  font-weight: 850;
+  letter-spacing: 0.8px;
+}
+
+.missionProgressTop strong {
+  color: #7c3aed;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.missionProgress {
+  position: relative;
+  z-index: 1;
+
+  height: 9px;
+
+  margin-top: 7px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: #ebe7f4;
+}
+
+.missionProgress > span {
+  display: block;
+
+  height: 100%;
+
+  border-radius: inherit;
+
+  background:
+    linear-gradient(
+      90deg,
+      #7c3aed,
+      #8b5cf6,
+      #a78bfa
+    );
+
+  box-shadow:
+    0 0 12px
+    rgba(139, 92, 246, 0.35);
+
+  transition: width 0.4s ease;
+}
+
+.missionBottom {
+  position: relative;
+  z-index: 1;
+
+  margin-top: 17px;
+  padding-top: 15px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  border-top: 1px solid #ece7f5;
+}
+
+.missionRewards > span {
+  display: block;
+
+  color: #9486aa;
+
+  font-size: 7px;
+  font-weight: 850;
+  letter-spacing: 0.8px;
+}
+
+.missionRewards > div {
+  margin-top: 6px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+}
+
+.missionRewards strong {
+  padding: 6px 9px;
+
+  border: 1px solid #e5defd;
+  border-radius: 8px;
+
+  background: #faf8ff;
+  color: #5b21b6;
+
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.claimButton {
+  min-height: 38px;
+  padding: 0 15px;
+
+  border: 0;
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #7c3aed,
+      #8b5cf6
+    );
+
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 850;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 9px 20px
+    rgba(124, 58, 237, 0.2);
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.claimButton:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 12px 24px
+    rgba(124, 58, 237, 0.28);
+}
+
+.missionStatus {
+  padding: 8px 11px;
+
+  border: 1px solid #e1e5ea;
+  border-radius: 9px;
+
+  background: #f7f8fa;
+  color: #7c8798;
+
+  font-size: 8px;
+  font-weight: 750;
+}
+
+.missionNotice {
+  position: relative;
+  z-index: 1;
+
+  margin-top: 13px;
+  padding: 9px 11px;
+
+  border: 1px solid #ddd6fe;
+  border-radius: 9px;
+
+  background: #f5f3ff;
+  color: #6d28d9;
+
+  font-size: 8px;
+  font-weight: 750;
+}
+
+.allMissionsComplete {
+  position: relative;
+  z-index: 1;
+
+  min-height: 120px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+.allMissionsComplete > div {
+  font-size: 30px;
+}
+
+.allMissionsComplete strong {
+  margin-top: 8px;
+
+  color: #172033;
+
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.allMissionsComplete p {
+  margin: 5px 0 0;
+
+  color: #8490a0;
+
+  font-size: 9px;
+}
+
+/* =========================
+   RESPONSIVE GAME UI
+========================= */
+
+@media (max-width: 1150px) {
+  .gameHud {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .playerBadge {
+    width: 100%;
+  }
+
+  .gameHud {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 8px;
+  }
+
+  .hudCard {
+    min-height: 75px;
+
+    padding: 10px;
+  }
+
+  .hudIcon {
+    width: 36px;
+    height: 36px;
+
+    flex-basis: 36px;
+
+    font-size: 16px;
+  }
+
+  .hudContent > strong {
+    font-size: 15px;
+  }
+
+  .missionCard {
+    padding: 16px;
+  }
+
+  .missionHeader,
+  .missionBottom {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .missionCounter {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    text-align: left;
+  }
+
+  .missionCounter strong {
+    margin-top: 0;
+  }
+
+  .missionRewards > div {
+    flex-wrap: wrap;
+  }
+
+  .claimButton {
+    width: 100%;
+  }
+}
+
+@media (max-width: 430px) {
+  .gameHud {
+    grid-template-columns: 1fr;
   }
 }

@@ -1,0 +1,1106 @@
+.page {
+  width: 100%;
+  min-height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  color: #172033;
+
+  font-family:
+    "Segoe UI",
+    Arial,
+    Helvetica,
+    sans-serif;
+}
+
+/* =========================
+   HERO
+========================= */
+
+.hero {
+  position: relative;
+
+  min-height: 220px;
+  padding: 34px 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+
+  overflow: hidden;
+
+  border-radius: 26px;
+
+  background:
+    radial-gradient(
+      circle at 88% 20%,
+      rgba(74, 222, 128, 0.24),
+      transparent 30%
+    ),
+    linear-gradient(
+      135deg,
+      #172033 0%,
+      #1d293d 55%,
+      #1e3a34 100%
+    );
+
+  color: #ffffff;
+
+  box-shadow:
+    0 22px 50px
+    rgba(23, 32, 51, 0.14);
+}
+
+.hero::before {
+  content: "";
+
+  position: absolute;
+
+  width: 280px;
+  height: 280px;
+
+  top: -170px;
+  left: 25%;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.08);
+
+  border-radius: 50%;
+}
+
+.hero::after {
+  content: "";
+
+  position: absolute;
+
+  width: 180px;
+  height: 180px;
+
+  right: 8%;
+  bottom: -125px;
+
+  border: 1px solid
+    rgba(74, 222, 128, 0.18);
+
+  border-radius: 50%;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+
+  max-width: 610px;
+}
+
+.eyebrow {
+  width: fit-content;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  color: #86efac;
+
+  font-size: 11px;
+  font-weight: 900;
+
+  letter-spacing: 1.3px;
+}
+
+.eyebrow svg {
+  width: 18px;
+  height: 18px;
+}
+
+.heroContent h1 {
+  margin: 12px 0 8px;
+
+  font-size: clamp(
+    32px,
+    4vw,
+    48px
+  );
+
+  font-weight: 900;
+
+  line-height: 1;
+
+  letter-spacing: -1.6px;
+}
+
+.heroContent p {
+  max-width: 540px;
+
+  margin: 0;
+
+  color: #cbd5e1;
+
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.heroBadge {
+  position: relative;
+  z-index: 2;
+
+  min-width: 205px;
+  padding: 18px;
+
+  display: flex;
+  align-items: center;
+  gap: 13px;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.12);
+
+  border-radius: 18px;
+
+  background:
+    rgba(255, 255, 255, 0.08);
+
+  backdrop-filter: blur(12px);
+}
+
+.heroBadgeIcon {
+  width: 48px;
+  height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 15px;
+
+  background: #22c55e;
+
+  color: #ffffff;
+
+  box-shadow:
+    0 10px 25px
+    rgba(34, 197, 94, 0.25);
+}
+
+.heroBadgeIcon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.heroBadge span {
+  display: block;
+
+  color: #cbd5e1;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.heroBadge strong {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #ffffff;
+
+  font-size: 25px;
+  font-weight: 900;
+}
+
+/* =========================
+   STATS
+========================= */
+
+.standingGrid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 15px;
+}
+
+.statCard {
+  min-width: 0;
+
+  padding: 19px;
+
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+
+  border: 1px solid #e4e9f0;
+  border-radius: 19px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 12px 28px
+    rgba(23, 32, 51, 0.055);
+}
+
+.statIcon {
+  width: 45px;
+  height: 45px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 14px;
+}
+
+.statIcon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.rankCard .statIcon {
+  background: #fff7ed;
+  color: #f97316;
+}
+
+.pointsCard .statIcon {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.levelCard .statIcon {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.friendsCard .statIcon {
+  background: #faf5ff;
+  color: #9333ea;
+}
+
+.statInfo {
+  min-width: 0;
+}
+
+.statInfo > span {
+  color: #8b95a7;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.statInfo strong {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #172033;
+
+  font-size: 22px;
+  font-weight: 900;
+
+  line-height: 1.1;
+}
+
+.statInfo p {
+  margin: 7px 0 0;
+
+  color: #8b95a7;
+
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+/* =========================
+   MAIN GRID
+========================= */
+
+.mainGrid {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr) 330px;
+
+  gap: 20px;
+
+  align-items: start;
+}
+
+/* =========================
+   RANKING
+========================= */
+
+.rankingPanel {
+  overflow: hidden;
+
+  border: 1px solid #e4e9f0;
+  border-radius: 22px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 14px 35px
+    rgba(23, 32, 51, 0.055);
+}
+
+.panelHeader {
+  padding: 22px 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  border-bottom:
+    1px solid #edf0f4;
+}
+
+.sectionLabel {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  color: #16a34a;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  letter-spacing: 1px;
+}
+
+.sectionLabel svg {
+  width: 16px;
+  height: 16px;
+}
+
+.panelHeader h2 {
+  margin: 6px 0 4px;
+
+  color: #172033;
+
+  font-size: 21px;
+  font-weight: 900;
+
+  letter-spacing: -0.5px;
+}
+
+.panelHeader p {
+  margin: 0;
+
+  color: #8b95a7;
+
+  font-size: 11px;
+}
+
+.tabs {
+  padding: 4px;
+
+  display: flex;
+
+  border: 1px solid #e4e9f0;
+  border-radius: 12px;
+
+  background: #f7f9fb;
+}
+
+.tabs button {
+  height: 34px;
+  padding: 0 13px;
+
+  border: 0;
+  border-radius: 9px;
+
+  background: transparent;
+
+  color: #7b8797;
+
+  font: inherit;
+  font-size: 10px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.tabs .activeTab {
+  background: #ffffff;
+
+  color: #172033;
+
+  box-shadow:
+    0 4px 10px
+    rgba(23, 32, 51, 0.08);
+}
+
+/* =========================
+   TABLE
+========================= */
+
+.tableHeader,
+.playerRow {
+  display: grid;
+
+  grid-template-columns:
+    85px minmax(190px, 1fr) 100px 110px;
+
+  gap: 12px;
+
+  align-items: center;
+}
+
+.tableHeader {
+  padding: 12px 20px;
+
+  background: #f8fafc;
+
+  color: #98a2b3;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.playerRow {
+  min-height: 78px;
+
+  padding: 13px 20px;
+
+  border-top:
+    1px solid #edf0f4;
+}
+
+.currentPlayerRow {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(34, 197, 94, 0.09),
+      rgba(34, 197, 94, 0.025)
+    );
+
+  border-left:
+    3px solid #22c55e;
+}
+
+.position {
+  color: #172033;
+
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.player {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 13px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #22c55e,
+      #15803d
+    );
+
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.player > div:last-child {
+  min-width: 0;
+}
+
+.player strong {
+  display: block;
+
+  overflow: hidden;
+
+  color: #172033;
+
+  font-size: 12px;
+  font-weight: 850;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player span {
+  display: block;
+
+  margin-top: 3px;
+
+  overflow: hidden;
+
+  color: #98a2b3;
+
+  font-size: 9px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.levelBadge {
+  width: fit-content;
+
+  padding: 6px 9px;
+
+  border-radius: 9px;
+
+  background: #eff6ff;
+
+  color: #2563eb;
+
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.points {
+  text-align: right;
+}
+
+.points strong {
+  color: #172033;
+
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.points span {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #98a2b3;
+
+  font-size: 8px;
+  font-weight: 800;
+}
+
+/* =========================
+   EMPTY
+========================= */
+
+.emptyRanking {
+  min-height: 260px;
+
+  padding: 35px 25px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 58px;
+  height: 58px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 18px;
+
+  background: #f0fdf4;
+
+  color: #16a34a;
+}
+
+.emptyIcon svg {
+  width: 27px;
+  height: 27px;
+}
+
+.emptyRanking strong {
+  margin-top: 15px;
+
+  color: #172033;
+
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.emptyRanking p {
+  max-width: 420px;
+
+  margin: 7px 0 0;
+
+  color: #8b95a7;
+
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+/* =========================
+   SIDE COLUMN
+========================= */
+
+.sideColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.friendPanel,
+.profilePanel {
+  padding: 21px;
+
+  border: 1px solid #e4e9f0;
+  border-radius: 21px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 14px 35px
+    rgba(23, 32, 51, 0.055);
+}
+
+.friendPanelTop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.friendIcon {
+  width: 43px;
+  height: 43px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 13px;
+
+  background: #f0fdf4;
+
+  color: #16a34a;
+}
+
+.friendIcon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.friendPanelTop span {
+  display: block;
+
+  color: #16a34a;
+
+  font-size: 8px;
+  font-weight: 900;
+
+  letter-spacing: 0.9px;
+}
+
+.friendPanelTop h2 {
+  margin: 4px 0 0;
+
+  color: #172033;
+
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.friendDescription {
+  margin: 15px 0;
+
+  color: #8b95a7;
+
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.friendForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.searchField {
+  position: relative;
+}
+
+.searchField svg {
+  position: absolute;
+
+  top: 50%;
+  left: 13px;
+
+  width: 18px;
+  height: 18px;
+
+  transform: translateY(-50%);
+
+  color: #98a2b3;
+
+  pointer-events: none;
+}
+
+.searchField input {
+  width: 100%;
+  height: 45px;
+
+  padding: 0 13px 0 41px;
+
+  outline: none;
+
+  border: 1px solid #dce3ea;
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  color: #172033;
+
+  font: inherit;
+  font-size: 11px;
+
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.searchField input::placeholder {
+  color: #a0aaba;
+}
+
+.searchField input:focus {
+  border-color: #22c55e;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(34, 197, 94, 0.1);
+}
+
+.addButton {
+  width: 100%;
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  border: 0;
+  border-radius: 12px;
+
+  background: #172033;
+
+  color: #ffffff;
+
+  font: inherit;
+  font-size: 10px;
+  font-weight: 900;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.addButton svg {
+  width: 18px;
+  height: 18px;
+}
+
+.addButton:hover {
+  transform: translateY(-1px);
+
+  background: #22c55e;
+
+  box-shadow:
+    0 10px 20px
+    rgba(34, 197, 94, 0.2);
+}
+
+.message {
+  margin-top: 12px;
+  padding: 10px 11px;
+
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+
+  background: #f0fdf4;
+
+  color: #15803d;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  line-height: 1.5;
+}
+
+/* =========================
+   PROFILE PANEL
+========================= */
+
+.profilePanel {
+  background:
+    linear-gradient(
+      145deg,
+      #172033,
+      #243047
+    );
+
+  color: #ffffff;
+
+  border-color: transparent;
+}
+
+.profileLabel {
+  color: #86efac;
+
+  font-size: 8px;
+  font-weight: 900;
+
+  letter-spacing: 1px;
+}
+
+.profileMain {
+  margin-top: 16px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.largeAvatar {
+  width: 49px;
+  height: 49px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 15px;
+
+  background: #22c55e;
+
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.profileMain strong {
+  display: block;
+
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.profileMain span {
+  display: block;
+
+  max-width: 200px;
+
+  margin-top: 3px;
+
+  overflow: hidden;
+
+  color: #aeb9ca;
+
+  font-size: 9px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileStats {
+  margin-top: 18px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 8px;
+}
+
+.profileStats > div {
+  padding: 10px 7px;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.08);
+
+  border-radius: 11px;
+
+  background:
+    rgba(255, 255, 255, 0.055);
+
+  text-align: center;
+}
+
+.profileStats span {
+  display: block;
+
+  color: #aeb9ca;
+
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.profileStats strong {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 900;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (
+  max-width: 1200px
+) {
+  .standingGrid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .sideColumn {
+    display: grid;
+
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+}
+
+@media (
+  max-width: 760px
+) {
+  .hero {
+    padding: 27px 23px;
+
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .heroBadge {
+    width: 100%;
+  }
+
+  .standingGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .panelHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tabs {
+    width: 100%;
+  }
+
+  .tabs button {
+    flex: 1;
+  }
+
+  .tableHeader {
+    display: none;
+  }
+
+  .playerRow {
+    grid-template-columns:
+      45px minmax(0, 1fr);
+
+    gap: 10px;
+  }
+
+  .levelBadge {
+    grid-column: 2;
+  }
+
+  .points {
+    grid-column: 2;
+
+    text-align: left;
+  }
+
+  .sideColumn {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (
+  max-width: 480px
+) {
+  .hero {
+    min-height: auto;
+
+    border-radius: 20px;
+  }
+
+  .heroContent h1 {
+    font-size: 32px;
+  }
+
+  .statCard,
+  .friendPanel,
+  .profilePanel {
+    border-radius: 17px;
+  }
+
+  .rankingPanel {
+    border-radius: 18px;
+  }
+
+  .playerRow {
+    padding:
+      13px 14px;
+  }
+}
