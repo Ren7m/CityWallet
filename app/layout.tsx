@@ -1,17 +1,16 @@
-import type { Metadata } from "next";
+import type {
+  Metadata,
+} from "next";
+
+import AppShell from "./AppShell";
+
 import "./globals.css";
-
-import { LanguageProvider } from "@/context/LanguageContext";
-import { AuthProvider } from "@/context/AuthContext";
-import { BudgetProvider } from "@/context/BudgetContext";
-import { GameProvider } from "@/context/GameContext";
-import { FinancialAnalysisProvider } from "@/context/FinancialAnalysisContext";
-
-import AppShell from "./components/AppShell";
 
 export const metadata: Metadata = {
   title: "CityWallet",
-  description: "A gamified personal finance city simulator.",
+
+  description:
+    "A gamified personal finance platform that turns financial habits into an interactive city experience.",
 };
 
 export default function RootLayout({
@@ -22,17 +21,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <LanguageProvider>
-          <AuthProvider>
-            <BudgetProvider>
-              <GameProvider>
-                <FinancialAnalysisProvider>
-                  <AppShell>{children}</AppShell>
-                </FinancialAnalysisProvider>
-              </GameProvider>
-            </BudgetProvider>
-          </AuthProvider>
-        </LanguageProvider>
+        <AppShell>
+          {children}
+        </AppShell>
       </body>
     </html>
   );

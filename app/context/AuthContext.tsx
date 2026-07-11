@@ -2,7 +2,6 @@
 
 import {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -16,9 +15,7 @@ import type {
   User as SupabaseUser,
 } from "@supabase/supabase-js";
 
-import {
-  createClient,
-} from "../lib/supabase/client";
+import { createClient } from "./supabaseClient";
 
 /* =========================
    TYPES
@@ -42,6 +39,8 @@ type AuthContextType = {
   user: AuthUser | null;
 
   isLoading: boolean;
+
+  isReady: boolean;
 
   isAuthenticated: boolean;
 
@@ -76,7 +75,7 @@ const AuthContext =
 
 function getInitials(
   name: string
-): string {
+) {
   const cleanName = name.trim();
 
   if (!cleanName) {
@@ -105,37 +104,51 @@ function mapSupabaseUser(
   supabaseUser: SupabaseUser
 ): AuthUser {
   const fullName =
-    typeof supabaseUser
-      .user_metadata?.full_name ===
+    supabaseUser
+      .user_metadata
+      ?.full_name;
+
+  const metadataName =
+    supabaseUser
+      .user_metadata
+      ?.name;
+
+  let resolvedName = "";
+
+  if (
+    typeof fullName === "string"
+  ) {
+    resolvedName = fullName;
+  } else if (
+    typeof metadataName ===
     "string"
-      ? supabaseUser
-          .user_metadata
-          .full_name
-      : typeof supabaseUser
-            .user_metadata?.name ===
-          "string"
-        ? supabaseUser
-            .user_metadata
-            .name
-        : "";
+  ) {
+    resolvedName = metadataName;
+  }
 
   const email =
-    supabaseUser.email ?? "";
+    supabaseUser.email || "";
 
   const fallbackName =
     email
       .split("@")[0]
-      .trim() || "Mayor";
+      .trim() ||
+    "Mayor";
 
   const name =
-    fullName.trim() ||
+    resolvedName.trim() ||
     fallbackName;
 
   return {
     id: supabaseUser.id,
+
     name,
+
     email,
-    initials: getInitials(name),
+
+    initials:
+      getInitials(name),
+
     createdAt:
       supabaseUser.created_at,
   };
@@ -158,9 +171,10 @@ export function AuthProvider({
   const [
     user,
     setUser,
-  ] = useState<AuthUser | null>(
-    null
-  );
+  ] =
+    useState<AuthUser | null>(
+      null
+    );
 
   const [
     isLoading,
@@ -168,38 +182,7 @@ export function AuthProvider({
   ] = useState(true);
 
   /* =========================
-     REFRESH USER
-  ========================= */
-
-  const refreshUser =
-    useCallback(async () => {
-      try {
-        const {
-          data,
-          error,
-        } =
-          await supabase.auth.getUser();
-
-        if (
-          error ||
-          !data.user
-        ) {
-          setUser(null);
-          return;
-        }
-
-        setUser(
-          mapSupabaseUser(
-            data.user
-          )
-        );
-      } catch {
-        setUser(null);
-      }
-    }, [supabase]);
-
-  /* =========================
-     RESTORE SESSION
+     LOAD CURRENT USER
   ========================= */
 
   useEffect(() => {
@@ -208,38 +191,30 @@ export function AuthProvider({
     async function loadCurrentUser() {
       setIsLoading(true);
 
-      try {
-        const {
-          data,
-          error,
-        } =
-          await supabase.auth.getUser();
+      const {
+        data,
+        error,
+      } =
+        await supabase.auth.getUser();
 
-        if (!isMounted) {
-          return;
-        }
-
-        if (
-          error ||
-          !data.user
-        ) {
-          setUser(null);
-        } else {
-          setUser(
-            mapSupabaseUser(
-              data.user
-            )
-          );
-        }
-      } catch {
-        if (isMounted) {
-          setUser(null);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+      if (!isMounted) {
+        return;
       }
+
+      if (
+        error ||
+        !data.user
+      ) {
+        setUser(null);
+      } else {
+        setUser(
+          mapSupabaseUser(
+            data.user
+          )
+        );
+      }
+
+      setIsLoading(false);
     }
 
     void loadCurrentUser();
@@ -254,10 +229,6 @@ export function AuthProvider({
           _event: AuthChangeEvent,
           session: Session | null
         ) => {
-          if (!isMounted) {
-            return;
-          }
-
           if (session?.user) {
             setUser(
               mapSupabaseUser(
@@ -283,311 +254,336 @@ export function AuthProvider({
      REGISTER
   ========================= */
 
-  const register =
-    useCallback(
-      async (
-        name: string,
-        email: string,
-        password: string
-      ): Promise<AuthResult> => {
-        const cleanName =
-          name.trim();
+  async function register(
+    name: string,
+    email: string,
+    password: string
+  ): Promise<AuthResult> {
+    const cleanName =
+      name.trim();
 
-        const cleanEmail =
-          email
-            .trim()
-            .toLowerCase();
+    const cleanEmail =
+      email
+        .trim()
+        .toLowerCase();
 
-        if (
-          cleanName.length < 2
-        ) {
-          return {
-            success: false,
-            message:
-              "Please enter your full name.",
-            emailConfirmationRequired:
-              false,
-          };
-        }
+    if (
+      cleanName.length < 2
+    ) {
+      return {
+        success: false,
 
-        if (
-          !cleanEmail ||
-          !cleanEmail.includes("@")
-        ) {
-          return {
-            success: false,
-            message:
-              "Please enter a valid email address.",
-            emailConfirmationRequired:
-              false,
-          };
-        }
+        message:
+          "Please enter your full name.",
 
-        if (
-          password.length < 6
-        ) {
-          return {
-            success: false,
-            message:
-              "Password must contain at least 6 characters.",
-            emailConfirmationRequired:
-              false,
-          };
-        }
+        emailConfirmationRequired:
+          false,
+      };
+    }
 
-        try {
-          const redirectUrl =
-            `${window.location.origin}/auth/confirm`;
+    if (
+      !cleanEmail ||
+      !cleanEmail.includes("@")
+    ) {
+      return {
+        success: false,
 
-          const {
-            data,
-            error,
-          } =
-            await supabase.auth.signUp({
-              email: cleanEmail,
-              password,
+        message:
+          "Please enter a valid email address.",
 
-              options: {
-                data: {
-                  full_name:
-                    cleanName,
+        emailConfirmationRequired:
+          false,
+      };
+    }
 
-                  name:
-                    cleanName,
-                },
+    if (
+      password.length < 6
+    ) {
+      return {
+        success: false,
 
-                emailRedirectTo:
-                  redirectUrl,
-              },
-            });
+        message:
+          "Password must contain at least 6 characters.",
 
-          if (error) {
-            return {
-              success: false,
-              message:
-                error.message,
-              emailConfirmationRequired:
-                false,
-            };
-          }
+        emailConfirmationRequired:
+          false,
+      };
+    }
 
-          if (!data.user) {
-            return {
-              success: false,
-              message:
-                "The account could not be created. Please try again.",
-              emailConfirmationRequired:
-                false,
-            };
-          }
+    try {
+      const {
+        data,
+        error,
+      } =
+        await supabase.auth.signUp({
+          email: cleanEmail,
 
-          /*
-            Confirm Email مفعّل:
-            Supabase ينشئ المستخدم
-            لكن لا ينشئ Session قبل
-            تأكيد البريد.
-          */
+          password,
 
-          if (!data.session) {
-            setUser(null);
+          options: {
+            data: {
+              full_name:
+                cleanName,
 
-            return {
-              success: true,
-              message:
-                "Account created. Please confirm your email to continue.",
-              emailConfirmationRequired:
-                true,
-            };
-          }
+              name:
+                cleanName,
+            },
+          },
+        });
 
-          /*
-            Confirm Email غير مفعّل:
-            توجد Session مباشرة،
-            لذلك المستخدم مسجل دخول.
-          */
+      if (error) {
+        return {
+          success: false,
 
-          setUser(
-            mapSupabaseUser(
-              data.user
-            )
-          );
+          message:
+            error.message,
 
-          return {
-            success: true,
-            message:
-              "Account created successfully.",
-            emailConfirmationRequired:
-              false,
-          };
-        } catch {
-          return {
-            success: false,
-            message:
-              "Unable to create the account right now. Please try again.",
-            emailConfirmationRequired:
-              false,
-          };
-        }
-      },
-      [supabase]
-    );
+          emailConfirmationRequired:
+            false,
+        };
+      }
+
+      if (!data.user) {
+        return {
+          success: false,
+
+          message:
+            "The account could not be created. Please try again.",
+
+          emailConfirmationRequired:
+            false,
+        };
+      }
+
+      /*
+        إذا كان تأكيد البريد
+        مفعّل في Supabase:
+
+        user موجود
+        session = null
+      */
+
+      if (!data.session) {
+        setUser(null);
+
+        return {
+          success: true,
+
+          message:
+            "Account created successfully. Please confirm your email, then sign in.",
+
+          emailConfirmationRequired:
+            true,
+        };
+      }
+
+      setUser(
+        mapSupabaseUser(
+          data.user
+        )
+      );
+
+      return {
+        success: true,
+
+        message:
+          "Account created successfully.",
+
+        emailConfirmationRequired:
+          false,
+      };
+    } catch {
+      return {
+        success: false,
+
+        message:
+          "Unable to create the account right now. Please try again.",
+
+        emailConfirmationRequired:
+          false,
+      };
+    }
+  }
 
   /* =========================
      LOGIN
   ========================= */
 
-  const login =
-    useCallback(
-      async (
-        email: string,
-        password: string
-      ): Promise<AuthResult> => {
-        const cleanEmail =
-          email
-            .trim()
-            .toLowerCase();
+  async function login(
+    email: string,
+    password: string
+  ): Promise<AuthResult> {
+    const cleanEmail =
+      email
+        .trim()
+        .toLowerCase();
 
-        if (
-          !cleanEmail ||
-          !cleanEmail.includes("@")
-        ) {
-          return {
-            success: false,
-            message:
-              "Please enter a valid email address.",
-            emailConfirmationRequired:
-              false,
-          };
-        }
+    if (
+      !cleanEmail ||
+      !cleanEmail.includes("@")
+    ) {
+      return {
+        success: false,
 
-        if (!password) {
-          return {
-            success: false,
-            message:
-              "Please enter your password.",
-            emailConfirmationRequired:
-              false,
-          };
-        }
+        message:
+          "Please enter a valid email address.",
 
-        try {
-          const {
-            data,
-            error,
-          } =
-            await supabase.auth
-              .signInWithPassword({
-                email:
-                  cleanEmail,
+        emailConfirmationRequired:
+          false,
+      };
+    }
 
-                password,
-              });
+    if (!password) {
+      return {
+        success: false,
 
-          if (error) {
-            const needsConfirmation =
-              error.message
-                .toLowerCase()
-                .includes(
-                  "email not confirmed"
-                );
+        message:
+          "Please enter your password.",
 
-            return {
-              success: false,
+        emailConfirmationRequired:
+          false,
+      };
+    }
 
-              message:
-                needsConfirmation
-                  ? "Please confirm your email before signing in."
-                  : error.message,
+    try {
+      const {
+        data,
+        error,
+      } =
+        await supabase.auth
+          .signInWithPassword({
+            email:
+              cleanEmail,
 
-              emailConfirmationRequired:
-                needsConfirmation,
-            };
-          }
+            password,
+          });
 
-          if (!data.user) {
-            return {
-              success: false,
-              message:
-                "Unable to sign in. Please try again.",
-              emailConfirmationRequired:
-                false,
-            };
-          }
+      if (error) {
+        return {
+          success: false,
 
-          setUser(
-            mapSupabaseUser(
-              data.user
-            )
-          );
+          message:
+            error.message,
 
-          return {
-            success: true,
-            message:
-              "Signed in successfully.",
-            emailConfirmationRequired:
-              false,
-          };
-        } catch {
-          return {
-            success: false,
-            message:
-              "Unable to sign in right now. Please try again.",
-            emailConfirmationRequired:
-              false,
-          };
-        }
-      },
-      [supabase]
-    );
+          emailConfirmationRequired:
+            false,
+        };
+      }
+
+      if (!data.user) {
+        return {
+          success: false,
+
+          message:
+            "Unable to sign in. Please try again.",
+
+          emailConfirmationRequired:
+            false,
+        };
+      }
+
+      setUser(
+        mapSupabaseUser(
+          data.user
+        )
+      );
+
+      return {
+        success: true,
+
+        message:
+          "Signed in successfully.",
+
+        emailConfirmationRequired:
+          false,
+      };
+    } catch {
+      return {
+        success: false,
+
+        message:
+          "Unable to sign in right now. Please try again.",
+
+        emailConfirmationRequired:
+          false,
+      };
+    }
+  }
 
   /* =========================
      LOGOUT
   ========================= */
 
-  const logout =
-    useCallback(
-      async (): Promise<AuthResult> => {
-        try {
-          const {
-            error,
-          } =
-            await supabase.auth.signOut();
+  async function logout():
+    Promise<AuthResult> {
+    try {
+      const {
+        error,
+      } =
+        await supabase.auth.signOut();
 
-          if (error) {
-            return {
-              success: false,
-              message:
-                error.message,
-              emailConfirmationRequired:
-                false,
-            };
-          }
+      if (error) {
+        return {
+          success: false,
 
-          setUser(null);
+          message:
+            error.message,
 
-          window.location.replace(
-            "/login"
-          );
+          emailConfirmationRequired:
+            false,
+        };
+      }
 
-          return {
-            success: true,
-            message:
-              "Signed out successfully.",
-            emailConfirmationRequired:
-              false,
-          };
-        } catch {
-          return {
-            success: false,
-            message:
-              "Unable to sign out right now.",
-            emailConfirmationRequired:
-              false,
-          };
-        }
-      },
-      [supabase]
+      setUser(null);
+
+      return {
+        success: true,
+
+        message:
+          "Signed out successfully.",
+
+        emailConfirmationRequired:
+          false,
+      };
+    } catch {
+      return {
+        success: false,
+
+        message:
+          "Unable to sign out right now.",
+
+        emailConfirmationRequired:
+          false,
+      };
+    }
+  }
+
+  /* =========================
+     REFRESH USER
+  ========================= */
+
+  async function refreshUser() {
+    const {
+      data,
+      error,
+    } =
+      await supabase.auth.getUser();
+
+    if (
+      error ||
+      !data.user
+    ) {
+      setUser(null);
+
+      return;
+    }
+
+    setUser(
+      mapSupabaseUser(
+        data.user
+      )
     );
+  }
 
   /* =========================
      CONTEXT VALUE
@@ -599,6 +595,9 @@ export function AuthProvider({
         user,
 
         isLoading,
+
+        isReady:
+          !isLoading,
 
         isAuthenticated:
           Boolean(user),
@@ -614,10 +613,6 @@ export function AuthProvider({
       [
         user,
         isLoading,
-        register,
-        login,
-        logout,
-        refreshUser,
       ]
     );
 
