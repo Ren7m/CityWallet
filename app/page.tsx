@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+
 import {
   useState,
   type CSSProperties,
@@ -39,6 +40,13 @@ export default function Home() {
     });
   }
 
+  function resetTilt() {
+    setTilt({
+      x: 0,
+      y: 0,
+    });
+  }
+
   const cityStyle = {
     "--rotate-x": `${tilt.x}deg`,
     "--rotate-y": `${tilt.y}deg`,
@@ -59,7 +67,9 @@ export default function Home() {
         </Link>
 
         <nav className={styles.nav}>
-          <Link href="/">Home</Link>
+          <Link href="/">
+            Home
+          </Link>
 
           <Link href="#how">
             How it works
@@ -86,7 +96,9 @@ export default function Home() {
 
           <h1>
             Build your
-            <span> financial city.</span>
+            <span>
+              financial city.
+            </span>
           </h1>
 
           <p>
@@ -113,7 +125,7 @@ export default function Home() {
           </div>
 
           <div className={styles.gameHint}>
-            <span></span>
+            <span />
 
             Your city is waiting for its mayor.
           </div>
@@ -122,12 +134,7 @@ export default function Home() {
         <div
           className={styles.cityStage}
           onMouseMove={handleMouseMove}
-          onMouseLeave={() =>
-            setTilt({
-              x: 0,
-              y: 0,
-            })
-          }
+          onMouseLeave={resetTilt}
         >
           <div
             className={styles.cityWorld}
@@ -135,43 +142,43 @@ export default function Home() {
           >
             <div
               className={`${styles.cloud} ${styles.cloudOne}`}
-            ></div>
+            />
 
             <div
               className={`${styles.cloud} ${styles.cloudTwo}`}
-            ></div>
+            />
 
-            <div className={styles.sun}></div>
+            <div className={styles.sun} />
 
             <div className={styles.cityIsland}>
-              <div className={styles.grass}></div>
+              <div className={styles.grass} />
 
               <div
                 className={styles.roadHorizontal}
-              ></div>
+              />
 
               <div
                 className={styles.roadVertical}
-              ></div>
+              />
 
               <div className={styles.house}>
                 <div
                   className={styles.houseRoof}
-                ></div>
+                />
 
                 <span
                   className={styles.houseDoor}
-                ></span>
+                />
 
                 <span
                   className={styles.houseWindow}
-                ></span>
+                />
               </div>
 
               <div className={styles.bank}>
                 <div
                   className={styles.bankRoof}
-                ></div>
+                />
 
                 <div
                   className={styles.bankSign}
@@ -179,46 +186,40 @@ export default function Home() {
                   BANK
                 </div>
 
-                <span></span>
-                <span></span>
-                <span></span>
+                <span />
+                <span />
+                <span />
               </div>
 
-              <div
-                className={styles.shop}
-              >
-                <span></span>
-                <span></span>
+              <div className={styles.shop}>
+                <span />
+                <span />
               </div>
 
               <div
                 className={`${styles.tree} ${styles.treeOne}`}
-              ></div>
+              />
 
               <div
                 className={`${styles.tree} ${styles.treeTwo}`}
-              ></div>
+              />
 
               <div
                 className={`${styles.tree} ${styles.treeThree}`}
-              ></div>
+              />
 
               <div
                 className={`${styles.tree} ${styles.treeFour}`}
-              ></div>
+              />
 
-              <div
-                className={styles.car}
-              ></div>
+              <div className={styles.car} />
 
-              <div
-                className={styles.citizen}
-              >
-                <span></span>
+              <div className={styles.citizen}>
+                <span />
               </div>
             </div>
 
-            <div className={styles.cityShadow}></div>
+            <div className={styles.cityShadow} />
           </div>
         </div>
       </section>
@@ -228,7 +229,9 @@ export default function Home() {
         className={styles.howSection}
       >
         <div className={styles.sectionHeader}>
-          <span>HOW IT WORKS</span>
+          <span>
+            HOW IT WORKS
+          </span>
 
           <h2>
             Your money decisions become
@@ -242,7 +245,9 @@ export default function Home() {
               01
             </div>
 
-            <h3>Track your spending</h3>
+            <h3>
+              Track your spending
+            </h3>
 
             <p>
               Understand where your money goes
@@ -256,7 +261,9 @@ export default function Home() {
               02
             </div>
 
-            <h3>Shape your city</h3>
+            <h3>
+              Shape your city
+            </h3>
 
             <p>
               Better financial decisions help
@@ -270,7 +277,9 @@ export default function Home() {
               03
             </div>
 
-            <h3>Build better habits</h3>
+            <h3>
+              Build better habits
+            </h3>
 
             <p>
               Complete challenges and use
