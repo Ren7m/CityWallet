@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+
 import {
   useEffect,
   useMemo,
@@ -9,14 +10,21 @@ import {
 } from "react";
 
 import { useAuth } from "@/context/AuthContext";
-import { useBudget } from "@/context/BudgetContext";
+
+import {
+  useBudget,
+} from "@/context/BudgetContext";
 
 import styles from "./profile.module.css";
 
 function EditIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
       <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z" />
+
       <path d="m13.5 6.5 4 4" />
     </svg>
   );
@@ -24,8 +32,12 @@ function EditIcon() {
 
 function ArrowIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
       <path d="M5 12h14" />
+
       <path d="m14 7 5 5-5 5" />
     </svg>
   );
@@ -33,7 +45,10 @@ function ArrowIcon() {
 
 function CloseIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
       <path d="m6 6 12 12M18 6 6 18" />
     </svg>
   );
@@ -41,14 +56,20 @@ function CloseIcon() {
 
 function CheckIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
       <path d="m5 12 4 4L19 6" />
     </svg>
   );
 }
 
 export default function ProfilePage() {
-  const { user, updateUser } = useAuth();
+  const {
+    user,
+    updateUser,
+  } = useAuth();
 
   const {
     budget,
@@ -57,76 +78,127 @@ export default function ProfilePage() {
     balance,
   } = useBudget();
 
-  const [editOpen, setEditOpen] =
-    useState(false);
+  const [
+    editOpen,
+    setEditOpen,
+  ] = useState(false);
 
-  const [name, setName] =
-    useState("");
+  const [
+    name,
+    setName,
+  ] = useState("");
 
-  const [email, setEmail] =
-    useState("");
+  const [
+    email,
+    setEmail,
+  ] = useState("");
 
-  const [error, setError] =
-    useState("");
+  const [
+    error,
+    setError,
+  ] = useState("");
 
-  const [notice, setNotice] =
-    useState("");
+  const [
+    notice,
+    setNotice,
+  ] = useState("");
+
+  const [
+    isSaving,
+    setIsSaving,
+  ] = useState(false);
 
   useEffect(() => {
     if (!user) {
       return;
     }
 
-    setName(user.name);
-    setEmail(user.email);
+    setName(
+      user.name
+    );
+
+    setEmail(
+      user.email
+    );
   }, [user]);
 
-  const numberFormatter = useMemo(() => {
-    return new Intl.NumberFormat("en-US", {
-      maximumFractionDigits: 2,
-    });
-  }, []);
+  const numberFormatter =
+    useMemo(() => {
+      return new Intl.NumberFormat(
+        "en-US",
+        {
+          maximumFractionDigits:
+            2,
+        }
+      );
+    }, []);
 
-  const safeBudget = Number(budget || 0);
-  const safeSpent = Number(totalSpent || 0);
-  const safeBalance = Number(balance || 0);
-  const safeExpenses = expenses ?? [];
+  const safeBudget =
+    Number(budget || 0);
+
+  const safeSpent =
+    Number(totalSpent || 0);
+
+  const safeBalance =
+    Number(balance || 0);
 
   const budgetUsage =
     safeBudget > 0
       ? Math.round(
-          (safeSpent / safeBudget) * 100
+          (
+            safeSpent /
+            safeBudget
+          ) * 100
         )
       : 0;
 
-  const progressWidth = Math.min(
-    Math.max(budgetUsage, 0),
-    100
-  );
+  const progressWidth =
+    Math.min(
+      Math.max(
+        budgetUsage,
+        0
+      ),
+      100
+    );
 
-  const recentExpenses = useMemo(() => {
-    return [...safeExpenses]
-      .reverse()
-      .slice(0, 5);
-  }, [safeExpenses]);
+  const recentExpenses =
+    useMemo(() => {
+      return [...expenses]
+        .reverse()
+        .slice(0, 5);
+    }, [expenses]);
 
   function openEditor() {
     if (!user) {
       return;
     }
 
-    setName(user.name);
-    setEmail(user.email);
+    setName(
+      user.name
+    );
+
+    setEmail(
+      user.email
+    );
+
     setError("");
+
     setEditOpen(true);
   }
 
   function closeEditor() {
+    if (isSaving) {
+      return;
+    }
+
     setEditOpen(false);
+
     setError("");
   }
 
-  function showNotice(message: string) {
+  function showNotice(
+    message: string
+  ) {
     setNotice(message);
 
     window.setTimeout(() => {
@@ -134,20 +206,31 @@ export default function ProfilePage() {
     }, 2200);
   }
 
-  function handleSave(
-    event: FormEvent<HTMLFormElement>
+  async function handleSave(
+    event:
+      FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
 
-    const cleanName = name.trim();
-    const cleanEmail = email
-      .trim()
-      .toLowerCase();
+    if (isSaving) {
+      return;
+    }
 
-    if (cleanName.length < 2) {
+    const cleanName =
+      name.trim();
+
+    const cleanEmail =
+      email
+        .trim()
+        .toLowerCase();
+
+    if (
+      cleanName.length < 2
+    ) {
       setError(
         "Please enter a valid name."
       );
+
       return;
     }
 
@@ -158,25 +241,55 @@ export default function ProfilePage() {
       setError(
         "Please enter a valid email address."
       );
+
       return;
     }
 
-    updateUser({
-      name: cleanName,
-      email: cleanEmail,
-    });
-
-    setEditOpen(false);
     setError("");
 
-    showNotice(
-      "Profile updated successfully."
-    );
+    setIsSaving(true);
+
+    try {
+      const result =
+        await updateUser({
+          name:
+            cleanName,
+
+          email:
+            cleanEmail,
+        });
+
+      if (!result.success) {
+        setError(
+          result.message
+        );
+
+        return;
+      }
+
+      setEditOpen(false);
+
+      setError("");
+
+      showNotice(
+        result.message
+      );
+    } catch {
+      setError(
+        "Unable to update your profile right now. Please try again."
+      );
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   if (!user) {
     return (
-      <div className={styles.loading}>
+      <div
+        className={
+          styles.loading
+        }
+      >
         Loading profile...
       </div>
     );
@@ -186,21 +299,34 @@ export default function ProfilePage() {
     <div className={styles.page}>
       {notice && (
         <div
-          className={styles.notice}
+          className={
+            styles.notice
+          }
           role="status"
         >
           <CheckIcon />
+
           {notice}
         </div>
       )}
 
-      <div className={styles.pageHeader}>
+      <div
+        className={
+          styles.pageHeader
+        }
+      >
         <div>
-          <span className={styles.eyebrow}>
+          <span
+            className={
+              styles.eyebrow
+            }
+          >
             ACCOUNT PROFILE
           </span>
 
-          <h1>My Profile</h1>
+          <h1>
+            My Profile
+          </h1>
 
           <p>
             Manage your account information and
@@ -210,31 +336,66 @@ export default function ProfilePage() {
 
         <Link
           href="/city"
-          className={styles.backButton}
+          className={
+            styles.backButton
+          }
         >
           Back to My City
+
           <ArrowIcon />
         </Link>
       </div>
 
-      <section className={styles.profileCard}>
-        <div className={styles.profileMain}>
-          <div className={styles.avatar}>
+      <section
+        className={
+          styles.profileCard
+        }
+      >
+        <div
+          className={
+            styles.profileMain
+          }
+        >
+          <div
+            className={
+              styles.avatar
+            }
+          >
             {user.initials}
           </div>
 
-          <div className={styles.profileInformation}>
-            <div className={styles.nameRow}>
-              <h2>{user.name}</h2>
+          <div
+            className={
+              styles.profileInformation
+            }
+          >
+            <div
+              className={
+                styles.nameRow
+              }
+            >
+              <h2>
+                {user.name}
+              </h2>
 
-              <span className={styles.status}>
+              <span
+                className={
+                  styles.status
+                }
+              >
                 Active
               </span>
             </div>
 
-            <p>{user.email}</p>
+            <p>
+              {user.email}
+            </p>
 
-            <span className={styles.role}>
+            <span
+              className={
+                styles.role
+              }
+            >
               CityWallet Member
             </span>
           </div>
@@ -242,17 +403,32 @@ export default function ProfilePage() {
 
         <button
           type="button"
-          className={styles.editButton}
-          onClick={openEditor}
+          className={
+            styles.editButton
+          }
+          onClick={
+            openEditor
+          }
         >
           <EditIcon />
+
           Edit Profile
         </button>
       </section>
 
-      <section className={styles.statsGrid}>
-        <article className={styles.statCard}>
-          <span>Monthly Budget</span>
+      <section
+        className={
+          styles.statsGrid
+        }
+      >
+        <article
+          className={
+            styles.statCard
+          }
+        >
+          <span>
+            Monthly Budget
+          </span>
 
           <strong>
             {numberFormatter.format(
@@ -261,11 +437,19 @@ export default function ProfilePage() {
             SAR
           </strong>
 
-          <p>Your selected monthly limit</p>
+          <p>
+            Your selected monthly limit
+          </p>
         </article>
 
-        <article className={styles.statCard}>
-          <span>Total Spent</span>
+        <article
+          className={
+            styles.statCard
+          }
+        >
+          <span>
+            Total Spent
+          </span>
 
           <strong>
             {numberFormatter.format(
@@ -274,11 +458,19 @@ export default function ProfilePage() {
             SAR
           </strong>
 
-          <p>{budgetUsage}% of budget used</p>
+          <p>
+            {budgetUsage}% of budget used
+          </p>
         </article>
 
-        <article className={styles.statCard}>
-          <span>Available Balance</span>
+        <article
+          className={
+            styles.statCard
+          }
+        >
+          <span>
+            Available Balance
+          </span>
 
           <strong
             className={
@@ -300,26 +492,52 @@ export default function ProfilePage() {
           </p>
         </article>
 
-        <article className={styles.statCard}>
-          <span>Transactions</span>
+        <article
+          className={
+            styles.statCard
+          }
+        >
+          <span>
+            Transactions
+          </span>
 
           <strong>
-            {safeExpenses.length}
+            {expenses.length}
           </strong>
 
-          <p>Expenses currently recorded</p>
+          <p>
+            Expenses currently recorded
+          </p>
         </article>
       </section>
 
-      <div className={styles.contentGrid}>
-        <section className={styles.summaryCard}>
-          <div className={styles.sectionHeader}>
+      <div
+        className={
+          styles.contentGrid
+        }
+      >
+        <section
+          className={
+            styles.summaryCard
+          }
+        >
+          <div
+            className={
+              styles.sectionHeader
+            }
+          >
             <div>
-              <span className={styles.sectionLabel}>
+              <span
+                className={
+                  styles.sectionLabel
+                }
+              >
                 FINANCIAL SUMMARY
               </span>
 
-              <h2>Monthly Budget Usage</h2>
+              <h2>
+                Monthly Budget Usage
+              </h2>
 
               <p>
                 Your profile updates automatically
@@ -340,7 +558,11 @@ export default function ProfilePage() {
             </strong>
           </div>
 
-          <div className={styles.progressTrack}>
+          <div
+            className={
+              styles.progressTrack
+            }
+          >
             <span
               className={
                 budgetUsage >= 100
@@ -350,14 +572,21 @@ export default function ProfilePage() {
                     : styles.safeProgress
               }
               style={{
-                width: `${progressWidth}%`,
+                width:
+                  `${progressWidth}%`,
               }}
             />
           </div>
 
-          <div className={styles.summaryValues}>
+          <div
+            className={
+              styles.summaryValues
+            }
+          >
             <div>
-              <span>Spent</span>
+              <span>
+                Spent
+              </span>
 
               <strong>
                 {numberFormatter.format(
@@ -368,7 +597,9 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <span>Remaining</span>
+              <span>
+                Remaining
+              </span>
 
               <strong>
                 {numberFormatter.format(
@@ -379,7 +610,9 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <span>Budget</span>
+              <span>
+                Budget
+              </span>
 
               <strong>
                 {numberFormatter.format(
@@ -392,56 +625,111 @@ export default function ProfilePage() {
 
           <Link
             href="/city/expenses"
-            className={styles.manageButton}
+            className={
+              styles.manageButton
+            }
           >
             Manage Expenses
+
             <ArrowIcon />
           </Link>
         </section>
 
-        <section className={styles.detailsCard}>
-          <div className={styles.sectionHeader}>
+        <section
+          className={
+            styles.detailsCard
+          }
+        >
+          <div
+            className={
+              styles.sectionHeader
+            }
+          >
             <div>
-              <span className={styles.sectionLabel}>
+              <span
+                className={
+                  styles.sectionLabel
+                }
+              >
                 ACCOUNT DETAILS
               </span>
 
-              <h2>Personal Information</h2>
+              <h2>
+                Personal Information
+              </h2>
             </div>
           </div>
 
-          <div className={styles.detailsList}>
+          <div
+            className={
+              styles.detailsList
+            }
+          >
             <div>
-              <span>Full name</span>
-              <strong>{user.name}</strong>
+              <span>
+                Full name
+              </span>
+
+              <strong>
+                {user.name}
+              </strong>
             </div>
 
             <div>
-              <span>Email address</span>
-              <strong>{user.email}</strong>
+              <span>
+                Email address
+              </span>
+
+              <strong>
+                {user.email}
+              </strong>
             </div>
 
             <div>
-              <span>Account type</span>
-              <strong>Demo account</strong>
+              <span>
+                Account type
+              </span>
+
+              <strong>
+                Registered account
+              </strong>
             </div>
 
             <div>
-              <span>Data storage</span>
-              <strong>Current session</strong>
+              <span>
+                Authentication
+              </span>
+
+              <strong>
+                Supabase Auth
+              </strong>
             </div>
           </div>
         </section>
       </div>
 
-      <section className={styles.activityCard}>
-        <div className={styles.activityHeader}>
+      <section
+        className={
+          styles.activityCard
+        }
+      >
+        <div
+          className={
+            styles.activityHeader
+          }
+        >
           <div>
-            <span className={styles.sectionLabel}>
+            <span
+              className={
+                styles.sectionLabel
+              }
+            >
               RECENT ACTIVITY
             </span>
 
-            <h2>Recent Expenses</h2>
+            <h2>
+              Recent Expenses
+            </h2>
 
             <p>
               Your latest recorded financial
@@ -451,41 +739,68 @@ export default function ProfilePage() {
 
           <Link
             href="/city/expenses"
-            className={styles.viewAll}
+            className={
+              styles.viewAll
+            }
           >
             View all
+
             <ArrowIcon />
           </Link>
         </div>
 
         {recentExpenses.length === 0 ? (
-          <div className={styles.emptyState}>
-            <strong>No expenses yet</strong>
+          <div
+            className={
+              styles.emptyState
+            }
+          >
+            <strong>
+              No expenses yet
+            </strong>
 
             <p>
               Add your first expense to see your
               financial activity here.
             </p>
 
-            <Link href="/city/expenses">
+            <Link
+              href="/city/expenses"
+            >
               Add Expense
             </Link>
           </div>
         ) : (
-          <div className={styles.expenseList}>
+          <div
+            className={
+              styles.expenseList
+            }
+          >
             {recentExpenses.map(
               (expense) => (
                 <article
-                  className={styles.expenseItem}
-                  key={expense.id}
+                  className={
+                    styles.expenseItem
+                  }
+                  key={
+                    expense.id
+                  }
                 >
-                  <div className={styles.expenseIcon}>
+                  <div
+                    className={
+                      styles.expenseIcon
+                    }
+                  >
                     {expense.name
                       .charAt(0)
                       .toUpperCase()}
                   </div>
 
-                  <div className={styles.expenseInfo}>
+                  <div
+                    className={
+                      styles.expenseInfo
+                    }
+                  >
                     <strong>
                       {expense.name}
                     </strong>
@@ -496,7 +811,9 @@ export default function ProfilePage() {
                   </div>
 
                   <strong
-                    className={styles.expenseAmount}
+                    className={
+                      styles.expenseAmount
+                    }
                   >
                     {numberFormatter.format(
                       expense.amount
@@ -511,20 +828,36 @@ export default function ProfilePage() {
       </section>
 
       {editOpen && (
-        <div className={styles.modalBackdrop}>
+        <div
+          className={
+            styles.modalBackdrop
+          }
+        >
           <section
-            className={styles.modal}
+            className={
+              styles.modal
+            }
             role="dialog"
             aria-modal="true"
             aria-labelledby="edit-profile-title"
           >
-            <div className={styles.modalHeader}>
+            <div
+              className={
+                styles.modalHeader
+              }
+            >
               <div>
-                <span className={styles.sectionLabel}>
+                <span
+                  className={
+                    styles.sectionLabel
+                  }
+                >
                   PROFILE SETTINGS
                 </span>
 
-                <h2 id="edit-profile-title">
+                <h2
+                  id="edit-profile-title"
+                >
                   Edit Profile
                 </h2>
 
@@ -536,9 +869,16 @@ export default function ProfilePage() {
 
               <button
                 type="button"
-                className={styles.closeButton}
-                onClick={closeEditor}
+                className={
+                  styles.closeButton
+                }
+                onClick={
+                  closeEditor
+                }
                 aria-label="Close"
+                disabled={
+                  isSaving
+                }
               >
                 <CloseIcon />
               </button>
@@ -546,7 +886,9 @@ export default function ProfilePage() {
 
             {error && (
               <div
-                className={styles.error}
+                className={
+                  styles.error
+                }
                 role="alert"
               >
                 {error}
@@ -554,54 +896,90 @@ export default function ProfilePage() {
             )}
 
             <form
-              className={styles.editForm}
-              onSubmit={handleSave}
+              className={
+                styles.editForm
+              }
+              onSubmit={
+                handleSave
+              }
             >
               <label>
-                <span>Full name</span>
+                <span>
+                  Full name
+                </span>
 
                 <input
                   type="text"
                   value={name}
-                  onChange={(event) =>
+                  onChange={(
+                    event
+                  ) =>
                     setName(
                       event.target.value
                     )
                   }
                   placeholder="Enter your full name"
                   maxLength={40}
+                  disabled={
+                    isSaving
+                  }
                 />
               </label>
 
               <label>
-                <span>Email address</span>
+                <span>
+                  Email address
+                </span>
 
                 <input
                   type="email"
                   value={email}
-                  onChange={(event) =>
+                  onChange={(
+                    event
+                  ) =>
                     setEmail(
                       event.target.value
                     )
                   }
                   placeholder="name@example.com"
+                  disabled={
+                    isSaving
+                  }
                 />
               </label>
 
-              <div className={styles.modalActions}>
+              <div
+                className={
+                  styles.modalActions
+                }
+              >
                 <button
                   type="button"
-                  className={styles.cancelButton}
-                  onClick={closeEditor}
+                  className={
+                    styles.cancelButton
+                  }
+                  onClick={
+                    closeEditor
+                  }
+                  disabled={
+                    isSaving
+                  }
                 >
                   Cancel
                 </button>
 
                 <button
                   type="submit"
-                  className={styles.saveButton}
+                  className={
+                    styles.saveButton
+                  }
+                  disabled={
+                    isSaving
+                  }
                 >
-                  Save Changes
+                  {isSaving
+                    ? "Saving..."
+                    : "Save Changes"}
                 </button>
               </div>
             </form>

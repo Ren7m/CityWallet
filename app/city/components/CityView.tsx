@@ -44,8 +44,10 @@ export default function CityView() {
   } = useBudget();
 
   const {
-    parkUnlocked,
+    monster,
   } = useGame();
+  const parkUnlocked =
+  monster.defeated;
 
   const [
     selectedCategory,

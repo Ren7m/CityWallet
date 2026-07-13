@@ -20,16 +20,16 @@ export default function AuthGuard({
 
   const {
     user,
-    isReady,
+    isLoading,
   } = useAuth();
 
   useEffect(() => {
-    if (isReady && !user) {
+    if (isLoading && !user) {
       router.replace("/login");
     }
-  }, [isReady, user, router]);
+  }, [isLoading, user, router]);
 
-  if (!isReady || !user) {
+  if (!isLoading || !user) {
     return (
       <div className={styles.loading}>
         <div className={styles.loader}>

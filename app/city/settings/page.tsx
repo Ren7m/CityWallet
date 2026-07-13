@@ -7,7 +7,10 @@ import {
 } from "react";
 
 import { useAuth } from "@/context/AuthContext";
-import { useBudget } from "@/context/BudgetContext";
+
+import {
+  useBudget,
+} from "@/context/BudgetContext";
 
 import styles from "./settings.module.css";
 
@@ -26,40 +29,64 @@ export default function SettingsPage() {
     clearExpenses,
   } = useBudget();
 
-  const [name, setName] =
-    useState("");
+  const [
+    name,
+    setName,
+  ] = useState("");
 
-  const [email, setEmail] =
-    useState("");
+  const [
+    email,
+    setEmail,
+  ] = useState("");
 
-  const [salary, setSalary] =
-    useState("");
+  const [
+    salary,
+    setSalary,
+  ] = useState("");
 
   const [
     monthlyBudget,
     setMonthlyBudget,
   ] = useState("");
 
-  const [message, setMessage] =
-    useState("");
+  const [
+    message,
+    setMessage,
+  ] = useState("");
 
-  const [error, setError] =
-    useState("");
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+  const [
+    isSaving,
+    setIsSaving,
+  ] = useState(false);
 
   useEffect(() => {
     if (!user) {
       return;
     }
 
-    setName(user.name);
-    setEmail(user.email);
+    setName(
+      user.name
+    );
+
+    setEmail(
+      user.email
+    );
 
     setSalary(
-      String(monthlySalary || "")
+      String(
+        monthlySalary || ""
+      )
     );
 
     setMonthlyBudget(
-      String(budget || "")
+      String(
+        budget || ""
+      )
     );
   }, [
     user,
@@ -67,13 +94,26 @@ export default function SettingsPage() {
     budget,
   ]);
 
-  function handleSave(
-    event: FormEvent<HTMLFormElement>
+  async function handleSave(
+    event:
+      FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
 
+    if (isSaving) {
+      return;
+    }
+
     setMessage("");
     setError("");
+
+    const cleanName =
+      name.trim();
+
+    const cleanEmail =
+      email
+        .trim()
+        .toLowerCase();
 
     const salaryValue =
       Number(salary);
@@ -82,48 +122,109 @@ export default function SettingsPage() {
       Number(monthlyBudget);
 
     if (
-      !Number.isFinite(salaryValue) ||
+      cleanName.length < 2
+    ) {
+      setError(
+        "Please enter a valid full name."
+      );
+
+      return;
+    }
+
+    if (
+      !cleanEmail.includes("@") ||
+      !cleanEmail.includes(".")
+    ) {
+      setError(
+        "Please enter a valid email address."
+      );
+
+      return;
+    }
+
+    if (
+      !Number.isFinite(
+        salaryValue
+      ) ||
       salaryValue <= 0
     ) {
       setError(
         "Please enter a valid monthly salary."
       );
+
       return;
     }
 
     if (
-      !Number.isFinite(budgetValue) ||
+      !Number.isFinite(
+        budgetValue
+      ) ||
       budgetValue <= 0
     ) {
       setError(
         "Please enter a valid monthly budget."
       );
+
       return;
     }
 
-    if (budgetValue > salaryValue) {
+    if (
+      budgetValue >
+      salaryValue
+    ) {
       setError(
         "Monthly budget cannot be greater than monthly salary."
       );
+
       return;
     }
 
-    const result = updateUser({
-      name,
-      email,
-    });
+    setIsSaving(true);
 
-    if (!result.success) {
-      setError(result.message);
-      return;
+    try {
+      const result =
+        await updateUser({
+          name:
+            cleanName,
+
+          email:
+            cleanEmail,
+        });
+
+      if (!result.success) {
+        setError(
+          result.message
+        );
+
+        return;
+      }
+
+      setMonthlySalary(
+        salaryValue
+      );
+
+      setBudget(
+        budgetValue
+      );
+
+      setName(
+        cleanName
+      );
+
+      setEmail(
+        cleanEmail
+      );
+
+      setMessage(
+        result.message
+      );
+    } catch {
+      setError(
+        "Unable to save your changes right now. Please try again."
+      );
+    } finally {
+      setIsSaving(false);
     }
-
-    setMonthlySalary(salaryValue);
-    setBudget(budgetValue);
-
-    setMessage(
-      "Your information was updated successfully."
-    );
   }
 
   function handleClearExpenses() {
@@ -138,6 +239,8 @@ export default function SettingsPage() {
 
     clearExpenses();
 
+    setError("");
+
     setMessage(
       "All expenses were removed."
     );
@@ -149,12 +252,16 @@ export default function SettingsPage() {
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
+      <header
+        className={styles.header}
+      >
         <span>
           ACCOUNT AND FINANCE
         </span>
 
-        <h1>Settings</h1>
+        <h1>
+          Settings
+        </h1>
 
         <p>
           Update the information entered
@@ -165,13 +272,23 @@ export default function SettingsPage() {
       </header>
 
       {message && (
-        <div className={styles.success}>
+        <div
+          className={
+            styles.success
+          }
+          role="status"
+        >
           {message}
         </div>
       )}
 
       {error && (
-        <div className={styles.error}>
+        <div
+          className={
+            styles.error
+          }
+          role="alert"
+        >
           {error}
         </div>
       )}
@@ -180,7 +297,9 @@ export default function SettingsPage() {
         className={styles.form}
         onSubmit={handleSave}
       >
-        <section className={styles.card}>
+        <section
+          className={styles.card}
+        >
           <div
             className={
               styles.cardHeader
@@ -190,7 +309,9 @@ export default function SettingsPage() {
               PROFILE INFORMATION
             </span>
 
-            <h2>Account details</h2>
+            <h2>
+              Account details
+            </h2>
 
             <p>
               Used in the navbar,
@@ -199,38 +320,59 @@ export default function SettingsPage() {
             </p>
           </div>
 
-          <div className={styles.fields}>
+          <div
+            className={
+              styles.fields
+            }
+          >
             <label>
-              <span>Full name</span>
+              <span>
+                Full name
+              </span>
 
               <input
                 type="text"
                 value={name}
-                onChange={(event) =>
+                onChange={(
+                  event
+                ) =>
                   setName(
                     event.target.value
                   )
                 }
+                disabled={
+                  isSaving
+                }
+                maxLength={40}
               />
             </label>
 
             <label>
-              <span>Email address</span>
+              <span>
+                Email address
+              </span>
 
               <input
                 type="email"
                 value={email}
-                onChange={(event) =>
+                onChange={(
+                  event
+                ) =>
                   setEmail(
                     event.target.value
                   )
+                }
+                disabled={
+                  isSaving
                 }
               />
             </label>
           </div>
         </section>
 
-        <section className={styles.card}>
+        <section
+          className={styles.card}
+        >
           <div
             className={
               styles.cardHeader
@@ -240,7 +382,9 @@ export default function SettingsPage() {
               FINANCIAL INFORMATION
             </span>
 
-            <h2>Salary and budget</h2>
+            <h2>
+              Salary and budget
+            </h2>
 
             <p>
               These values control your
@@ -249,7 +393,11 @@ export default function SettingsPage() {
             </p>
           </div>
 
-          <div className={styles.fields}>
+          <div
+            className={
+              styles.fields
+            }
+          >
             <label>
               <span>
                 Monthly salary
@@ -264,14 +412,21 @@ export default function SettingsPage() {
                   type="number"
                   min="1"
                   value={salary}
-                  onChange={(event) =>
+                  onChange={(
+                    event
+                  ) =>
                     setSalary(
                       event.target.value
                     )
                   }
+                  disabled={
+                    isSaving
+                  }
                 />
 
-                <strong>SAR</strong>
+                <strong>
+                  SAR
+                </strong>
               </div>
             </label>
 
@@ -288,15 +443,24 @@ export default function SettingsPage() {
                 <input
                   type="number"
                   min="1"
-                  value={monthlyBudget}
-                  onChange={(event) =>
+                  value={
+                    monthlyBudget
+                  }
+                  onChange={(
+                    event
+                  ) =>
                     setMonthlyBudget(
                       event.target.value
                     )
                   }
+                  disabled={
+                    isSaving
+                  }
                 />
 
-                <strong>SAR</strong>
+                <strong>
+                  SAR
+                </strong>
               </div>
             </label>
           </div>
@@ -321,6 +485,9 @@ export default function SettingsPage() {
               onClick={
                 handleClearExpenses
               }
+              disabled={
+                isSaving
+              }
             >
               Clear all expenses
             </button>
@@ -329,9 +496,16 @@ export default function SettingsPage() {
 
         <button
           type="submit"
-          className={styles.saveButton}
+          className={
+            styles.saveButton
+          }
+          disabled={
+            isSaving
+          }
         >
-          Save Changes
+          {isSaving
+            ? "Saving..."
+            : "Save Changes"}
         </button>
       </form>
     </div>

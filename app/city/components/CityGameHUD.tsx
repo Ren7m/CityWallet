@@ -22,9 +22,7 @@ export default function CityGameHUD() {
     currentLevelXp,
     xpRequiredForNextLevel,
     levelProgress,
-    availableAttacks,
-    monsterDefeated,
-    parkUnlocked,
+    monster,
   } = useGame();
 
   const firstName =
@@ -32,6 +30,18 @@ export default function CityGameHUD() {
       ?.trim()
       .split(/\s+/)[0] ||
     "Mayor";
+
+  const monsterDefeated =
+    monster.defeated;
+
+  const progressWidth =
+    Math.min(
+      Math.max(
+        Number(levelProgress) || 0,
+        0
+      ),
+      100
+    );
 
   return (
     <aside className={styles.hud}>
@@ -63,33 +73,37 @@ export default function CityGameHUD() {
       <div className={styles.progress}>
         <span
           style={{
-            width: `${levelProgress}%`,
+            width: `${progressWidth}%`,
           }}
         />
       </div>
 
       <div
         className={`${styles.quest} ${
-          parkUnlocked
+          monsterDefeated
             ? styles.completed
             : ""
         }`}
       >
         <div className={styles.questIcon}>
-          {parkUnlocked ? "🌳" : "🔒"}
+          {monsterDefeated
+            ? "🏆"
+            : "⚔️"}
         </div>
 
         <div>
           <strong>
-            {parkUnlocked
-              ? "City Park Unlocked"
-              : "Unlock City Park"}
+            {monsterDefeated
+              ? "Weekly Monster Defeated"
+              : "Defeat Weekly Monster"}
           </strong>
 
           <p>
-            {parkUnlocked
-              ? "Weekly Monster defeated."
-              : `${availableAttacks} attacks available`}
+            {monsterDefeated
+              ? monster.rewardClaimed
+                ? "Victory reward claimed."
+                : "Victory reward ready to claim."
+              : `${monster.hp} / ${monster.maxHp} HP remaining`}
           </p>
         </div>
       </div>
@@ -99,7 +113,9 @@ export default function CityGameHUD() {
         className={styles.questButton}
       >
         {monsterDefeated
-          ? "View completed mission"
+          ? monster.rewardClaimed
+            ? "View completed mission"
+            : "Claim victory reward"
           : "Fight Weekly Monster"}
       </Link>
     </aside>
