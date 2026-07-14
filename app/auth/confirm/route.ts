@@ -62,6 +62,11 @@ export async function GET(
       "error"
     );
 
+    verifiedUrl.searchParams.set(
+      "error_code",
+      "missing_verification_data"
+    );
+
     return NextResponse.redirect(
       verifiedUrl
     );
@@ -92,6 +97,11 @@ export async function GET(
         "error"
       );
 
+      verifiedUrl.searchParams.set(
+        "error_code",
+        "verification_failed"
+      );
+
       return NextResponse.redirect(
         verifiedUrl
       );
@@ -114,6 +124,11 @@ export async function GET(
     verifiedUrl.searchParams.set(
       "status",
       "error"
+    );
+
+    verifiedUrl.searchParams.set(
+      "error_code",
+      "unexpected_error"
     );
 
     return NextResponse.redirect(

@@ -311,6 +311,9 @@ export function AuthProvider({
         .trim()
         .toLowerCase();
 
+    const isArabic =
+      language === "ar-SA";
+
     if (
       cleanName.length < 2
     ) {
@@ -318,7 +321,9 @@ export function AuthProvider({
         success: false,
 
         message:
-          "Please enter your full name.",
+          isArabic
+            ? "فضلاً أدخل اسمك كامل."
+            : "Please enter your full name.",
 
         emailConfirmationRequired:
           false,
@@ -334,7 +339,9 @@ export function AuthProvider({
         success: false,
 
         message:
-          "Please enter a valid email address.",
+          isArabic
+            ? "فضلاً أدخل بريد إلكتروني صحيح."
+            : "Please enter a valid email address.",
 
         emailConfirmationRequired:
           false,
@@ -348,7 +355,9 @@ export function AuthProvider({
         success: false,
 
         message:
-          "Password must contain at least 6 characters.",
+          isArabic
+            ? "كلمة المرور لازم تكون 6 خانات على الأقل."
+            : "Password must contain at least 6 characters.",
 
         emailConfirmationRequired:
           false,
@@ -361,8 +370,7 @@ export function AuthProvider({
 
       const verificationUrl =
         `${siteUrl}/auth/verified` +
-        `?status=success` +
-        `&lang=${encodeURIComponent(
+        `?lang=${encodeURIComponent(
           language
         )}`;
 
@@ -393,11 +401,50 @@ export function AuthProvider({
         });
 
       if (error) {
+        const normalizedMessage =
+          error.message.toLowerCase();
+
+        let message =
+          error.message;
+
+        if (isArabic) {
+          if (
+            normalizedMessage.includes(
+              "already registered"
+            ) ||
+            normalizedMessage.includes(
+              "already been registered"
+            )
+          ) {
+            message =
+              "هذا البريد مسجّل من قبل.";
+          } else if (
+            normalizedMessage.includes(
+              "rate limit"
+            ) ||
+            normalizedMessage.includes(
+              "too many"
+            )
+          ) {
+            message =
+              "صار فيه طلبات كثيرة خلال وقت قصير. انتظر شوي وجرّب مرة ثانية.";
+          } else if (
+            normalizedMessage.includes(
+              "password"
+            )
+          ) {
+            message =
+              "كلمة المرور ما تطابق المتطلبات المطلوبة.";
+          } else {
+            message =
+              "ما قدرنا ننشئ حسابك الحين. جرّب مرة ثانية.";
+          }
+        }
+
         return {
           success: false,
 
-          message:
-            error.message,
+          message,
 
           emailConfirmationRequired:
             false,
@@ -409,7 +456,9 @@ export function AuthProvider({
           success: false,
 
           message:
-            "The account could not be created. Please try again.",
+            isArabic
+              ? "ما قدرنا ننشئ حسابك الحين. جرّب مرة ثانية."
+              : "The account could not be created. Please try again.",
 
           emailConfirmationRequired:
             false,
@@ -423,7 +472,9 @@ export function AuthProvider({
           success: true,
 
           message:
-            "Account created successfully. Please confirm your email, then sign in.",
+            isArabic
+              ? "تم إنشاء حسابك. افتح بريدك ووثّق الحساب، وبعدها سجّل دخولك."
+              : "Account created successfully. Please confirm your email, then sign in.",
 
           emailConfirmationRequired:
             true,
@@ -440,7 +491,9 @@ export function AuthProvider({
         success: true,
 
         message:
-          "Account created successfully.",
+          isArabic
+            ? "تم إنشاء حسابك بنجاح."
+            : "Account created successfully.",
 
         emailConfirmationRequired:
           false,
@@ -450,7 +503,9 @@ export function AuthProvider({
         success: false,
 
         message:
-          "Unable to create the account right now. Please try again.",
+          isArabic
+            ? "ما قدرنا ننشئ حسابك الحين. جرّب مرة ثانية."
+            : "Unable to create the account right now. Please try again.",
 
         emailConfirmationRequired:
           false,
