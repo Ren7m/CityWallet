@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+
 import {
   useRouter,
 } from "next/navigation";
@@ -10,11 +11,19 @@ import {
   type FormEvent,
 } from "react";
 
-import { useAuth } from "@/context/AuthContext";
+import {
+  useAuth,
+} from "@/context/AuthContext";
 
 import {
   useBudget,
 } from "@/context/BudgetContext";
+
+import {
+  useLanguage,
+} from "@/context/LanguageContext";
+
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 import styles from "./register.module.css";
 
@@ -31,6 +40,11 @@ export default function RegisterPage() {
     setExpenses,
     setGoal,
   } = useBudget();
+
+  const {
+    language,
+    isArabic,
+  } = useLanguage();
 
   const [
     name,
@@ -77,8 +91,130 @@ export default function RegisterPage() {
     setIsSubmitting,
   ] = useState(false);
 
+  const text = {
+    label: isArabic
+      ? "أنشئ حسابك"
+      : "CREATE ACCOUNT",
+
+    title: isArabic
+      ? "ابدأ ببناء مدينتك المالية."
+      : "Build your financial city.",
+
+    description: isArabic
+      ? "أنشئ حسابك وابدأ تدير فلوسك بشكل أذكى."
+      : "Create your account and start managing your money smarter.",
+
+    fullName: isArabic
+      ? "الاسم الكامل"
+      : "Full name",
+
+    fullNamePlaceholder: isArabic
+      ? "أدخل اسمك الكامل"
+      : "Enter your full name",
+
+    email: isArabic
+      ? "البريد الإلكتروني"
+      : "Email address",
+
+    salary: isArabic
+      ? "الراتب الشهري"
+      : "Monthly salary",
+
+    budget: isArabic
+      ? "الميزانية الشهرية"
+      : "Monthly budget",
+
+    currency: isArabic
+      ? "ر.س"
+      : "SAR",
+
+    password: isArabic
+      ? "كلمة المرور"
+      : "Password",
+
+    passwordPlaceholder: isArabic
+      ? "6 خانات على الأقل"
+      : "At least 6 characters",
+
+    confirmPassword: isArabic
+      ? "تأكيد كلمة المرور"
+      : "Confirm password",
+
+    confirmPlaceholder: isArabic
+      ? "أعد كتابة كلمة المرور"
+      : "Repeat your password",
+
+    show: isArabic
+      ? "إظهار"
+      : "Show",
+
+    hide: isArabic
+      ? "إخفاء"
+      : "Hide",
+
+    creating: isArabic
+      ? "جاري إنشاء الحساب..."
+      : "Creating account...",
+
+    create: isArabic
+      ? "إنشاء الحساب"
+      : "Create Account",
+
+    hasAccount: isArabic
+      ? "عندك حساب؟"
+      : "Already have an account?",
+
+    signIn: isArabic
+      ? "تسجيل الدخول"
+      : "Sign in",
+
+    back: isArabic
+      ? "الرجوع للرئيسية"
+      : "Back to home",
+  };
+
+  function getArabicSignupError(
+    message: string
+  ) {
+    const normalized =
+      message.toLowerCase();
+
+    if (
+      normalized.includes(
+        "already registered"
+      ) ||
+      normalized.includes(
+        "already been registered"
+      )
+    ) {
+      return "هذا البريد مسجّل من قبل.";
+    }
+
+    if (
+      normalized.includes(
+        "rate limit"
+      ) ||
+      normalized.includes(
+        "too many"
+      )
+    ) {
+      return "صار فيه طلبات كثيرة خلال وقت قصير. انتظر شوي وجرّب مرة ثانية.";
+    }
+
+    if (
+      normalized.includes(
+        "password"
+      )
+    ) {
+      return "كلمة المرور ما تطابق المتطلبات المطلوبة.";
+    }
+
+    return "ما قدرنا ننشئ حسابك الحين. جرّب مرة ثانية.";
+  }
+
   async function handleSubmit(
-    event: FormEvent<HTMLFormElement>
+    event:
+      FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
 
@@ -106,7 +242,9 @@ export default function RegisterPage() {
       cleanName.length < 2
     ) {
       setError(
-        "Please enter your full name."
+        isArabic
+          ? "فضلاً أدخل اسمك كامل."
+          : "Please enter your full name."
       );
 
       return;
@@ -117,7 +255,9 @@ export default function RegisterPage() {
       !cleanEmail.includes(".")
     ) {
       setError(
-        "Please enter a valid email address."
+        isArabic
+          ? "فضلاً أدخل بريد إلكتروني صحيح."
+          : "Please enter a valid email address."
       );
 
       return;
@@ -130,7 +270,9 @@ export default function RegisterPage() {
       salaryValue <= 0
     ) {
       setError(
-        "Please enter a valid monthly salary."
+        isArabic
+          ? "فضلاً أدخل راتب شهري صحيح."
+          : "Please enter a valid monthly salary."
       );
 
       return;
@@ -143,7 +285,9 @@ export default function RegisterPage() {
       budgetValue <= 0
     ) {
       setError(
-        "Please enter a valid monthly budget."
+        isArabic
+          ? "فضلاً أدخل ميزانية شهرية صحيحة."
+          : "Please enter a valid monthly budget."
       );
 
       return;
@@ -154,7 +298,9 @@ export default function RegisterPage() {
       salaryValue
     ) {
       setError(
-        "Monthly budget cannot be greater than monthly salary."
+        isArabic
+          ? "الميزانية الشهرية ما تقدر تكون أعلى من راتبك الشهري."
+          : "Monthly budget cannot be greater than monthly salary."
       );
 
       return;
@@ -164,7 +310,9 @@ export default function RegisterPage() {
       password.length < 6
     ) {
       setError(
-        "Password must contain at least 6 characters."
+        isArabic
+          ? "كلمة المرور لازم تكون 6 خانات على الأقل."
+          : "Password must contain at least 6 characters."
       );
 
       return;
@@ -175,7 +323,9 @@ export default function RegisterPage() {
       confirmPassword
     ) {
       setError(
-        "Passwords do not match."
+        isArabic
+          ? "كلمتا المرور غير متطابقتين."
+          : "Passwords do not match."
       );
 
       return;
@@ -188,12 +338,17 @@ export default function RegisterPage() {
         await register(
           cleanName,
           cleanEmail,
-          password
+          password,
+          language
         );
 
       if (!result.success) {
         setError(
-          result.message
+          isArabic
+            ? getArabicSignupError(
+                result.message
+              )
+            : result.message
         );
 
         setIsSubmitting(false);
@@ -219,6 +374,8 @@ export default function RegisterPage() {
         router.replace(
           `/login?registered=1&email=${encodeURIComponent(
             cleanEmail
+          )}&lang=${encodeURIComponent(
+            language
           )}`
         );
 
@@ -230,7 +387,9 @@ export default function RegisterPage() {
       router.refresh();
     } catch {
       setError(
-        "Unable to create your account. Please try again."
+        isArabic
+          ? "ما قدرنا ننشئ حسابك الحين. جرّب مرة ثانية."
+          : "Unable to create your account. Please try again."
       );
 
       setIsSubmitting(false);
@@ -238,8 +397,17 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className={styles.page}>
+    <main
+      className={styles.page}
+      dir={
+        isArabic
+          ? "rtl"
+          : "ltr"
+      }
+    >
       <section className={styles.card}>
+        <LanguageSwitcher />
+
         <Link
           href="/"
           className={styles.logo}
@@ -263,16 +431,15 @@ export default function RegisterPage() {
               styles.label
             }
           >
-            CREATE ACCOUNT
+            {text.label}
           </span>
 
           <h1>
-            Build your financial city.
+            {text.title}
           </h1>
 
           <p>
-            Create your account and start
-            managing your money smarter.
+            {text.description}
           </p>
         </div>
 
@@ -293,7 +460,7 @@ export default function RegisterPage() {
             className={styles.field}
           >
             <span>
-              Full name
+              {text.fullName}
             </span>
 
             <input
@@ -304,7 +471,9 @@ export default function RegisterPage() {
                   event.target.value
                 )
               }
-              placeholder="Enter your full name"
+              placeholder={
+                text.fullNamePlaceholder
+              }
               autoComplete="name"
               required
             />
@@ -314,7 +483,7 @@ export default function RegisterPage() {
             className={styles.field}
           >
             <span>
-              Email address
+              {text.email}
             </span>
 
             <input
@@ -336,7 +505,7 @@ export default function RegisterPage() {
               className={styles.field}
             >
               <span>
-                Monthly salary
+                {text.salary}
               </span>
 
               <div
@@ -360,7 +529,7 @@ export default function RegisterPage() {
                 />
 
                 <strong>
-                  SAR
+                  {text.currency}
                 </strong>
               </div>
             </label>
@@ -369,7 +538,7 @@ export default function RegisterPage() {
               className={styles.field}
             >
               <span>
-                Monthly budget
+                {text.budget}
               </span>
 
               <div
@@ -393,7 +562,7 @@ export default function RegisterPage() {
                 />
 
                 <strong>
-                  SAR
+                  {text.currency}
                 </strong>
               </div>
             </label>
@@ -403,7 +572,7 @@ export default function RegisterPage() {
             className={styles.field}
           >
             <span>
-              Password
+              {text.password}
             </span>
 
             <div
@@ -423,7 +592,9 @@ export default function RegisterPage() {
                     event.target.value
                   )
                 }
-                placeholder="At least 6 characters"
+                placeholder={
+                  text.passwordPlaceholder
+                }
                 autoComplete="new-password"
                 required
               />
@@ -441,8 +612,8 @@ export default function RegisterPage() {
                 }
               >
                 {showPassword
-                  ? "Hide"
-                  : "Show"}
+                  ? text.hide
+                  : text.show}
               </button>
             </div>
           </label>
@@ -451,7 +622,9 @@ export default function RegisterPage() {
             className={styles.field}
           >
             <span>
-              Confirm password
+              {
+                text.confirmPassword
+              }
             </span>
 
             <input
@@ -466,7 +639,9 @@ export default function RegisterPage() {
                   event.target.value
                 )
               }
-              placeholder="Repeat your password"
+              placeholder={
+                text.confirmPlaceholder
+              }
               autoComplete="new-password"
               required
             />
@@ -480,8 +655,8 @@ export default function RegisterPage() {
             disabled={isSubmitting}
           >
             {isSubmitting
-              ? "Creating account..."
-              : "Create Account"}
+              ? text.creating
+              : text.create}
           </button>
         </form>
 
@@ -490,10 +665,10 @@ export default function RegisterPage() {
             styles.footerText
           }
         >
-          Already have an account?{" "}
+          {text.hasAccount}{" "}
 
           <Link href="/login">
-            Sign in
+            {text.signIn}
           </Link>
         </p>
 
@@ -501,7 +676,10 @@ export default function RegisterPage() {
           href="/"
           className={styles.back}
         >
-          ← Back to home
+          {isArabic
+            ? "→"
+            : "←"}{" "}
+          {text.back}
         </Link>
       </section>
     </main>

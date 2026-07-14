@@ -14,7 +14,9 @@ import {
 export async function GET(
   request: NextRequest
 ) {
-  const { searchParams } =
+  const {
+    searchParams,
+  } =
     new URL(request.url);
 
   const tokenHash =
@@ -27,6 +29,17 @@ export async function GET(
       "type"
     ) as EmailOtpType | null;
 
+  const requestedLanguage =
+    searchParams.get(
+      "lang"
+    );
+
+  const language =
+    requestedLanguage ===
+    "ar-SA"
+      ? "ar-SA"
+      : "en-US";
+
   const verifiedUrl =
     request.nextUrl.clone();
 
@@ -34,6 +47,11 @@ export async function GET(
     "/auth/verified";
 
   verifiedUrl.search = "";
+
+  verifiedUrl.searchParams.set(
+    "lang",
+    language
+  );
 
   if (
     !tokenHash ||

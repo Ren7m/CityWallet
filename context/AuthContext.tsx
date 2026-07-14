@@ -15,6 +15,10 @@ import type {
   User as SupabaseUser,
 } from "@supabase/supabase-js";
 
+import type {
+  AppLanguage,
+} from "./LanguageContext";
+
 import {
   createClient,
 } from "./supabaseClient";
@@ -54,7 +58,8 @@ type AuthContextType = {
   register: (
     name: string,
     email: string,
-    password: string
+    password: string,
+    language?: AppLanguage
   ) => Promise<AuthResult>;
 
   login: (
@@ -170,6 +175,27 @@ function mapSupabaseUser(
   };
 }
 
+function getSiteUrl() {
+  const configuredUrl =
+    process.env
+      .NEXT_PUBLIC_SITE_URL
+      ?.trim()
+      .replace(/\/+$/, "");
+
+  if (configuredUrl) {
+    return configuredUrl;
+  }
+
+  if (
+    typeof window !==
+    "undefined"
+  ) {
+    return window.location.origin;
+  }
+
+  return "";
+}
+
 /* =========================
    PROVIDER
 ========================= */
@@ -273,7 +299,9 @@ export function AuthProvider({
   async function register(
     name: string,
     email: string,
-    password: string
+    password: string,
+    language:
+      AppLanguage = "en-US"
   ): Promise<AuthResult> {
     const cleanName =
       name.trim();
@@ -328,6 +356,16 @@ export function AuthProvider({
     }
 
     try {
+      const siteUrl =
+        getSiteUrl();
+
+      const verificationUrl =
+        `${siteUrl}/auth/verified` +
+        `?status=success` +
+        `&lang=${encodeURIComponent(
+          language
+        )}`;
+
       const {
         data,
         error,
@@ -345,10 +383,12 @@ export function AuthProvider({
 
               name:
                 cleanName,
+
+              language,
             },
 
             emailRedirectTo:
-              `${window.location.origin}/auth/verified?status=success`,
+              verificationUrl,
           },
         });
 

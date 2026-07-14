@@ -18,7 +18,10 @@ import {
 
 import {
   useLanguage,
+  type AppLanguage,
 } from "@/context/LanguageContext";
+
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 import styles from "./login.module.css";
 
@@ -33,6 +36,7 @@ export default function LoginPage() {
 
   const {
     isArabic,
+    setLanguage,
   } = useLanguage();
 
   const [
@@ -60,8 +64,40 @@ export default function LoginPage() {
     setIsSubmitting,
   ] = useState(false);
 
+  useEffect(() => {
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+    const queryLanguage =
+      params.get("lang");
+
+    if (
+      queryLanguage === "ar-SA" ||
+      queryLanguage === "en-US"
+    ) {
+      setLanguage(
+        queryLanguage as AppLanguage
+      );
+    }
+  }, [setLanguage]);
+
+  useEffect(() => {
+    if (
+      !isLoading &&
+      user
+    ) {
+      router.replace("/city");
+    }
+  }, [
+    isLoading,
+    user,
+    router,
+  ]);
+
   const text = {
-    welcomeBack: isArabic
+    welcome: isArabic
       ? "هلا بعودتك"
       : "WELCOME BACK",
 
@@ -76,10 +112,6 @@ export default function LoginPage() {
     email: isArabic
       ? "البريد الإلكتروني"
       : "Email address",
-
-    emailPlaceholder: isArabic
-      ? "name@example.com"
-      : "name@example.com",
 
     password: isArabic
       ? "كلمة المرور"
@@ -97,7 +129,7 @@ export default function LoginPage() {
       ? "إخفاء"
       : "Hide",
 
-    forgotPassword: isArabic
+    forgot: isArabic
       ? "نسيت كلمة المرور؟"
       : "Forgot password?",
 
@@ -115,29 +147,16 @@ export default function LoginPage() {
 
     noAccount: isArabic
       ? "ما عندك حساب؟"
-      : "Don&apos;t have an account?",
+      : "Don't have an account?",
 
     createAccount: isArabic
       ? "أنشئ حساب"
       : "Create account",
 
-    backHome: isArabic
+    back: isArabic
       ? "الرجوع للرئيسية"
       : "Back to home",
   };
-
-  useEffect(() => {
-    if (
-      !isLoading &&
-      user
-    ) {
-      router.replace("/city");
-    }
-  }, [
-    isLoading,
-    user,
-    router,
-  ]);
 
   function getArabicLoginError(
     message: string
@@ -158,18 +177,21 @@ export default function LoginPage() {
         "email not confirmed"
       )
     ) {
-      return "فضلاً أكّد بريدك الإلكتروني أول، وبعدها جرّب تسجّل دخول.";
+      return "لازم توثّق بريدك الإلكتروني أول، وبعدها جرّب تسجّل دخول.";
     }
 
     if (
       normalized.includes(
-        "too many requests"
+        "too many"
+      ) ||
+      normalized.includes(
+        "rate limit"
       )
     ) {
       return "صار فيه محاولات كثيرة. انتظر شوي وجرّب مرة ثانية.";
     }
 
-    return "ما قدرنا نسجّل دخولك حاليًا. جرّب مرة ثانية.";
+    return "ما قدرنا نسجّل دخولك الحين. جرّب مرة ثانية.";
   }
 
   async function handleSubmit(
@@ -259,6 +281,8 @@ export default function LoginPage() {
       }
     >
       <section className={styles.card}>
+        <LanguageSwitcher />
+
         <Link
           href="/"
           className={styles.logo}
@@ -282,7 +306,7 @@ export default function LoginPage() {
               styles.label
             }
           >
-            {text.welcomeBack}
+            {text.welcome}
           </span>
 
           <h1>
@@ -322,9 +346,7 @@ export default function LoginPage() {
                   event.target.value
                 )
               }
-              placeholder={
-                text.emailPlaceholder
-              }
+              placeholder="name@example.com"
               autoComplete="email"
               required
             />
@@ -391,7 +413,7 @@ export default function LoginPage() {
                 styles.forgotButton
               }
             >
-              {text.forgotPassword}
+              {text.forgot}
             </button>
           </div>
 
@@ -418,9 +440,7 @@ export default function LoginPage() {
             styles.footerText
           }
         >
-          {isArabic
-            ? "ما عندك حساب؟ "
-            : "Don't have an account? "}
+          {text.noAccount}{" "}
 
           <Link href="/register">
             {text.createAccount}
@@ -434,7 +454,7 @@ export default function LoginPage() {
           {isArabic
             ? "→"
             : "←"}{" "}
-          {text.backHome}
+          {text.back}
         </Link>
       </section>
     </main>

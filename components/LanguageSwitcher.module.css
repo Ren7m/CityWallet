@@ -1,0 +1,101 @@
+.switcher {
+  width: max-content;
+
+  display: inline-flex;
+  align-items: center;
+
+  padding: 4px;
+
+  border:
+    1px solid
+    rgba(217, 224, 233, 0.95);
+
+  border-radius: 12px;
+
+  background:
+    rgba(255, 255, 255, 0.9);
+
+  box-shadow:
+    0 8px 22px
+    rgba(23, 32, 51, 0.06);
+
+  direction: ltr;
+}
+
+.switcher button {
+  min-height: 34px;
+
+  padding: 0 12px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 0;
+  border-radius: 9px;
+
+  color: #667085;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  white-space: nowrap;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.switcher button:hover {
+  color: #16a34a;
+}
+
+.switcher button.active {
+  color: #ffffff;
+
+  background: #172033;
+
+  box-shadow:
+    0 6px 16px
+    rgba(23, 32, 51, 0.15);
+}
+
+.desktopLabel {
+  display: inline;
+}
+
+.mobileLabel {
+  display: none;
+}
+
+@media (max-width: 620px) {
+  .switcher {
+    padding: 3px;
+
+    border-radius: 10px;
+  }
+
+  .switcher button {
+    min-height: 31px;
+
+    padding: 0 9px;
+
+    border-radius: 8px;
+
+    font-size: 11px;
+  }
+
+  .desktopLabel {
+    display: none;
+  }
+
+  .mobileLabel {
+    display: inline;
+  }
+}

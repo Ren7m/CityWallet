@@ -5,6 +5,7 @@ import styles from "./verified.module.css";
 type VerifiedPageProps = {
   searchParams: Promise<{
     status?: string;
+    lang?: string;
   }>;
 };
 
@@ -39,8 +40,61 @@ export default async function VerifiedPage({
   const isSuccess =
     params.status === "success";
 
+  const isArabic =
+    params.lang === "ar-SA";
+
+  const language =
+    isArabic
+      ? "ar-SA"
+      : "en-US";
+
+  const text = {
+    eyebrow: isArabic
+      ? isSuccess
+        ? "تم توثيق البريد"
+        : "فشل التوثيق"
+      : isSuccess
+        ? "EMAIL VERIFIED"
+        : "VERIFICATION FAILED",
+
+    title: isArabic
+      ? isSuccess
+        ? "تم توثيق بريدك بنجاح!"
+        : "ما قدرنا نوثّق بريدك."
+      : isSuccess
+        ? "Email verified successfully!"
+        : "We couldn't verify your email.",
+
+    description: isArabic
+      ? isSuccess
+        ? "حسابك في CityWallet صار جاهز. الحين تقدر تسجّل دخولك وتبدأ تبني مدينتك المالية."
+        : "رابط التوثيق ممكن يكون غير صالح أو انتهت صلاحيته. جرّب تنشئ حسابك من جديد."
+      : isSuccess
+        ? "Your CityWallet account is ready. You can now sign in and start building your financial city."
+        : "The verification link may be invalid or expired. Please create your account again or request a new verification email.",
+
+    primaryButton: isArabic
+      ? isSuccess
+        ? "كمّل لتسجيل الدخول"
+        : "الرجوع للتسجيل"
+      : isSuccess
+        ? "Continue to Sign In"
+        : "Back to Registration",
+
+    home: isArabic
+      ? "الرجوع للرئيسية"
+      : "Back to home",
+  };
+
   return (
-    <main className={styles.page}>
+    <main
+      className={styles.page}
+      dir={
+        isArabic
+          ? "rtl"
+          : "ltr"
+      }
+    >
       <div
         className={
           styles.backgroundGlowOne
@@ -90,39 +144,35 @@ export default async function VerifiedPage({
             styles.eyebrow
           }
         >
-          {isSuccess
-            ? "EMAIL VERIFIED"
-            : "VERIFICATION FAILED"}
+          {text.eyebrow}
         </span>
 
         <h1>
-          {isSuccess
-            ? "Email verified successfully!"
-            : "We couldn't verify your email."}
+          {text.title}
         </h1>
 
         <p>
-          {isSuccess
-            ? "Your CityWallet account is ready. You can now sign in and start building your financial city."
-            : "The verification link may be invalid or expired. Please create your account again or request a new verification email."}
+          {text.description}
         </p>
 
         <Link
           href={
             isSuccess
-              ? "/login"
-              : "/register"
+              ? `/login?lang=${encodeURIComponent(
+                  language
+                )}`
+              : `/register`
           }
           className={
             styles.primaryButton
           }
         >
-          {isSuccess
-            ? "Continue to Sign In"
-            : "Back to Registration"}
+          {text.primaryButton}
 
           <span>
-            →
+            {isArabic
+              ? "←"
+              : "→"}
           </span>
         </Link>
 
@@ -132,7 +182,7 @@ export default async function VerifiedPage({
             styles.homeLink
           }
         >
-          Back to home
+          {text.home}
         </Link>
 
         <div
