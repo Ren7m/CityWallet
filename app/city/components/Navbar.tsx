@@ -8,84 +8,176 @@ import {
   usePathname,
 } from "next/navigation";
 
-import { useAuth } from "@/context/AuthContext";
-import { useBudget } from "@/context/BudgetContext";
+import {
+  useAuth,
+} from "@/context/AuthContext";
+
+import {
+  useBudget,
+} from "@/context/BudgetContext";
+
+import {
+  useLanguage,
+} from "@/context/LanguageContext";
 
 import UserBadge from "./UserBadge";
 
 import styles from "./Navbar.module.css";
 
-const PAGE_DETAILS: Record<
-  string,
-  {
-    title: string;
-    description: string;
-  }
-> = {
-  "/city": {
-    title: "My City Dashboard",
-    description:
-      "Your city updates from your current budget and expenses.",
-  },
-
-  "/city/profile": {
-    title: "My Profile",
-    description:
-      "Review your account and financial summary.",
-  },
-
-  "/city/expenses": {
-    title: "Expense Management",
-    description:
-      "Manage the expenses used across CityWallet.",
-  },
-
-  "/city/insights": {
-    title: "AI Insights",
-    description:
-      "Insights based on your financial data.",
-  },
-
-  "/city/challenges": {
-    title: "Challenges",
-    description:
-      "Complete missions based on your spending.",
-  },
-
-  "/city/settings": {
-    title: "Settings",
-    description:
-      "Update the information entered during registration.",
-  },
+type PageDetail = {
+  title: string;
+  description: string;
 };
 
 export default function Navbar() {
-  const pathname = usePathname();
+  const pathname =
+    usePathname();
 
-  const { user } = useAuth();
+  const {
+    user,
+  } = useAuth();
 
   const {
     balance,
   } = useBudget();
 
-  const pageDetails = useMemo(() => {
-    if (PAGE_DETAILS[pathname]) {
-      return PAGE_DETAILS[pathname];
-    }
+  const {
+    language,
+    isArabic,
+  } = useLanguage();
 
-    const matchingPath =
-      Object.keys(
-        PAGE_DETAILS
-      ).find(
-        (path) =>
-          path !== "/city" &&
-          pathname.startsWith(path)
-      );
+  const pageDetails =
+    useMemo<
+      Record<string, PageDetail>
+    >(
+      () => ({
+        "/city": {
+          title:
+            isArabic
+              ? "لوحة مدينتي"
+              : "My City Dashboard",
 
-    return matchingPath
-      ? PAGE_DETAILS[matchingPath]
-      : PAGE_DETAILS["/city"];
-  }, [pathname]);
+          description:
+            isArabic
+              ? "مدينتك تتغير حسب ميزانيتك ومصروفاتك الحالية."
+              : "Your city updates from your current budget and expenses.",
+        },
+
+        "/city/profile": {
+          title:
+            isArabic
+              ? "ملفي الشخصي"
+              : "My Profile",
+
+          description:
+            isArabic
+              ? "راجع بيانات حسابك وملخصك المالي."
+              : "Review your account and financial summary.",
+        },
+
+        "/city/expenses": {
+          title:
+            isArabic
+              ? "إدارة المصروفات"
+              : "Expense Management",
+
+          description:
+            isArabic
+              ? "أدر كل المصروفات المستخدمة داخل CityWallet."
+              : "Manage the expenses used across CityWallet.",
+        },
+
+        "/city/insights": {
+          title:
+            isArabic
+              ? "تحليلات الذكاء الاصطناعي"
+              : "AI Insights",
+
+          description:
+            isArabic
+              ? "تحليلات مبنية على بياناتك المالية الفعلية."
+              : "Insights based on your financial data.",
+        },
+
+        "/city/challenges": {
+          title:
+            isArabic
+              ? "التحديات"
+              : "Challenges",
+
+          description:
+            isArabic
+              ? "أنجز مهام مالية مبنية على مصروفاتك."
+              : "Complete missions based on your spending.",
+        },
+
+        "/city/settings": {
+          title:
+            isArabic
+              ? "الإعدادات"
+              : "Settings",
+
+          description:
+            isArabic
+              ? "حدّث بيانات حسابك ومعلوماتك المالية وإعدادات التطبيق."
+              : "Update the information entered during registration.",
+        },
+
+        "/city/leaderboard": {
+          title:
+            isArabic
+              ? "لوحة الصدارة"
+              : "Leaderboard",
+
+          description:
+            isArabic
+              ? "تابع ترتيب اللاعبين وتقدمك داخل CityWallet."
+              : "Track player rankings and your CityWallet progress.",
+        },
+
+        "/city/financial-profile": {
+          title:
+            isArabic
+              ? "ملفي المالي"
+              : "Financial Profile",
+
+          description:
+            isArabic
+              ? "شوف تحليلك المالي المبني على نشاطك الحقيقي."
+              : "Review your financial profile based on your real activity.",
+        },
+      }),
+      [isArabic]
+    );
+
+  const currentPageDetails =
+    useMemo(() => {
+      if (
+        pageDetails[pathname]
+      ) {
+        return pageDetails[pathname];
+      }
+
+      const matchingPath =
+        Object.keys(
+          pageDetails
+        ).find(
+          (path) =>
+            path !== "/city" &&
+            pathname.startsWith(
+              path
+            )
+        );
+
+      return matchingPath
+        ? pageDetails[
+            matchingPath
+          ]
+        : pageDetails["/city"];
+    }, [
+      pathname,
+      pageDetails,
+    ]);
 
   function openMobileMenu() {
     window.dispatchEvent(
@@ -99,31 +191,73 @@ export default function Navbar() {
     user?.name
       .trim()
       .split(/\s+/)[0] ??
-    "Mayor";
+    (
+      isArabic
+        ? "العمدة"
+        : "Mayor"
+    );
+
+  const formattedBalance =
+    Number(
+      balance || 0
+    ).toLocaleString(
+      language,
+      {
+        maximumFractionDigits:
+          2,
+      }
+    );
 
   return (
-    <header className={styles.navbar}>
+    <header
+      className={styles.navbar}
+      dir={
+        isArabic
+          ? "rtl"
+          : "ltr"
+      }
+    >
       <div className={styles.left}>
         <button
           type="button"
-          className={styles.menuButton}
-          onClick={openMobileMenu}
-          aria-label="Open menu"
+          className={
+            styles.menuButton
+          }
+          onClick={
+            openMobileMenu
+          }
+          aria-label={
+            isArabic
+              ? "فتح القائمة"
+              : "Open menu"
+          }
         >
           ☰
         </button>
 
         <div>
           <span
-            className={styles.welcome}
+            className={
+              styles.welcome
+            }
           >
-            Welcome, {firstName}
+            {isArabic
+              ? `هلا، ${firstName}`
+              : `Welcome, ${firstName}`}
           </span>
 
-          <h1>{pageDetails.title}</h1>
+          <h1>
+            {
+              currentPageDetails
+                .title
+            }
+          </h1>
 
           <p>
-            {pageDetails.description}
+            {
+              currentPageDetails
+                .description
+            }
           </p>
         </div>
       </div>
@@ -133,16 +267,16 @@ export default function Navbar() {
           className={styles.balance}
         >
           <span>
-            Available Balance
+            {isArabic
+              ? "الرصيد المتاح"
+              : "Available Balance"}
           </span>
 
           <strong>
-            {Number(
-              balance || 0
-            ).toLocaleString("en-US", {
-              maximumFractionDigits: 2,
-            })}{" "}
-            SAR
+            {formattedBalance}{" "}
+            {isArabic
+              ? "ر.س"
+              : "SAR"}
           </strong>
         </div>
 

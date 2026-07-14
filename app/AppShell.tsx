@@ -20,6 +20,10 @@ import {
   FinancialAnalysisProvider,
 } from "@/context/FinancialAnalysisContext";
 
+import {
+  LanguageProvider,
+} from "@/context/LanguageContext";
+
 type AppShellProps = {
   children: ReactNode;
 };
@@ -28,14 +32,16 @@ export default function AppShell({
   children,
 }: AppShellProps) {
   return (
-    <AuthProvider>
-      <BudgetProvider>
-        <GameProvider>
-          <FinancialAnalysisProvider>
-            {children}
-          </FinancialAnalysisProvider>
-        </GameProvider>
-      </BudgetProvider>
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <BudgetProvider>
+          <GameProvider>
+            <FinancialAnalysisProvider>
+              {children}
+            </FinancialAnalysisProvider>
+          </GameProvider>
+        </BudgetProvider>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }

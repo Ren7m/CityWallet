@@ -346,6 +346,9 @@ export function AuthProvider({
               name:
                 cleanName,
             },
+
+            emailRedirectTo:
+              `${window.location.origin}/auth/verified?status=success`,
           },
         });
 

@@ -1,10 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
-import { useAuth } from "@/context/AuthContext";
-import { useGame } from "@/context/GameContext";
+import {
+  usePathname,
+} from "next/navigation";
+
+import {
+  useAuth,
+} from "@/context/AuthContext";
+
+import {
+  useGame,
+} from "@/context/GameContext";
+
+import {
+  useLanguage,
+} from "@/context/LanguageContext";
 
 import styles from "./Sidebar.module.css";
 
@@ -21,39 +33,6 @@ type NavigationItem = {
   label: string;
   icon: IconName;
 };
-
-const navigation: NavigationItem[] = [
-  {
-    href: "/city",
-    label: "My City",
-    icon: "city",
-  },
-  {
-    href: "/city/insights",
-    label: "AI Insights",
-    icon: "insights",
-  },
-  {
-    href: "/city/leaderboard",
-    label: "Leaderboard",
-    icon: "leaderboard",
-  },
-  {
-    href: "/city/challenges",
-    label: "Weekly Monster",
-    icon: "monster",
-  },
-  {
-    href: "/city/profile",
-    label: "Profile",
-    icon: "profile",
-  },
-  {
-    href: "/city/settings",
-    label: "Settings",
-    icon: "settings",
-  },
-];
 
 function NavigationIcon({
   name,
@@ -86,7 +65,9 @@ function NavigationIcon({
     );
   }
 
-  if (name === "leaderboard") {
+  if (
+    name === "leaderboard"
+  ) {
     return (
       <svg
         viewBox="0 0 24 24"
@@ -158,9 +139,12 @@ function NavigationIcon({
 }
 
 export default function Sidebar() {
-  const pathname = usePathname();
+  const pathname =
+    usePathname();
 
-  const { user } = useAuth();
+  const {
+    user,
+  } = useAuth();
 
   const {
     level,
@@ -168,11 +152,92 @@ export default function Sidebar() {
     monster,
   } = useGame();
 
+  const {
+    isArabic,
+  } = useLanguage();
+
+  const navigation:
+    NavigationItem[] = [
+      {
+        href: "/city",
+
+        label:
+          isArabic
+            ? "مدينتي"
+            : "My City",
+
+        icon: "city",
+      },
+
+      {
+        href:
+          "/city/insights",
+
+        label:
+          isArabic
+            ? "تحليلات الذكاء الاصطناعي"
+            : "AI Insights",
+
+        icon: "insights",
+      },
+
+      {
+        href:
+          "/city/leaderboard",
+
+        label:
+          isArabic
+            ? "لوحة الصدارة"
+            : "Leaderboard",
+
+        icon:
+          "leaderboard",
+      },
+
+      {
+        href:
+          "/city/challenges",
+
+        label:
+          isArabic
+            ? "الوحش الأسبوعي"
+            : "Weekly Monster",
+
+        icon: "monster",
+      },
+
+      {
+        href:
+          "/city/profile",
+
+        label:
+          isArabic
+            ? "الملف الشخصي"
+            : "Profile",
+
+        icon: "profile",
+      },
+
+      {
+        href:
+          "/city/settings",
+
+        label:
+          isArabic
+            ? "الإعدادات"
+            : "Settings",
+
+        icon: "settings",
+      },
+    ];
+
   function isActive(
     href: string
   ) {
     if (href === "/city") {
-      return pathname === "/city";
+      return (
+        pathname === "/city"
+      );
     }
 
     return pathname.startsWith(
@@ -182,7 +247,11 @@ export default function Sidebar() {
 
   const playerName =
     user?.name?.trim() ||
-    "Mayor";
+    (
+      isArabic
+        ? "العمدة"
+        : "Mayor"
+    );
 
   const playerInitials =
     user?.initials ||
@@ -201,6 +270,11 @@ export default function Sidebar() {
   return (
     <aside
       className={styles.sidebar}
+      dir={
+        isArabic
+          ? "rtl"
+          : "ltr"
+      }
     >
       <Link
         href="/city"
@@ -228,7 +302,9 @@ export default function Sidebar() {
           styles.sectionTitle
         }
       >
-        MAIN MENU
+        {isArabic
+          ? "القائمة الرئيسية"
+          : "MAIN MENU"}
       </p>
 
       <nav
@@ -307,7 +383,9 @@ export default function Sidebar() {
           </strong>
 
           <span>
-            Level {level} Builder
+            {isArabic
+              ? `المستوى ${level}`
+              : `Level ${level} Builder`}
           </span>
         </div>
 

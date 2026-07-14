@@ -2,7 +2,6 @@
 
 import {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -10,71 +9,68 @@ import {
   type ReactNode,
 } from "react";
 
-import {
-  translations,
-  type Language,
-  type TranslationKey,
-} from "@/translations";
-
-type TranslationValues = Record<
-  string,
-  string | number
->;
+export type AppLanguage =
+  | "en-US"
+  | "ar-SA";
 
 type LanguageContextType = {
-  language: Language;
+  language: AppLanguage;
+
   isArabic: boolean;
-  isReady: boolean;
-  setLanguage: (language: Language) => void;
-  t: (
-    key: TranslationKey,
-    values?: TranslationValues
-  ) => string;
-  formatNumber: (value: number) => string;
+
+  isEnglish: boolean;
+
+  setLanguage: (
+    language: AppLanguage
+  ) => void;
+
+  toggleLanguage: () => void;
 };
 
+const STORAGE_KEY =
+  "citywallet-language";
+
+const DEFAULT_LANGUAGE:
+  AppLanguage = "en-US";
+
 const LanguageContext =
-  createContext<LanguageContextType | null>(null);
+  createContext<
+    LanguageContextType | undefined
+  >(undefined);
 
-const LANGUAGE_STORAGE_KEY =
-  "fincity-language";
-
-function isLanguage(
-  value: string | null
-): value is Language {
-  return value === "ar" || value === "en";
-}
-
-function updateDocumentLanguage(
-  language: Language
-) {
-  document.documentElement.lang = language;
-  document.documentElement.dir =
-    language === "ar" ? "rtl" : "ltr";
-}
+type LanguageProviderProps = {
+  children: ReactNode;
+};
 
 export function LanguageProvider({
   children,
-}: {
-  children: ReactNode;
-}) {
-  const [language, setCurrentLanguage] =
-    useState<Language>("en");
+}: LanguageProviderProps) {
+  const [
+    language,
+    setLanguageState,
+  ] =
+    useState<AppLanguage>(
+      DEFAULT_LANGUAGE
+    );
 
-  const [isReady, setIsReady] =
-    useState(false);
+  const [
+    isReady,
+    setIsReady,
+  ] = useState(false);
 
   useEffect(() => {
     const savedLanguage =
       window.localStorage.getItem(
-        LANGUAGE_STORAGE_KEY
+        STORAGE_KEY
       );
 
-    if (isLanguage(savedLanguage)) {
-      setCurrentLanguage(savedLanguage);
-      updateDocumentLanguage(savedLanguage);
-    } else {
-      updateDocumentLanguage("en");
+    if (
+      savedLanguage === "en-US" ||
+      savedLanguage === "ar-SA"
+    ) {
+      setLanguageState(
+        savedLanguage
+      );
     }
 
     setIsReady(true);
@@ -85,88 +81,80 @@ export function LanguageProvider({
       return;
     }
 
+    const isArabicLanguage =
+      language === "ar-SA";
+
     window.localStorage.setItem(
-      LANGUAGE_STORAGE_KEY,
+      STORAGE_KEY,
       language
     );
 
-    updateDocumentLanguage(language);
-  }, [language, isReady]);
+    document.documentElement.lang =
+      language;
 
-  const setLanguage = useCallback(
-    (newLanguage: Language) => {
-      setCurrentLanguage(newLanguage);
-    },
-    []
-  );
+    document.documentElement.dir =
+      isArabicLanguage
+        ? "rtl"
+        : "ltr";
 
-  const t = useCallback(
-    (
-      key: TranslationKey,
-      values?: TranslationValues
-    ) => {
-      let text =
-        translations[language][key] ??
-        translations.en[key] ??
-        key;
+    document.body.dir =
+      isArabicLanguage
+        ? "rtl"
+        : "ltr";
+  }, [
+    language,
+    isReady,
+  ]);
 
-      if (values) {
-        Object.entries(values).forEach(
-          ([name, value]) => {
-            text = text.replaceAll(
-              `{{${name}}}`,
-              String(value)
-            );
-          }
-        );
-      }
+  function setLanguage(
+    newLanguage: AppLanguage
+  ) {
+    setLanguageState(
+      newLanguage
+    );
+  }
 
-      return text;
-    },
-    [language]
-  );
-
-  const formatNumber = useCallback(
-    (value: number) => {
-      return new Intl.NumberFormat(
-        language === "ar"
+  function toggleLanguage() {
+    setLanguageState(
+      (currentLanguage) =>
+        currentLanguage === "en-US"
           ? "ar-SA"
-          : "en-US",
-        {
-          maximumFractionDigits: 2,
-        }
-      ).format(value);
-    },
-    [language]
-  );
+          : "en-US"
+    );
+  }
 
-  const value = useMemo(
-    () => ({
-      language,
-      isArabic: language === "ar",
-      isReady,
-      setLanguage,
-      t,
-      formatNumber,
-    }),
-    [
-      language,
-      isReady,
-      setLanguage,
-      t,
-      formatNumber,
-    ]
-  );
+  const value =
+    useMemo<LanguageContextType>(
+      () => ({
+        language,
+
+        isArabic:
+          language === "ar-SA",
+
+        isEnglish:
+          language === "en-US",
+
+        setLanguage,
+
+        toggleLanguage,
+      }),
+      [language]
+    );
 
   return (
-    <LanguageContext.Provider value={value}>
+    <LanguageContext.Provider
+      value={value}
+    >
       {children}
     </LanguageContext.Provider>
   );
 }
 
 export function useLanguage() {
-  const context = useContext(LanguageContext);
+  const context =
+    useContext(
+      LanguageContext
+    );
 
   if (!context) {
     throw new Error(

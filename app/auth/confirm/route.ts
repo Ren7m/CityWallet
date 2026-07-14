@@ -18,53 +18,88 @@ export async function GET(
     new URL(request.url);
 
   const tokenHash =
-    searchParams.get("token_hash");
+    searchParams.get(
+      "token_hash"
+    );
 
   const type =
     searchParams.get(
       "type"
     ) as EmailOtpType | null;
 
-  if (tokenHash && type) {
-    const supabase =
-      await createClient();
+  const verifiedUrl =
+    request.nextUrl.clone();
 
-    const { error } =
-      await supabase.auth.verifyOtp({
-        token_hash: tokenHash,
-        type,
-      });
+  verifiedUrl.pathname =
+    "/auth/verified";
 
-    if (!error) {
-      const cityUrl =
-        request.nextUrl.clone();
+  verifiedUrl.search = "";
 
-      cityUrl.pathname = "/city";
-      cityUrl.search = "";
+  if (
+    !tokenHash ||
+    !type
+  ) {
+    verifiedUrl.searchParams.set(
+      "status",
+      "error"
+    );
 
-      return NextResponse.redirect(
-        cityUrl
-      );
-    }
-
-    console.error(
-      "Email confirmation error:",
-      error.message
+    return NextResponse.redirect(
+      verifiedUrl
     );
   }
 
-  const loginUrl =
-    request.nextUrl.clone();
+  try {
+    const supabase =
+      await createClient();
 
-  loginUrl.pathname = "/login";
-  loginUrl.search = "";
+    const {
+      error,
+    } =
+      await supabase.auth.verifyOtp({
+        token_hash:
+          tokenHash,
 
-  loginUrl.searchParams.set(
-    "error",
-    "confirmation_failed"
-  );
+        type,
+      });
 
-  return NextResponse.redirect(
-    loginUrl
-  );
+    if (error) {
+      console.error(
+        "Email confirmation error:",
+        error.message
+      );
+
+      verifiedUrl.searchParams.set(
+        "status",
+        "error"
+      );
+
+      return NextResponse.redirect(
+        verifiedUrl
+      );
+    }
+
+    verifiedUrl.searchParams.set(
+      "status",
+      "success"
+    );
+
+    return NextResponse.redirect(
+      verifiedUrl
+    );
+  } catch (error) {
+    console.error(
+      "Unexpected email confirmation error:",
+      error
+    );
+
+    verifiedUrl.searchParams.set(
+      "status",
+      "error"
+    );
+
+    return NextResponse.redirect(
+      verifiedUrl
+    );
+  }
 }

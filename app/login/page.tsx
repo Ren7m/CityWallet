@@ -16,6 +16,10 @@ import {
   useAuth,
 } from "@/context/AuthContext";
 
+import {
+  useLanguage,
+} from "@/context/LanguageContext";
+
 import styles from "./login.module.css";
 
 export default function LoginPage() {
@@ -26,6 +30,10 @@ export default function LoginPage() {
     isLoading,
     login,
   } = useAuth();
+
+  const {
+    isArabic,
+  } = useLanguage();
 
   const [
     email,
@@ -52,6 +60,72 @@ export default function LoginPage() {
     setIsSubmitting,
   ] = useState(false);
 
+  const text = {
+    welcomeBack: isArabic
+      ? "هلا بعودتك"
+      : "WELCOME BACK",
+
+    title: isArabic
+      ? "سجّل دخولك وارجع لمدينتك."
+      : "Sign in to your city.",
+
+    description: isArabic
+      ? "كمّل إدارة فلوسك، تابع تقدمك المالي، وطوّر مدينتك في CityWallet."
+      : "Continue managing your finances and growing your CityWallet progress.",
+
+    email: isArabic
+      ? "البريد الإلكتروني"
+      : "Email address",
+
+    emailPlaceholder: isArabic
+      ? "name@example.com"
+      : "name@example.com",
+
+    password: isArabic
+      ? "كلمة المرور"
+      : "Password",
+
+    passwordPlaceholder: isArabic
+      ? "أدخل كلمة المرور"
+      : "Enter your password",
+
+    show: isArabic
+      ? "إظهار"
+      : "Show",
+
+    hide: isArabic
+      ? "إخفاء"
+      : "Hide",
+
+    forgotPassword: isArabic
+      ? "نسيت كلمة المرور؟"
+      : "Forgot password?",
+
+    signingIn: isArabic
+      ? "جاري تسجيل الدخول..."
+      : "Signing in...",
+
+    loading: isArabic
+      ? "جاري التحميل..."
+      : "Loading...",
+
+    signIn: isArabic
+      ? "تسجيل الدخول"
+      : "Sign In",
+
+    noAccount: isArabic
+      ? "ما عندك حساب؟"
+      : "Don&apos;t have an account?",
+
+    createAccount: isArabic
+      ? "أنشئ حساب"
+      : "Create account",
+
+    backHome: isArabic
+      ? "الرجوع للرئيسية"
+      : "Back to home",
+  };
+
   useEffect(() => {
     if (
       !isLoading &&
@@ -65,8 +139,42 @@ export default function LoginPage() {
     router,
   ]);
 
+  function getArabicLoginError(
+    message: string
+  ) {
+    const normalized =
+      message.toLowerCase();
+
+    if (
+      normalized.includes(
+        "invalid login credentials"
+      )
+    ) {
+      return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+    }
+
+    if (
+      normalized.includes(
+        "email not confirmed"
+      )
+    ) {
+      return "فضلاً أكّد بريدك الإلكتروني أول، وبعدها جرّب تسجّل دخول.";
+    }
+
+    if (
+      normalized.includes(
+        "too many requests"
+      )
+    ) {
+      return "صار فيه محاولات كثيرة. انتظر شوي وجرّب مرة ثانية.";
+    }
+
+    return "ما قدرنا نسجّل دخولك حاليًا. جرّب مرة ثانية.";
+  }
+
   async function handleSubmit(
-    event: FormEvent<HTMLFormElement>
+    event:
+      FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
 
@@ -86,7 +194,9 @@ export default function LoginPage() {
       !cleanEmail.includes("@")
     ) {
       setError(
-        "Please enter a valid email address."
+        isArabic
+          ? "فضلاً أدخل بريد إلكتروني صحيح."
+          : "Please enter a valid email address."
       );
 
       return;
@@ -94,7 +204,9 @@ export default function LoginPage() {
 
     if (!password) {
       setError(
-        "Please enter your password."
+        isArabic
+          ? "فضلاً أدخل كلمة المرور."
+          : "Please enter your password."
       );
 
       return;
@@ -111,7 +223,11 @@ export default function LoginPage() {
 
       if (!result.success) {
         setError(
-          result.message
+          isArabic
+            ? getArabicLoginError(
+                result.message
+              )
+            : result.message
         );
 
         setIsSubmitting(false);
@@ -124,7 +240,9 @@ export default function LoginPage() {
       router.refresh();
     } catch {
       setError(
-        "Unable to sign in right now. Please try again."
+        isArabic
+          ? "ما قدرنا نسجّل دخولك الحين. جرّب مرة ثانية."
+          : "Unable to sign in right now. Please try again."
       );
 
       setIsSubmitting(false);
@@ -132,7 +250,14 @@ export default function LoginPage() {
   }
 
   return (
-    <main className={styles.page}>
+    <main
+      className={styles.page}
+      dir={
+        isArabic
+          ? "rtl"
+          : "ltr"
+      }
+    >
       <section className={styles.card}>
         <Link
           href="/"
@@ -157,17 +282,15 @@ export default function LoginPage() {
               styles.label
             }
           >
-            WELCOME BACK
+            {text.welcomeBack}
           </span>
 
           <h1>
-            Sign in to your city.
+            {text.title}
           </h1>
 
           <p>
-            Continue managing your
-            finances and growing your
-            CityWallet progress.
+            {text.description}
           </p>
         </div>
 
@@ -188,7 +311,7 @@ export default function LoginPage() {
             className={styles.field}
           >
             <span>
-              Email address
+              {text.email}
             </span>
 
             <input
@@ -199,7 +322,9 @@ export default function LoginPage() {
                   event.target.value
                 )
               }
-              placeholder="name@example.com"
+              placeholder={
+                text.emailPlaceholder
+              }
               autoComplete="email"
               required
             />
@@ -209,7 +334,7 @@ export default function LoginPage() {
             className={styles.field}
           >
             <span>
-              Password
+              {text.password}
             </span>
 
             <div
@@ -229,7 +354,9 @@ export default function LoginPage() {
                     event.target.value
                   )
                 }
-                placeholder="Enter your password"
+                placeholder={
+                  text.passwordPlaceholder
+                }
                 autoComplete="current-password"
                 required
               />
@@ -247,8 +374,8 @@ export default function LoginPage() {
                 }
               >
                 {showPassword
-                  ? "Hide"
-                  : "Show"}
+                  ? text.hide
+                  : text.show}
               </button>
             </div>
           </label>
@@ -264,7 +391,7 @@ export default function LoginPage() {
                 styles.forgotButton
               }
             >
-              Forgot password?
+              {text.forgotPassword}
             </button>
           </div>
 
@@ -279,10 +406,10 @@ export default function LoginPage() {
             }
           >
             {isSubmitting
-              ? "Signing in..."
+              ? text.signingIn
               : isLoading
-                ? "Loading..."
-                : "Sign In"}
+                ? text.loading
+                : text.signIn}
           </button>
         </form>
 
@@ -291,10 +418,12 @@ export default function LoginPage() {
             styles.footerText
           }
         >
-          Don&apos;t have an account?{" "}
+          {isArabic
+            ? "ما عندك حساب؟ "
+            : "Don't have an account? "}
 
           <Link href="/register">
-            Create account
+            {text.createAccount}
           </Link>
         </p>
 
@@ -302,7 +431,10 @@ export default function LoginPage() {
           href="/"
           className={styles.back}
         >
-          ← Back to home
+          {isArabic
+            ? "→"
+            : "←"}{" "}
+          {text.backHome}
         </Link>
       </section>
     </main>

@@ -6,11 +6,17 @@ import {
   type FormEvent,
 } from "react";
 
-import { useAuth } from "@/context/AuthContext";
+import {
+  useAuth,
+} from "@/context/AuthContext";
 
 import {
   useBudget,
 } from "@/context/BudgetContext";
+
+import {
+  useLanguage,
+} from "@/context/LanguageContext";
 
 import styles from "./settings.module.css";
 
@@ -28,6 +34,12 @@ export default function SettingsPage() {
     expenses,
     clearExpenses,
   } = useBudget();
+
+  const {
+    language,
+    isArabic,
+    setLanguage,
+  } = useLanguage();
 
   const [
     name,
@@ -69,13 +81,9 @@ export default function SettingsPage() {
       return;
     }
 
-    setName(
-      user.name
-    );
+    setName(user.name);
 
-    setEmail(
-      user.email
-    );
+    setEmail(user.email);
 
     setSalary(
       String(
@@ -93,6 +101,109 @@ export default function SettingsPage() {
     monthlySalary,
     budget,
   ]);
+
+  const text = {
+    eyebrow: isArabic
+      ? "الحساب والشؤون المالية"
+      : "ACCOUNT AND FINANCE",
+
+    title: isArabic
+      ? "الإعدادات"
+      : "Settings",
+
+    description: isArabic
+      ? "حدّثي بيانات حسابك ومعلوماتك المالية واختاري لغة التطبيق."
+      : "Update your account information, financial data, and app language.",
+
+    languageLabel: isArabic
+      ? "اللغة"
+      : "LANGUAGE",
+
+    languageTitle: isArabic
+      ? "لغة التطبيق"
+      : "App language",
+
+    languageDescription: isArabic
+      ? "اختاري اللغة اللي تبين تستخدمينها في CityWallet."
+      : "Choose the language you want to use in CityWallet.",
+
+    currentLanguage: isArabic
+      ? "اللغة الحالية"
+      : "Current language",
+
+    english: "English",
+
+    arabicSaudi:
+      "العربية السعودية",
+
+    switchToEnglish: isArabic
+      ? "التبديل إلى الإنجليزية"
+      : "Switch to English",
+
+    switchToArabic: isArabic
+      ? "التبديل إلى العربية السعودية"
+      : "Switch to Saudi Arabic",
+
+    profileLabel: isArabic
+      ? "معلومات الملف الشخصي"
+      : "PROFILE INFORMATION",
+
+    accountDetails: isArabic
+      ? "بيانات الحساب"
+      : "Account details",
+
+    accountDescription: isArabic
+      ? "تُستخدم هذي البيانات في شريط التنقل والملف الشخصي ورسائل الترحيب."
+      : "Used in the navbar, profile and welcome messages.",
+
+    fullName: isArabic
+      ? "الاسم الكامل"
+      : "Full name",
+
+    emailAddress: isArabic
+      ? "البريد الإلكتروني"
+      : "Email address",
+
+    financeLabel: isArabic
+      ? "المعلومات المالية"
+      : "FINANCIAL INFORMATION",
+
+    salaryAndBudget: isArabic
+      ? "الراتب والميزانية"
+      : "Salary and budget",
+
+    financeDescription: isArabic
+      ? "هذي القيم تتحكم في رصيدك وتقدمك المالي داخل مدينتك."
+      : "These values control your balances and financial progress.",
+
+    monthlySalary: isArabic
+      ? "الراتب الشهري"
+      : "Monthly salary",
+
+    monthlyBudget: isArabic
+      ? "الميزانية الشهرية"
+      : "Monthly budget",
+
+    currency: isArabic
+      ? "ر.س"
+      : "SAR",
+
+    recordedExpenses: isArabic
+      ? "المصروفات المسجلة"
+      : "Recorded expenses",
+
+    clearExpenses: isArabic
+      ? "حذف جميع المصروفات"
+      : "Clear all expenses",
+
+    saveChanges: isArabic
+      ? "حفظ التغييرات"
+      : "Save Changes",
+
+    saving: isArabic
+      ? "جاري الحفظ..."
+      : "Saving...",
+  };
 
   async function handleSave(
     event:
@@ -125,7 +236,9 @@ export default function SettingsPage() {
       cleanName.length < 2
     ) {
       setError(
-        "Please enter a valid full name."
+        isArabic
+          ? "فضلاً أدخلي اسم كامل صحيح."
+          : "Please enter a valid full name."
       );
 
       return;
@@ -136,7 +249,9 @@ export default function SettingsPage() {
       !cleanEmail.includes(".")
     ) {
       setError(
-        "Please enter a valid email address."
+        isArabic
+          ? "فضلاً أدخلي بريد إلكتروني صحيح."
+          : "Please enter a valid email address."
       );
 
       return;
@@ -149,7 +264,9 @@ export default function SettingsPage() {
       salaryValue <= 0
     ) {
       setError(
-        "Please enter a valid monthly salary."
+        isArabic
+          ? "فضلاً أدخلي راتب شهري صحيح."
+          : "Please enter a valid monthly salary."
       );
 
       return;
@@ -162,7 +279,9 @@ export default function SettingsPage() {
       budgetValue <= 0
     ) {
       setError(
-        "Please enter a valid monthly budget."
+        isArabic
+          ? "فضلاً أدخلي ميزانية شهرية صحيحة."
+          : "Please enter a valid monthly budget."
       );
 
       return;
@@ -173,7 +292,9 @@ export default function SettingsPage() {
       salaryValue
     ) {
       setError(
-        "Monthly budget cannot be greater than monthly salary."
+        isArabic
+          ? "الميزانية الشهرية ما تقدر تكون أكبر من الراتب الشهري."
+          : "Monthly budget cannot be greater than monthly salary."
       );
 
       return;
@@ -184,16 +305,15 @@ export default function SettingsPage() {
     try {
       const result =
         await updateUser({
-          name:
-            cleanName,
-
-          email:
-            cleanEmail,
+          name: cleanName,
+          email: cleanEmail,
         });
 
       if (!result.success) {
         setError(
-          result.message
+          isArabic
+            ? "ما قدرنا نحدّث بيانات حسابك حاليًا. جرّبي مرة ثانية."
+            : result.message
         );
 
         return;
@@ -216,11 +336,15 @@ export default function SettingsPage() {
       );
 
       setMessage(
-        result.message
+        isArabic
+          ? "تم تحديث بياناتك بنجاح."
+          : "Your information was updated successfully."
       );
     } catch {
       setError(
-        "Unable to save your changes right now. Please try again."
+        isArabic
+          ? "ما قدرنا نحفظ التغييرات الحين. جرّبي مرة ثانية."
+          : "Unable to save your changes right now. Please try again."
       );
     } finally {
       setIsSaving(false);
@@ -230,7 +354,9 @@ export default function SettingsPage() {
   function handleClearExpenses() {
     const accepted =
       window.confirm(
-        "Remove all recorded expenses?"
+        isArabic
+          ? "متأكدة تبين تحذفين كل المصروفات المسجلة؟"
+          : "Remove all recorded expenses?"
       );
 
     if (!accepted) {
@@ -242,7 +368,36 @@ export default function SettingsPage() {
     setError("");
 
     setMessage(
-      "All expenses were removed."
+      isArabic
+        ? "تم حذف جميع المصروفات."
+        : "All expenses were removed."
+    );
+  }
+
+  function handleLanguageChange() {
+    setMessage("");
+    setError("");
+
+    if (
+      language === "en-US"
+    ) {
+      setLanguage(
+        "ar-SA"
+      );
+
+      setMessage(
+        "تم تغيير اللغة إلى العربية السعودية."
+      );
+
+      return;
+    }
+
+    setLanguage(
+      "en-US"
+    );
+
+    setMessage(
+      "Language changed to English."
     );
   }
 
@@ -251,23 +406,27 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className={styles.page}>
+    <div
+      className={styles.page}
+      dir={
+        isArabic
+          ? "rtl"
+          : "ltr"
+      }
+    >
       <header
         className={styles.header}
       >
         <span>
-          ACCOUNT AND FINANCE
+          {text.eyebrow}
         </span>
 
         <h1>
-          Settings
+          {text.title}
         </h1>
 
         <p>
-          Update the information entered
-          during registration. Changes
-          appear across CityWallet
-          immediately.
+          {text.description}
         </p>
       </header>
 
@@ -293,6 +452,59 @@ export default function SettingsPage() {
         </div>
       )}
 
+      <section
+        className={styles.card}
+      >
+        <div
+          className={
+            styles.cardHeader
+          }
+        >
+          <span>
+            {text.languageLabel}
+          </span>
+
+          <h2>
+            {text.languageTitle}
+          </h2>
+
+          <p>
+            {
+              text.languageDescription
+            }
+          </p>
+        </div>
+
+        <div
+          className={
+            styles.financeSummary
+          }
+        >
+          <div>
+            <span>
+              {text.currentLanguage}
+            </span>
+
+            <strong>
+              {language === "ar-SA"
+                ? text.arabicSaudi
+                : text.english}
+            </strong>
+          </div>
+
+          <button
+            type="button"
+            onClick={
+              handleLanguageChange
+            }
+          >
+            {isArabic
+              ? text.switchToEnglish
+              : text.switchToArabic}
+          </button>
+        </div>
+      </section>
+
       <form
         className={styles.form}
         onSubmit={handleSave}
@@ -306,17 +518,17 @@ export default function SettingsPage() {
             }
           >
             <span>
-              PROFILE INFORMATION
+              {text.profileLabel}
             </span>
 
             <h2>
-              Account details
+              {text.accountDetails}
             </h2>
 
             <p>
-              Used in the navbar,
-              profile and welcome
-              messages.
+              {
+                text.accountDescription
+              }
             </p>
           </div>
 
@@ -327,7 +539,7 @@ export default function SettingsPage() {
           >
             <label>
               <span>
-                Full name
+                {text.fullName}
               </span>
 
               <input
@@ -349,7 +561,7 @@ export default function SettingsPage() {
 
             <label>
               <span>
-                Email address
+                {text.emailAddress}
               </span>
 
               <input
@@ -379,17 +591,19 @@ export default function SettingsPage() {
             }
           >
             <span>
-              FINANCIAL INFORMATION
+              {text.financeLabel}
             </span>
 
             <h2>
-              Salary and budget
+              {
+                text.salaryAndBudget
+              }
             </h2>
 
             <p>
-              These values control your
-              balances and financial
-              progress.
+              {
+                text.financeDescription
+              }
             </p>
           </div>
 
@@ -400,7 +614,9 @@ export default function SettingsPage() {
           >
             <label>
               <span>
-                Monthly salary
+                {
+                  text.monthlySalary
+                }
               </span>
 
               <div
@@ -425,14 +641,16 @@ export default function SettingsPage() {
                 />
 
                 <strong>
-                  SAR
+                  {text.currency}
                 </strong>
               </div>
             </label>
 
             <label>
               <span>
-                Monthly budget
+                {
+                  text.monthlyBudget
+                }
               </span>
 
               <div
@@ -459,7 +677,7 @@ export default function SettingsPage() {
                 />
 
                 <strong>
-                  SAR
+                  {text.currency}
                 </strong>
               </div>
             </label>
@@ -472,7 +690,9 @@ export default function SettingsPage() {
           >
             <div>
               <span>
-                Recorded expenses
+                {
+                  text.recordedExpenses
+                }
               </span>
 
               <strong>
@@ -489,7 +709,9 @@ export default function SettingsPage() {
                 isSaving
               }
             >
-              Clear all expenses
+              {
+                text.clearExpenses
+              }
             </button>
           </div>
         </section>
@@ -504,8 +726,8 @@ export default function SettingsPage() {
           }
         >
           {isSaving
-            ? "Saving..."
-            : "Save Changes"}
+            ? text.saving
+            : text.saveChanges}
         </button>
       </form>
     </div>

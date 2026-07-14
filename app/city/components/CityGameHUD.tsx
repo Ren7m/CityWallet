@@ -10,10 +10,16 @@ import {
   useGame,
 } from "@/context/GameContext";
 
+import {
+  useLanguage,
+} from "@/context/LanguageContext";
+
 import styles from "./CityGameHUD.module.css";
 
 export default function CityGameHUD() {
-  const { user } = useAuth();
+  const {
+    user,
+  } = useAuth();
 
   const {
     level,
@@ -25,11 +31,19 @@ export default function CityGameHUD() {
     monster,
   } = useGame();
 
+  const {
+    isArabic,
+  } = useLanguage();
+
   const firstName =
     user?.name
       ?.trim()
       .split(/\s+/)[0] ||
-    "Mayor";
+    (
+      isArabic
+        ? "العمدة"
+        : "Mayor"
+    );
 
   const monsterDefeated =
     monster.defeated;
@@ -37,22 +51,94 @@ export default function CityGameHUD() {
   const progressWidth =
     Math.min(
       Math.max(
-        Number(levelProgress) || 0,
+        Number(
+          levelProgress
+        ) || 0,
         0
       ),
       100
     );
 
+  const missionTitle =
+    monsterDefeated
+      ? (
+          isArabic
+            ? "تم هزيمة الوحش الأسبوعي"
+            : "Weekly Monster Defeated"
+        )
+      : (
+          isArabic
+            ? "اهزم الوحش الأسبوعي"
+            : "Defeat Weekly Monster"
+        );
+
+  let missionDescription:
+    string;
+
+  if (monsterDefeated) {
+    missionDescription =
+      monster.rewardClaimed
+        ? (
+            isArabic
+              ? "استلمت مكافأة الفوز."
+              : "Victory reward claimed."
+          )
+        : (
+            isArabic
+              ? "مكافأة الفوز جاهزة للاستلام."
+              : "Victory reward ready to claim."
+          );
+  } else {
+    missionDescription =
+      isArabic
+        ? `متبقي ${monster.hp} من ${monster.maxHp} من نقاط الصحة`
+        : `${monster.hp} / ${monster.maxHp} HP remaining`;
+  }
+
+  let missionButton:
+    string;
+
+  if (monsterDefeated) {
+    missionButton =
+      monster.rewardClaimed
+        ? (
+            isArabic
+              ? "عرض المهمة المكتملة"
+              : "View completed mission"
+          )
+        : (
+            isArabic
+              ? "استلام مكافأة الفوز"
+              : "Claim victory reward"
+          );
+  } else {
+    missionButton =
+      isArabic
+        ? "واجه الوحش الأسبوعي"
+        : "Fight Weekly Monster";
+  }
+
   return (
-    <aside className={styles.hud}>
+    <aside
+      className={styles.hud}
+      dir={
+        isArabic
+          ? "rtl"
+          : "ltr"
+      }
+    >
       <div className={styles.header}>
         <div>
           <span>
-            {firstName}&apos;s Progress
+            {isArabic
+              ? `تقدم ${firstName}`
+              : `${firstName}'s Progress`}
           </span>
 
           <strong>
-            Level {level} Builder
+            {isArabic
+              ? `المستوى ${level}`
+              : `Level ${level} Builder`}
           </strong>
         </div>
 
@@ -63,17 +149,21 @@ export default function CityGameHUD() {
 
       <div className={styles.xpRow}>
         <span>
-          XP {currentLevelXp} /{" "}
-          {xpRequiredForNextLevel}
+          {isArabic
+            ? `نقاط الخبرة ${currentLevelXp} / ${xpRequiredForNextLevel}`
+            : `XP ${currentLevelXp} / ${xpRequiredForNextLevel}`}
         </span>
 
-        <b>{xp}</b>
+        <b>
+          {xp}
+        </b>
       </div>
 
       <div className={styles.progress}>
         <span
           style={{
-            width: `${progressWidth}%`,
+            width:
+              `${progressWidth}%`,
           }}
         />
       </div>
@@ -85,7 +175,11 @@ export default function CityGameHUD() {
             : ""
         }`}
       >
-        <div className={styles.questIcon}>
+        <div
+          className={
+            styles.questIcon
+          }
+        >
           {monsterDefeated
             ? "🏆"
             : "⚔️"}
@@ -93,30 +187,24 @@ export default function CityGameHUD() {
 
         <div>
           <strong>
-            {monsterDefeated
-              ? "Weekly Monster Defeated"
-              : "Defeat Weekly Monster"}
+            {missionTitle}
           </strong>
 
           <p>
-            {monsterDefeated
-              ? monster.rewardClaimed
-                ? "Victory reward claimed."
-                : "Victory reward ready to claim."
-              : `${monster.hp} / ${monster.maxHp} HP remaining`}
+            {
+              missionDescription
+            }
           </p>
         </div>
       </div>
 
       <Link
         href="/city/challenges"
-        className={styles.questButton}
+        className={
+          styles.questButton
+        }
       >
-        {monsterDefeated
-          ? monster.rewardClaimed
-            ? "View completed mission"
-            : "Claim victory reward"
-          : "Fight Weekly Monster"}
+        {missionButton}
       </Link>
     </aside>
   );
