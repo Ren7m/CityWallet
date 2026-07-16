@@ -1,6 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import {
+  useMemo,
+  useState,
+} from "react";
 
 import {
   useRouter,
@@ -13,26 +16,28 @@ import { useGame } from "@/context/GameContext";
 import styles from "./MonsterCard.module.css";
 
 function getWeekNumber() {
-  const today = new Date();
+  const today =
+    new Date();
 
-  const firstDay = new Date(
-    today.getFullYear(),
-    0,
-    1
-  );
+  const firstDay =
+    new Date(
+      today.getFullYear(),
+      0,
+      1
+    );
 
-  const daysPassed = Math.floor(
-    (today.getTime() -
-      firstDay.getTime()) /
-      86400000
-  );
+  const daysPassed =
+    Math.floor(
+      (today.getTime() -
+        firstDay.getTime()) /
+        86400000
+    );
 
   return Math.ceil(
-    (
-      daysPassed +
+    (daysPassed +
       firstDay.getDay() +
-      1
-    ) / 7
+      1) /
+      7
   );
 }
 
@@ -60,46 +65,71 @@ function clamp(
 }
 
 export default function MonsterCard() {
-  const router = useRouter();
+  const router =
+    useRouter();
 
-  const { user } = useAuth();
+  const { user } =
+    useAuth();
 
   const { expenses } =
     useBudget();
 
-  const {
-    monster,
-  } = useGame();
+  const game =
+    useGame();
 
-  const topExpense = useMemo(() => {
-    if (expenses.length === 0) {
-      return null;
-    }
+  const monster =
+    game.monster;
 
-    return [...expenses].sort(
-      (
-        first,
-        second
-      ) =>
+  const availableAttacks =
+    Number(
+      game.availableAttacks
+    ) || 0;
+
+  const attackMonster =
+    game.attackMonster;
+
+  const [
+    isAttacking,
+    setIsAttacking,
+  ] = useState(false);
+
+  const [
+    battleMessage,
+    setBattleMessage,
+  ] = useState("");
+
+  const topExpense =
+    useMemo(() => {
+      if (
+        expenses.length === 0
+      ) {
+        return null;
+      }
+
+      return [
+        ...expenses,
+      ].sort(
         (
-          Number(
+          first,
+          second
+        ) =>
+          (Number(
             second.amount
-          ) || 0
-        ) -
-        (
-          Number(
+          ) || 0) -
+          (Number(
             first.amount
-          ) || 0
-        )
-    )[0];
-  }, [expenses]);
+          ) || 0)
+      )[0];
+    }, [expenses]);
 
   const playerName =
     user?.name?.trim() ||
     "Mayor";
 
   const firstName =
-    playerName.split(/\s+/)[0];
+    playerName.split(
+      /\s+/
+    )[0];
 
   const topExpenseName =
     topExpense?.name ||
@@ -120,7 +150,9 @@ export default function MonsterCard() {
 
   const monsterHp =
     clamp(
-      Number(monster.hp) || 0,
+      Number(
+        monster.hp
+      ) || 0,
       0,
       monsterMaxHp
     );
@@ -129,10 +161,9 @@ export default function MonsterCard() {
     monsterMaxHp > 0
       ? clamp(
           Math.round(
-            (
-              monsterHp /
-              monsterMaxHp
-            ) * 100
+            (monsterHp /
+              monsterMaxHp) *
+              100
           ),
           0,
           100
@@ -149,55 +180,159 @@ export default function MonsterCard() {
     if (
       monster.rewardClaimed
     ) {
-      return `${firstName}, you defeated the monster and already collected your real weekly victory reward.`;
+      return `${firstName}, you defeated the monster and collected your weekly victory reward.`;
     }
 
-    if (monster.defeated) {
-      return `${firstName}, you defeated the monster. Your victory reward of ${monster.rewardXp} XP and ${monster.rewardCoins} Coins is ready to claim.`;
+    if (
+      monster.defeated
+    ) {
+      return `${firstName}, you defeated the monster. Your reward is ${monster.rewardXp} XP and ${monster.rewardCoins} Coins.`;
     }
 
     if (
       expenses.length === 0
     ) {
-      return `${firstName}, record your first real expense to activate your Weekly Monster battle progress.`;
+      return `${firstName}, record your first expense to earn attacks against the Weekly Monster.`;
     }
 
     return `${topExpenseName} is currently your highest recorded expense at ${topExpenseAmount.toLocaleString(
       "en-US",
       {
-        maximumFractionDigits: 2,
+        maximumFractionDigits:
+          2,
       }
-    )} SAR. Keep tracking real expenses and completing financial quests to weaken ${monster.name}.`;
+    )} SAR. You currently have ${availableAttacks} attacks available.`;
   }
 
-  function handleBattleAction() {
-    if (monster.defeated) {
-      return;
-    }
+  function showTemporaryMessage(
+    message: string
+  ) {
+    setBattleMessage(
+      message
+    );
 
-    router.push(
-      "/city/expenses"
+    window.setTimeout(
+      () => {
+        setBattleMessage(
+          ""
+        );
+      },
+      2200
     );
   }
 
+  function handleBattleAction() {
+    if (
+      monster.defeated ||
+      isAttacking
+    ) {
+      return;
+    }
+
+    if (
+      availableAttacks <= 0
+    ) {
+      router.push(
+        "/city/expenses"
+      );
+
+      return;
+    }
+
+    if (
+      typeof attackMonster !==
+      "function"
+    ) {
+      showTemporaryMessage(
+        "تعذر تشغيل الهجوم. أعيدي تشغيل السيرفر."
+      );
+
+      return;
+    }
+
+    const attackSucceeded =
+      attackMonster();
+
+    if (!attackSucceeded) {
+      showTemporaryMessage(
+        "No attacks are available. Record a new expense to earn more attacks."
+      );
+
+      return;
+    }
+
+    setIsAttacking(true);
+
+    showTemporaryMessage(
+      "⚔️ Successful attack! The monster lost 35 HP."
+    );
+
+    window.setTimeout(
+      () => {
+        setIsAttacking(
+          false
+        );
+      },
+      350
+    );
+  }
+
+  function getButtonLabel() {
+    if (
+      monster.defeated
+    ) {
+      return "🎉 Monster Defeated!";
+    }
+
+    if (
+      availableAttacks <= 0
+    ) {
+      return expenses.length ===
+        0
+        ? "⚔️ Record First Expense to Earn Attacks"
+        : "⚔️ Record Expense to Earn More Attacks";
+    }
+
+    return `⚔️ Attack Monster (${availableAttacks} ${
+      availableAttacks === 1
+        ? "Attack"
+        : "Attacks"
+    })`;
+  }
+
   return (
-    <section className={styles.card}>
-      <div className={styles.top}>
+    <section
+      className={
+        styles.card
+      }
+    >
+      <div
+        className={
+          styles.top
+        }
+      >
         <span>
-          🔥 Week {weekNumber}
+          🔥 Week{" "}
+          {weekNumber}
           {" • "}
+
           {monster.defeated
             ? "Completed"
             : "Active"}
         </span>
 
-        <div className={styles.time}>
+        <div
+          className={
+            styles.time
+          }
+        >
           <small>
             Time left
           </small>
 
           <b>
             {daysLeft}{" "}
+
             {daysLeft === 1
               ? "day"
               : "days"}
@@ -210,7 +345,11 @@ export default function MonsterCard() {
       </h2>
 
       <div
-        className={styles.monster}
+        className={`${styles.monster} ${
+          isAttacking
+            ? styles.hit
+            : ""
+        }`}
       >
         <div
           className={
@@ -224,7 +363,11 @@ export default function MonsterCard() {
           }
         />
 
-        <div className={styles.body}>
+        <div
+          className={
+            styles.body
+          }
+        >
           <div
             className={
               styles.eyeLeft
@@ -274,11 +417,15 @@ export default function MonsterCard() {
           />
 
           <div
-            className={styles.mouth}
+            className={
+              styles.mouth
+            }
           />
 
           <div
-            className={styles.teeth}
+            className={
+              styles.teeth
+            }
           >
             <span />
             <span />
@@ -311,7 +458,9 @@ export default function MonsterCard() {
         </div>
 
         <div
-          className={styles.shadow}
+          className={
+            styles.shadow
+          }
         />
       </div>
 
@@ -328,16 +477,23 @@ export default function MonsterCard() {
       </p>
 
       <div
-        className={styles.progress}
+        className={
+          styles.progress
+        }
       >
         <div
           style={{
-            width: `${healthPercentage}%`,
+            width:
+              `${healthPercentage}%`,
           }}
         />
       </div>
 
-      <div className={styles.percent}>
+      <div
+        className={
+          styles.percent
+        }
+      >
         <span>
           Monster health
         </span>
@@ -349,26 +505,52 @@ export default function MonsterCard() {
         </b>
       </div>
 
+      <div
+        className={
+          styles.percent
+        }
+      >
+        <span>
+          Available attacks
+        </span>
+
+        <b>
+          {availableAttacks}
+        </b>
+      </div>
+
       <button
         type="button"
-        className={styles.attack}
+        className={
+          styles.attack
+        }
         onClick={
           handleBattleAction
         }
         disabled={
-          monster.defeated
+          monster.defeated ||
+          isAttacking
         }
       >
-        {monster.defeated
-          ? "🎉 Monster Defeated!"
-          : expenses.length === 0
-            ? "⚔️ Record First Expense to Attack"
-            : "⚔️ Track Expense to Keep Attacking"}
+        {getButtonLabel()}
       </button>
+
+      {battleMessage && (
+        <div
+          className={
+            styles.defeated
+          }
+          role="status"
+        >
+          {battleMessage}
+        </div>
+      )}
 
       {monster.defeated && (
         <div
-          className={styles.defeated}
+          className={
+            styles.defeated
+          }
         >
           {monster.rewardClaimed
             ? "🎉 Monster defeated and victory reward claimed."
